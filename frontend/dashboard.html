@@ -1,0 +1,134 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — EduPoint AI</title>
+<link rel="stylesheet" href="/css/style.css">
+</head><body>
+<header class="topbar">
+  <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+  <nav class="top-actions"><span id="hello"></span>
+    <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a></nav>
+</header>
+<main class="container">
+  <section class="hero">
+    <p class="eyebrow">STUDENT DASHBOARD</p>
+    <h1>Your EduPoint AI account</h1>
+    <p>Choose a plan and pay via Pesapal (M-PESA, Airtel, T-Kash, Card).</p>
+  </section>
+
+  <section class="card">
+    <h2>Choose your plan</h2>
+    <div class="plans" id="plans"></div>
+    <form id="payForm">
+      <input type="hidden" id="plan" value="basic">
+      <div class="field"><label>Amount</label><input id="amount" readonly></div>
+      <div class="field"><label>Payment method</label><select id="provider"></select></div>
+      <div class="field"><label>Payment number</label><input id="phone" inputmode="tel" required></div>
+      <button class="pay">Pay Now</button>
+      <div id="msg" class="message"></div>
+      <div id="status" class="status-box"></div>
+    </form>
+  </section>
+
+  <section class="grid" id="tools" style="display:none">
+    <div class="card"><h2>🎯 Cluster Points</h2><button class="nav-btn" onclick="openTool('calculator')">Open</button></div>
+    <div class="card"><h2>🎓 Scholarships</h2><button class="nav-btn" onclick="openTool('scholarships')">Open</button></div>
+    <div class="card"><h2>🤖 AI Chatbot</h2><button class="nav-btn" onclick="openTool('chat')">Open</button></div>
+  </section>
+
+  <section class="card" id="toolBox" style="display:none">
+    <h2 id="toolTitle"></h2><div id="toolContent"></div>
+  </section>
+</main>
+<script src="/js/api.js"></script>
+<script>
+let me, plans;
+const $ = id => document.getElementById(id);
+
+(async function () {
+  const r = await requireAuth(); if (!r) return;
+  me = r.user;
+  $("hello").textContent = "Hi, " + me.name;
+  $("phone").value = me.phone || "";
+  $("status").textContent = r.paid
+    ? "✅ Payment confirmed — features unlocked."
+    : "🔒 Payment required before protected tools can be used.";
+  if (r.paid) $("tools").style.display = "";
+
+  [plans, providers] = await Promise.all([
+    fetch(window.EDUPOINT_API + "/api/plans").then(r => r.json()),
+    api("/api/providers"),
+  ]);
+  $("provider").innerHTML = providers.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  $("plans").innerHTML = Object.entries(plans).map(([k, p], i) =>
+    `<button type="button" class="plan ${i===0?'active':''}" data-plan="${k}" data-amount="${p.amount}">
+       <strong>${p.name}</strong><b>KES ${p.amount}</b>
+       <span>${p.features.join(" • ")}</span></button>`).join("");
+  $("amount").value = "KES " + plans.basic.amount;
+  document.querySelectorAll(".plan").forEach(b => b.onclick = () => {
+    document.querySelectorAll(".plan").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    $("plan").value = b.dataset.plan;
+    $("amount").value = "KES " + b.dataset.amount;
+  });
+})();
+
+let providers = [];
+
+$("payForm").onsubmit = async e => {
+  e.preventDefault();
+  $("msg").textContent = "Starting secure payment…";
+  try {
+    const j = await api("/api/payment/initiate", { method: "POST", body: JSON.stringify({
+      plan: $("plan").value,
+      provider: $("provider").value,
+      phone: $("phone").value,
+    })});
+    $("msg").textContent = (j.message || "") + " " + (j.instructions || []).join(" ");
+    if (j.redirect_url) { location.href = j.redirect_url; return; }
+    // Fallback polling for STK-style providers
+    let n = 0;
+    const t = setInterval(async () => {
+      n++;
+      try {
+        const x = await api("/api/payment/status/" + j.transaction_id);
+        $("status").textContent = "Transaction " + j.transaction_id + ": " + x.payment.status;
+        if (x.payment.status === "paid") { clearInterval(t); location.reload(); }
+        if (x.payment.status === "failed" || n >= 40) clearInterval(t);
+      } catch (_) { clearInterval(t); }
+    }, 3000);
+  } catch (err) { $("msg").textContent = err.message; }
+};
+
+async function openTool(kind) {
+  const box = $("toolBox"); box.style.display = "block";
+  if (kind === "scholarships") {
+    $("toolTitle").textContent = "Scholarships";
+    const data = await api("/api/scholarships");
+    $("toolContent").innerHTML = data.map(x =>
+      `<div class="mini-card"><b>${x.name}</b><p>${x.amount} • ${x.major}</p>
+        <a href="${x.link}" target="_blank">Official site</a></div>`).join("");
+  } else if (kind === "chat") {
+    $("toolTitle").textContent = "AI Chatbot";
+    $("toolContent").innerHTML = `<form id="cf"><input id="q" placeholder="Ask a KUCCPS question"><button class="pay">Ask</button></form><div id="ca" class="message"></div>`;
+    cf.onsubmit = async e => {
+      e.preventDefault();
+      const d = await api("/api/chat", { method: "POST", body: JSON.stringify({ question: q.value }) });
+      ca.textContent = d.answer;
+    };
+  } else {
+    $("toolTitle").textContent = "Cluster Points Calculator";
+    $("toolContent").innerHTML = `<p>Enter at least 7 grades separated by commas.</p>
+      <textarea id="grades" rows="4" placeholder="A, B+, B, B-, C+, C, C"></textarea>
+      <button class="pay" id="cb">Calculate</button><div id="cr" class="message"></div>`;
+    cb.onclick = async () => {
+      const obj = {};
+      grades.value.split(",").forEach((v, i) => obj[i] = v.trim());
+      const d = await api("/api/calculate", { method: "POST", body: JSON.stringify({ grades: obj }) });
+      cr.textContent = d.ok
+        ? `Cluster points: ${d.cluster_points} — ${d.results.filter(x => x.match === "qualified").length} matching courses.`
+        : d.error;
+    };
+  }
+}
+</script></body></html>
