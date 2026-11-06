@@ -380,7 +380,7 @@ def calculate():
             conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
             
         # Send email in background
-        threading.Thread(target=send_pdf_email, args=(u["email"], u["name"], round(cp, 3), qualified_count)).start()
+        threading.Thread(target=send_pdf_email, args=(u["email"], u["name"], round(cp, 3), out)).start()
             
         return jsonify(
             ok=True, 
