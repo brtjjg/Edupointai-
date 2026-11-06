@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduPoint Admin</title>
+<link rel="stylesheet" href="/css/style.css">
+</head><body>
+<header class="topbar">
+  <div class="brand">🎓 EduPoint AI <span>ADMIN</span></div>
+  <nav class="top-actions"><a class="nav-btn" href="/index.html">Website</a>
+    <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a></nav>
+</header>
+<main class="container">
+  <section class="hero">
+    <p class="eyebrow">ADMIN PANEL</p>
+    <h1>Management dashboard</h1>
+  </section>
+
+  <section class="card">
+    <h2>Student accounts</h2>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Referral</th><th>Status</th><th>Actions</th>
+      </tr></thead><tbody id="users"></tbody></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Recent payments</h2>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>Transaction</th><th>User</th><th>Network</th><th>Amount</th><th>Plan</th><th>Status</th><th>Created</th>
+      </tr></thead><tbody id="payments"></tbody></table>
+    </div>
+  </section>
+</main>
+<script src="/js/api.js"></script>
+<script>
+(async function () {
+  const me = await requireAuth(); if (!me) return;
+  if (me.user.role !== "admin") { location.href = "/dashboard.html"; return; }
+
+  const users = await api("/api/admin/users");
+  document.getElementById("users").innerHTML = users.users.map(u => `
+    <tr>
+      <td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.phone}</td>
+      <td>${u.role}</td><td>${u.referral_code || "-"}</td>
+      <td>${u.active ? "Active" : "Disabled"}</td>
+      <td>
+        <button class="small-btn" onclick="toggleUser(${u.id})">${u.active ? "Disable" : "Enable"}</button>
+        <button class="small-btn" onclick="grant(${u.id})">Grant access</button>
+      </td>
+    </tr>`).join("");
+
+  const pays = await api("/api/admin/payments");
+  document.getElementById("payments").innerHTML = pays.payments.map(p => `
+    <tr>
+      <td>${p.transaction_id}</td><td>${p.user_id ?? "-"}</td><td>${p.network}</td>
+      <td>KES ${p.amount}</td><td>${p.plan}</td><td>${p.status}</td>
+      <td>${p.created_at || ""}</td>
+    </tr>`).join("");
+})();
+
+async function toggleUser(id) {
+  try { await api(`/api/admin/user/${id}/toggle`, { method: "POST" }); location.reload(); }
+  catch (e) { alert(e.message); }
+}
+async function grant(id) {
+  try {
+    await api(`/api/admin/access/${id}`, { method: "POST",
+      body: JSON.stringify({ paid: true, plan: "admin-granted" }) });
+    alert("Access granted");
+  } catch (e) { alert(e.message); }
+}
+</script></body></html>
