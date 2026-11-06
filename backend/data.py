@@ -1,12 +1,9 @@
 PAYMENT_PLANS = {
-    "basic": {"amount": 50, "name": "Basic Plan",
-              "features": ["3 Course Searches", "Basic Results", "Course Matching"]},
-    "premium": {"amount": 150, "name": "Premium Plan",
-                "features": ["Unlimited Searches", "Full Results",
-                             "Scholarship Info", "Career Advice"]},
-    "pro": {"amount": 300, "name": "Pro Plan",
-            "features": ["All Premium Features", "AI Chatbot",
-                         "Download Reports", "Priority Support"]},
+    "standard": {
+        "amount": 100, 
+        "name": "Full Access (100 KES)", 
+        "features": ["Unlimited Searches", "Full Results", "Scholarship Info", "AI Chatbot"]
+    }
 }
 
 W = {'A':12,'A-':11,'B+':10,'B':9,'B-':8,'C+':7,'C':6,'C-':5,'D+':4,'D':3,'D-':2,'E':1}
