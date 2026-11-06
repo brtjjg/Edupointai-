@@ -34,7 +34,7 @@
 <header class="topbar">
   <div class="brand">🎓 EduPoint AI <span>v10</span></div>
   <nav class="top-actions">
-    <span id="hello"></span>
+    <span id="hello">Loading...</span>
     <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a>
   </nav>
 </header>
@@ -42,10 +42,9 @@
   <section class="hero">
     <p class="eyebrow">STUDENT DASHBOARD</p>
     <h1>Your EduPoint AI account</h1>
-    <p id="creditStatus" style="font-size: 20px; font-weight: bold; color: #73e8ff;">Loading credits...</p>
+    <p id="creditStatus" style="font-size: 20px; font-weight: bold; color: #73e8ff;">Loading...</p>
   </section>
 
-  <!-- My Claimed Offers Section -->
   <section class="card" id="myClaimsCard" style="display:none;">
     <h2>🎁 My Claimed Offers</h2>
     <div class="table-wrap">
@@ -81,7 +80,7 @@
 <!-- Offer Pop-up Modal -->
 <div class="modal-overlay" id="offerModal">
   <div class="offer-modal">
-    <img id="modalImg" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800" alt="Offer Image">
+    <img id="modalImg" src="" alt="Offer Image">
     <div class="offer-body">
       <div class="offer-eyebrow">Special Offer</div>
       <div class="offer-title" id="modalTitle">Scholarship Opportunity</div>
@@ -112,6 +111,7 @@ let currentOfferId = null;
 const subjectList = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
 const gradeList = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
 
+// 1. Render Dropdowns Instantly
 (function renderDropdowns() {
   let html = "";
   for (let i = 0; i < 7; i++) {
@@ -124,31 +124,70 @@ const gradeList = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-",
   $("subjectList").innerHTML = html;
 })();
 
-(async function loadData() {
+// 2. Load Cached Data INSTANTLY
+function loadCachedData() {
+  const cachedUser = localStorage.getItem("ep_user");
+  const cachedCredits = localStorage.getItem("ep_credits");
+  
+  if (cachedUser) {
+    me = JSON.parse(cachedUser);
+    $("hello").textContent = "Hi, " + me.name;
+  }
+  if (cachedCredits !== null) {
+    updateCreditsUI(parseInt(cachedCredits));
+  } else {
+    $("creditStatus").textContent = "Syncing with server...";
+    $("creditStatus").style.color = "#fbbf24";
+  }
+}
+loadCachedData();
+
+// 3. Fetch Fresh Data in Background
+(async function loadFreshData() {
   try {
-    const r = await requireAuth(); 
+    // Load Profile & Credits
+    const r = await api("/api/me"); 
     if (!r) return;
+    
     me = r.user;
+    localStorage.setItem("ep_user", JSON.stringify(me));
+    localStorage.setItem("ep_credits", r.credits);
+    
     $("hello").textContent = "Hi, " + me.name;
     updateCreditsUI(r.credits);
     
-    // Load Offers & Claims
+    // Load Offers
     checkOffers();
     loadMyClaims();
-  } catch (err) {}
+  } catch (err) {
+    console.error("Background sync failed:", err);
+    // If it fails, but we have cached data, we just stay on the cached view
+  }
 })();
 
-async function checkOffers() {
-  const res = await api("/api/offers/active");
-  if (res.ok && res.offer) {
-    currentOfferId = res.offer.id;
-    $("modalImg").src = res.offer.image_url || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800";
-    $("modalTitle").textContent = res.offer.title;
-    $("modalDesc").textContent = res.offer.description;
-    $("modalEligibility").textContent = res.offer.eligibility || "Open to all students";
-    $("modalGrabBtn").textContent = res.offer.button_text || "Grab This Offer";
-    $("offerModal").style.display = "flex";
+function updateCreditsUI(credits) {
+  if (credits > 0) {
+    $("creditStatus").textContent = `✅ You have ${credits} calculation(s) available.`;
+    $("creditStatus").style.color = "#c9ffda";
+  } else {
+    $("creditStatus").textContent = `🔒 You have 0 calculations left. Please pay 100 KES.`;
+    $("creditStatus").style.color = "#ff7b7b";
   }
+}
+
+async function checkOffers() {
+  try {
+    const res = await api("/api/offers/active");
+    if (res.ok && res.offer) {
+      currentOfferId = res.offer.id;
+      $("modalImg").src = res.offer.image_url || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800";
+      $("modalTitle").textContent = res.offer.title;
+      $("modalDesc").textContent = res.offer.description;
+      $("modalEligibility").textContent = res.offer.eligibility || "Open to all students";
+      $("modalGrabBtn").textContent = res.offer.button_text || "Grab This Offer";
+      $("offerModal").style.display = "flex";
+    }
+  } catch(e) {}
 }
 
 function closeModal() {
@@ -169,6 +208,10 @@ async function claimOffer() {
         $("claimRefBox").innerHTML = `Claim submitted! Awaiting Admin approval.<br>Ref: <b>${res.reference}</b>`;
       } else {
         $("claimRefBox").innerHTML = `🎉 Offer Claimed Successfully!<br>Ref: <b>${res.reference}</b>`;
+        // Give them a free credit on the UI instantly
+        let currentCredits = parseInt(localStorage.getItem("ep_credits") || "0");
+        localStorage.setItem("ep_credits", currentCredits + 1);
+        updateCreditsUI(currentCredits + 1);
       }
       loadMyClaims();
     } else {
@@ -183,19 +226,138 @@ async function claimOffer() {
 }
 
 async function loadMyClaims() {
-  const res = await api("/api/offers/my-claims");
-  if (res.ok && res.claims.length > 0) {
-    $("myClaimsCard").style.display = "block";
-    $("claimsList").innerHTML = res.claims.map(c => `
-      <tr>
-        <td>${c.title}</td>
-        <td><b>${c.reference}</b></td>
-        <td style="color: ${c.status === 'approved' || c.status === 'redeemed' ? '#4ade80' : '#fbbf24'}">${c.status.toUpperCase()}</td>
-        <td>${new Date(c.created_at).toLocaleDateString()}</td>
-      </tr>
-    `).join("");
-  }
+  try {
+    const res = await api("/api/offers/my-claims");
+    if (res.ok && res.claims.length > 0) {
+      $("myClaimsCard").style.display = "block";
+      $("claimsList").innerHTML = res.claims.map(c => `
+        <tr>
+          <td>${c.title}</td>
+          <td><b>${c.reference}</b></td>
+          <td style="color: ${c.status === 'approved' || c.status === 'redeemed' ? '#4ade80' : '#fbbf24'}">${c.status.toUpperCase()}</td>
+          <td>${new Date(c.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join("");
+    }
+  } catch(e) {}
 }
 
-// ... (Keep the existing updateCreditsUI, Calculate, and triggerPayment functions from the previous step) ...
+// 4. Calculate Function
+$("cb").onclick = async () => {
+  const subjectSelects = document.querySelectorAll('.subject-select');
+  const gradeSelects = document.querySelectorAll('.grade-select');
+  const grades = {};
+  const subjects = {};
+  let count = 0;
+  
+  gradeSelects.forEach((select, index) => {
+    if (select.value) {
+      grades[index] = select.value;
+      subjects[index] = subjectSelects[index].value || `Subject ${index + 1}`;
+      count++;
+    }
+  });
+
+  if (count < 7) {
+    $("cr").textContent = "Please select a grade for all 7 subjects.";
+    return;
+  }
+
+  $("cr").textContent = "Calculating... (If server is asleep, this may take up to 50s)";
+  $("cb").disabled = true;
+  $("calcResult").style.display = "none";
+  
+  try {
+    const d = await api("/api/calculate", { 
+      method: "POST", 
+      body: JSON.stringify({ grades: grades, subjects: subjects }) 
+    });
+    
+    $("cr").textContent = "";
+    $("cb").disabled = false;
+    $("calcResult").style.display = "block";
+    $("cpDisplay").textContent = `Cluster points: ${d.cluster_points}`;
+    
+    // Update local storage credits
+    localStorage.setItem("ep_credits", d.credits_left);
+    
+    const qualified = d.results.filter(x => x.match === "qualified");
+    if (qualified.length > 0) {
+      $("qualifiedSection").style.display = "block";
+      $("qualifiedList").innerHTML = qualified.map(c => `
+        <li class="course-item qualified">
+          <div class="course-name">${c.n}</div>
+          <div class="course-uni">${c.u}</div>
+          <div class="course-meta">Cutoff: ${c.c} | You are +${c.difference.toFixed(3)} above</div>
+        </li>
+      `).join("");
+    } else {
+      $("qualifiedSection").style.display = "none";
+    }
+
+    const close = d.results.filter(x => x.match === "close");
+    if (close.length > 0) {
+      $("closeSection").style.display = "block";
+      $("closeList").innerHTML = close.map(c => `
+        <li class="course-item close">
+          <div class="course-name">${c.n}</div>
+          <div class="course-uni">${c.u}</div>
+          <div class="course-meta">Cutoff: ${c.c} | You are ${c.difference.toFixed(3)} below</div>
+        </li>
+      `).join("");
+    } else {
+      $("closeSection").style.display = "none";
+    }
+    
+    updateCreditsUI(d.credits_left);
+
+  } catch (err) {
+    $("cb").disabled = false;
+    if (err.status === 402) {
+      $("cr").innerHTML = `
+        <div style="background: rgba(255,0,0,0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff7b7b; margin-top: 15px;">
+          <b>No calculations left!</b><br>Pay 100 KES to unlock 1 more calculation.<br><br>
+          <button class="pay" onclick="triggerPayment('${me?.phone || '0700000000'}')">Pay 100 KES Now</button>
+        </div>
+      `;
+    } else {
+      $("cr").textContent = err.message || "An error occurred. Please try again.";
+    }
+  }
+};
+
+async function triggerPayment(phone) {
+  try {
+    $("cr").textContent = "Starting payment...";
+    const j = await api("/api/payment/initiate", { 
+      method: "POST", 
+      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone })
+    });
+    
+    if (j.redirect_url) {
+      const w = 600, h = 700;
+      const left = (screen.width/2)-(w/2);
+      const top = (screen.height/2)-(h/2);
+      window.open(j.redirect_url, 'Pesapal Payment', `width=${w},height=${h},top=${top},left=${left}`);
+      
+      $("cr").textContent = "Waiting for payment confirmation... (Do not close this tab)";
+      
+      let n = 0;
+      const t = setInterval(async () => {
+        n++;
+        const x = await api("/api/payment/status/" + j.transaction_id);
+        
+        if (x.payment.status === "paid" || x.payment.status === "completed") {
+          clearInterval(t);
+          alert("Payment Confirmed! You now have 1 new calculation.");
+          location.reload(); 
+        }
+        if (x.payment.status === "failed" || n >= 60) {
+           clearInterval(t);
+           $("cr").textContent = "Payment failed or timed out.";
+        }
+      }, 3000);
+    }
+  } catch (err) { $("cr").textContent = err.message; }
+}
 </script></body></html>
