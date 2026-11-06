@@ -80,21 +80,48 @@ def ensure_admin():
             )
 ensure_admin()
 
-def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
-    """Generates PDF and sends it via Brevo API."""
+def send_pdf_email(user_email, user_name, cluster_points, results):
     try:
         # 1. Generate PDF
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=16)
+        pdf.set_font("Arial", 'B', size=16)
         pdf.cell(200, 10, txt="EduPoint AI - Results Report", ln=True, align='C')
+        
         pdf.set_font("Arial", size=12)
         pdf.cell(200, 10, txt=f"Student: {user_name}", ln=True)
         pdf.cell(200, 10, txt=f"Cluster Points: {cluster_points}", ln=True)
-        pdf.cell(200, 10, txt=f"Qualified Courses: {qualified_count}", ln=True)
+        pdf.ln(5) # Add space
+
+        # Filter results
+        qualified = [r for r in results if r['match'] == 'qualified']
+        close = [r for r in results if r['match'] == 'close']
+
+        # Qualified Courses Section
+        pdf.set_font("Arial", 'B', size=14)
+        pdf.cell(200, 10, txt=f"✅ Qualified Courses ({len(qualified)}):", ln=True)
+        pdf.set_font("Arial", size=11)
+        if not qualified:
+            pdf.cell(200, 8, txt="No courses qualified for yet.", ln=True)
+        else:
+            # Limit to top 20 to avoid massive PDF files
+            for r in qualified[:20]:
+                pdf.cell(200, 8, txt=f"- {r['n']} at {r['u']} (Cutoff: {r['c']})", ln=True)
+        pdf.ln(5)
+
+        # Close Matches Section
+        pdf.set_font("Arial", 'B', size=14)
+        pdf.cell(200, 10, txt=f"⚠️ Close Matches ({len(close)}):", ln=True)
+        pdf.set_font("Arial", size=11)
+        if not close:
+            pdf.cell(200, 8, txt="No close matches found.", ln=True)
+        else:
+            for r in close[:15]:
+                pdf.cell(200, 8, txt=f"- {r['n']} at {r['u']} (Cutoff: {r['c']})", ln=True)
+                
         pdf_bytes = pdf.output()
 
-        # 2. Convert PDF to Base64
+        # 2. Convert PDF to Base64 (Required by Brevo)
         pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
         # 3. Setup Brevo Client
@@ -107,10 +134,10 @@ def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
 
         client = Brevo(api_key=api_key)
 
-        # 4. Send Email
+        # 4. Send Email via Brevo
         client.transactional_emails.send_transac_email(
             subject="Your EduPoint AI Calculation Report",
-            html_content="<p>Thank you for using EduPoint AI. Please find your calculation report attached.</p>",
+            html_content="<p>Thank you for using EduPoint AI. Please find your detailed course report attached.</p>",
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
             attachment=[{"content": pdf_base64, "name": "EduPoint_Report.pdf"}]
@@ -119,8 +146,6 @@ def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
         
     except Exception as e:
         logger.error(f"Failed to send email via Brevo: {e}")
-
-# ---------------- Routes ----------------
 
 @app.get("/health")
 def health(): 
