@@ -4,10 +4,9 @@ import uuid
 import logging
 import base64
 import threading
-from datetime import datetime
-from datetime import datetime
 import random
 import string
+from datetime import datetime
 
 import psycopg
 from flask import Flask, request, jsonify
@@ -36,14 +35,12 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["JSON_SORT_KEYS"] = False
 
-# CORS for Vercel Frontend
 FRONTEND_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
 CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize DB and Payments
 init_db()
 payments = PaymentService()
 
@@ -64,7 +61,6 @@ def set_access(user_id, paid, plan=None, tx=None):
         )
 
 def add_credit(user_id):
-    """Adds 1 calculation credit to the user."""
     with connect() as conn:
         conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (user_id,))
 
@@ -83,7 +79,7 @@ def ensure_admin():
             )
 ensure_admin()
 
- def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
+def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
     try:
         # 1. Generate PDF
         pdf = FPDF()
@@ -209,6 +205,9 @@ ensure_admin()
         
     except Exception as e:
         logger.error(f"Failed to send email via Brevo: {e}")
+
+# ---------------- Routes ----------------
+
 @app.get("/health")
 def health(): 
     return jsonify(ok=True, service="edupoint-api")
@@ -361,13 +360,11 @@ def payment_status(transaction_id):
         except Exception: 
             logger.exception("Status check failed")
 
-    # If payment just succeeded, add a credit and mark as completed
     if row["status"] == "paid" and row.get("user_id"):
         add_credit(row["user_id"])
         payments.update(transaction_id, status="completed")
         row["status"] = "completed"
 
-    # Fetch fresh user data to get updated credits
     with connect() as conn:
         fresh_u = conn.execute("SELECT credits FROM users WHERE id=%s", (u["id"],)).fetchone()
 
@@ -388,7 +385,6 @@ def payment_webhook(provider):
                 add_credit(row["user_id"])
                 payments.update(row["transaction_id"], status="completed")
                 
-        # Pesapal expects this exact JSON structure
         return jsonify({
             "orderNotificationType": payload.get("orderNotificationType", "IPNCHANGE"), 
             "orderTrackingId": payload.get("orderTrackingId", ""), 
@@ -396,7 +392,6 @@ def payment_webhook(provider):
             "status": 200 if r.get("ok") else 500
         }), 200
 
-    # Fallback for other providers
     r = payments.handle_webhook(provider, payload)
     if not r.get("ok"): 
         return jsonify(r), 400
@@ -432,7 +427,6 @@ def calculate():
         with connect() as conn:
             conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
             
-        # Send email in background with full data
         threading.Thread(
             target=send_pdf_email, 
             args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
@@ -441,6 +435,7 @@ def calculate():
         return jsonify(ok=True, cluster_points=round(cp, 3), results=out, credits_left=u["credits"] - 1)
     except Exception as e:
         return jsonify(ok=False, error=f"Invalid grades: {e}"), 400
+
 @app.get("/api/scholarships")
 @login_required
 def scholarships():
@@ -456,8 +451,6 @@ def chat():
         if any(k in q for k in x["keywords"]): 
             return jsonify(answer=x["answer"])
     return jsonify(answer="I can help with cluster points, KUCCPS courses, admission chances, transfers, scholarships and university requirements.")
-
-# ---------------- Admin Routes ----------------
 
 @app.get("/api/admin/users")
 @admin_required
@@ -493,8 +486,6 @@ def admin_toggle_user(user_id):
 @admin_required
 def admin_access(user_id):
     d = request.get_json(silent=True) or {}
-    
-    # Get the custom amount of credits from the prompt (default to 1 if missing)
     credits_to_add = int(d.get("credits", 1))
     
     if credits_to_add > 0:
