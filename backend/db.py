@@ -14,10 +14,9 @@ CREATE TABLE IF NOT EXISTS users(
     referral_code TEXT,
     role TEXT NOT NULL DEFAULT 'student',
     active INTEGER NOT NULL DEFAULT 1,
-    credits INTEGER NOT NULL DEFAULT 1, -- 1 Free calculation for new users
+    credits INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- (Leave the access, payments, sessions, and settings tables exactly as they are)
 CREATE TABLE IF NOT EXISTS access(
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     paid INTEGER NOT NULL DEFAULT 0,
@@ -52,7 +51,6 @@ CREATE TABLE IF NOT EXISTS settings(
     value TEXT
 );
 """
-
 
 def connect():
     if not DATABASE_URL:
