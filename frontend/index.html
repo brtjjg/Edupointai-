@@ -1,20 +1,26 @@
 <!doctype html>
-<html><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EduPoint AI — KUCCPS, Cluster Points, Scholarships</title>
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-</head><body>
+</head>
+<body>
+
 <header class="topbar">
   <div class="brand">🎓 EduPoint AI <span>v10</span></div>
   <nav class="top-actions" id="nav"></nav>
 </header>
+
 <main class="container">
   <section class="hero">
     <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
     <h1>Find your course. Unlock premium features.</h1>
     <p>Pay via Pesapal (M-PESA, Airtel, T-Kash, Card) to unlock calculations for just 100 KES.</p>
   </section>
+  
   <section class="card">
     <h2>Unlock Premium Features</h2>
     <div class="feature-list">
@@ -25,8 +31,8 @@
     </div>
     
     <!-- Google Sign In Button -->
-    <div id="g_id_onload"243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com
-         data-client_id=""
+    <div id="g_id_onload"
+         data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com"
          data-callback="handleCredentialResponse">
     </div>
     <div class="g_id_signin" data-type="standard" style="margin-top: 20px;"></div>
@@ -34,6 +40,7 @@
     <div class="grid" id="cta" style="margin-top: 20px;"></div>
   </section>
 </main>
+
 <script src="/js/api.js"></script>
 <script>
 function handleCredentialResponse(response) {
@@ -45,6 +52,7 @@ function handleCredentialResponse(response) {
 (async function () {
   const nav = document.getElementById("nav");
   const cta = document.getElementById("cta");
+  
   if (getToken()) {
     try {
       const me = await api("/api/me");
@@ -54,6 +62,7 @@ function handleCredentialResponse(response) {
       cta.innerHTML = `<a class="pay nav-btn" href="/dashboard.html">Continue to Dashboard</a>`;
     } catch (_) { clearToken(); }
   }
+  
   if (!nav.innerHTML) {
     nav.innerHTML = `<a class="nav-btn" href="/login.html">Login</a>
                      <a class="nav-btn primary" href="/register.html">Create Account</a>`;
@@ -61,4 +70,5 @@ function handleCredentialResponse(response) {
   }
 })();
 </script>
-</body></html>
+</body>
+</html>
