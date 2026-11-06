@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EduPoint Admin</title>
 <link rel="stylesheet" href="/css/style.css">
+<style>
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #303451; padding-bottom: 10px; }
+  .tab-btn { background: transparent; border: none; color: #aab1ca; font-size: 16px; cursor: pointer; padding: 10px; font-weight: bold; }
+  .tab-btn.active { color: #73e8ff; border-bottom: 2px solid #73e8ff; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+  .stat-card { background: #111326; border: 1px solid #303451; padding: 20px; border-radius: 12px; text-align: center; }
+  .stat-card h3 { margin: 0; color: #aab1ca; font-size: 14px; }
+  .stat-card p { margin: 10px 0 0; font-size: 28px; font-weight: bold; color: #73e8ff; }
+  .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
+  .form-row > * { flex: 1; }
+  .btn-green { background: #15803D; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+</style>
 </head>
 <body>
 
@@ -17,135 +29,175 @@
 </header>
 
 <main class="container">
-  <section class="hero">
-    <p class="eyebrow">ADMIN PANEL</p>
-    <h1>Management dashboard</h1>
-  </section>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('users')">Users</button>
+    <button class="tab-btn" onclick="switchTab('payments')">Payments</button>
+    <button class="tab-btn" onclick="switchTab('offers')">🎁 Offers Management</button>
+  </div>
 
-  <section class="card">
-    <h2>Student accounts</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Role</th>
-            <th>Credits</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="usersTableBody">
-          <tr><td colspan="8">Loading users...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <!-- Users Tab -->
+  <div id="tab-users">
+    <section class="card">
+      <h2>Student accounts</h2>
+      <div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Credits</th><th>Actions</th></tr></thead><tbody id="usersBody"></tbody></table>
+      </div>
+    </section>
+  </div>
 
-  <section class="card">
-    <h2>Recent payments</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Transaction</th>
-            <th>User</th>
-            <th>Network</th>
-            <th>Amount</th>
-            <th>Plan</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody id="paymentsTableBody">
-          <tr><td colspan="7">Loading payments...</td></tr>
-        </tbody>
-      </table>
+  <!-- Payments Tab -->
+  <div id="tab-payments" style="display:none;">
+    <section class="card">
+      <h2>Recent payments</h2>
+      <div class="table-wrap">
+        <table><thead><tr><th>Transaction</th><th>User</th><th>Amount</th><th>Status</th></tr></thead><tbody id="paymentsBody"></tbody></table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Offers Tab -->
+  <div id="tab-offers" style="display:none;">
+    <div class="stats-grid">
+      <div class="stat-card"><h3>Total Offers</h3><p id="statTotal">0</p></div>
+      <div class="stat-card"><h3>Active Offers</h3><p id="statActive">0</p></div>
+      <div class="stat-card"><h3>Total Claims</h3><p id="statClaims">0</p></div>
+      <div class="stat-card"><h3>Expired</h3><p id="statExpired">0</p></div>
     </div>
-  </section>
+
+    <section class="card">
+      <h2>Create New Offer</h2>
+      <form id="offerForm">
+        <div class="form-row">
+          <div class="field"><label>Offer Title</label><input id="oTitle" required></div>
+          <div class="field"><label>Offer Type</label><select id="oType"><option>Scholarship</option><option>Discount</option><option>Service</option><option>Opportunity</option></select></div>
+        </div>
+        <div class="field"><label>Description</label><input id="oDesc" required></div>
+        <div class="form-row">
+          <div class="field"><label>Image URL</label><input id="oImg" placeholder="https://..."></div>
+          <div class="field"><label>Eligibility</label><input id="oEligibility" placeholder="All students"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Start Date</label><input type="date" id="oStart" required></div>
+          <div class="field"><label>Expiry Date</label><input type="date" id="oEnd" required></div>
+          <div class="field"><label>Max Claims</label><input type="number" id="oMax" value="100" required></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Button Text</label><input id="oBtn" value="Grab This Offer"></div>
+          <div class="field" style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" id="oApproval" style="width:20px; height:20px;"> 
+            <label style="margin:0;">Require Admin Approval for Claims</label>
+          </div>
+        </div>
+        <button type="submit" class="btn-green" style="width:100%; padding:15px;">Publish Offer</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Manage Offers</h2>
+      <div class="table-wrap">
+        <table><thead><tr><th>Offer Title</th><th>Status</th><th>Claims</th><th>Actions</th></tr></thead><tbody id="offersBody"></tbody></table>
+      </div>
+    </section>
+  </div>
 </main>
 
 <script src="/js/api.js"></script>
 <script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-users').style.display = tab === 'users' ? 'block' : 'none';
+  document.getElementById('tab-payments').style.display = tab === 'payments' ? 'block' : 'none';
+  document.getElementById('tab-offers').style.display = tab === 'offers' ? 'block' : 'none';
+  
+  if (tab === 'offers') loadOffersData();
+}
+
 (async function () {
   const me = await requireAuth(); 
-  if (!me) return;
-  
-  if (me.user.role !== "admin") { 
-    location.href = "/dashboard.html"; 
-    return; 
-  }
+  if (!me || me.user.role !== "admin") { location.href = "/dashboard.html"; return; }
 
-  // Load Users
-  try {
-    const users = await api("/api/admin/users");
-    document.getElementById("usersTableBody").innerHTML = users.users.map(u => `
-      <tr>
-        <td>${u.id}</td>
-        <td>${u.name}</td>
-        <td>${u.email}</td>
-        <td>${u.phone}</td>
-        <td>${u.role}</td>
-        <td><b style="color: #73e8ff;">${u.credits}</b></td>
-        <td>${u.active ? "Active" : "Disabled"}</td>
-        <td>
-          <button class="small-btn" onclick="toggleUser(${u.id})">${u.active ? "Disable" : "Enable"}</button>
-          <button class="small-btn" style="border-color: #73e8ff; color: #73e8ff;" onclick="grant(${u.id})">+ Add Credits</button>
-        </td>
-      </tr>`).join("");
-  } catch (err) {
-    document.getElementById("usersTableBody").innerHTML = `<tr><td colspan="8" style="color:red;">Error loading users: ${err.message}</td></tr>`;
-  }
-
-  // Load Payments
-  try {
-    const pays = await api("/api/admin/payments");
-    document.getElementById("paymentsTableBody").innerHTML = pays.payments.map(p => `
-      <tr>
-        <td>${p.transaction_id}</td>
-        <td>${p.user_id ?? "-"}</td>
-        <td>${p.network}</td>
-        <td>KES ${p.amount}</td>
-        <td>${p.plan}</td>
-        <td style="color: ${p.status === 'completed' || p.status === 'paid' ? '#c9ffda' : '#fff'}">${p.status}</td>
-        <td>${p.created_at || ""}</td>
-      </tr>`).join("");
-  } catch (err) {
-    document.getElementById("paymentsTableBody").innerHTML = `<tr><td colspan="7" style="color:red;">Error loading payments: ${err.message}</td></tr>`;
-  }
+  // Load Users & Payments on start
+  loadUsers(); loadPayments();
 })();
 
-async function toggleUser(id) {
-  try { 
-    await api(`/api/admin/user/${id}/toggle`, { method: "POST" }); 
-    location.reload(); 
-  } catch (e) { 
-    alert(e.message); 
-  }
+async function loadUsers() {
+  const users = await api("/api/admin/users");
+  document.getElementById("usersBody").innerHTML = users.users.map(u => `
+    <tr><td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td>
+    <td>${u.credits}</td>
+    <td><button class="small-btn" onclick="grant(${u.id})">+ Credits</button></td></tr>`).join("");
 }
 
-async function grant(id) {
-  const amount = prompt("How many credits do you want to give this user?", "1");
-  
-  if (amount === null || isNaN(amount) || parseInt(amount) <= 0) {
-    return; // User cancelled or entered invalid amount
-  }
+async function loadPayments() {
+  const pays = await api("/api/admin/payments");
+  document.getElementById("paymentsBody").innerHTML = pays.payments.map(p => `
+    <tr><td>${p.transaction_id}</td><td>${p.user_id}</td><td>KES ${p.amount}</td><td>${p.status}</td></tr>`).join("");
+}
 
+// OFFERS FUNCTIONS
+async function loadOffersData() {
+  const stats = await api("/api/admin/offers/stats");
+  document.getElementById("statTotal").textContent = stats.stats.total;
+  document.getElementById("statActive").textContent = stats.stats.active;
+  document.getElementById("statClaims").textContent = stats.stats.claims;
+  document.getElementById("statExpired").textContent = stats.stats.expired;
+
+  const offers = await api("/api/admin/offers");
+  document.getElementById("offersBody").innerHTML = offers.offers.map(o => `
+    <tr>
+      <td>${o.title}</td>
+      <td><span style="color:${o.status === 'active' ? '#4ade80' : '#ff7b7b'}">${o.status.toUpperCase()}</span></td>
+      <td><button class="small-btn" onclick="viewClaims(${o.id}, '${o.title}')">${o.total_claims} Claims</button></td>
+      <td>
+        <button class="small-btn" onclick="toggleStatus(${o.id}, '${o.status}')">${o.status === 'active' ? 'Pause' : 'Activate'}</button>
+        <button class="small-btn" style="border-color:#ff7b7b; color:#ff7b7b;" onclick="deleteOffer(${o.id})">Delete</button>
+      </td>
+    </tr>`).join("");
+}
+
+document.getElementById("offerForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById("oTitle").value,
+    description: document.getElementById("oDesc").value,
+    image_url: document.getElementById("oImg").value,
+    offer_type: document.getElementById("oType").value,
+    start_date: document.getElementById("oStart").value,
+    end_date: document.getElementById("oEnd").value,
+    max_claims: parseInt(document.getElementById("oMax").value),
+    eligibility: document.getElementById("oEligibility").value,
+    button_text: document.getElementById("oBtn").value,
+    requires_approval: document.getElementById("oApproval").checked
+  };
   try {
-    await api(`/api/admin/access/${id}`, { 
-      method: "POST",
-      body: JSON.stringify({ credits: parseInt(amount) }) 
-    });
-    alert(`Successfully added ${amount} credits!`);
-    location.reload();
-  } catch (e) { 
-    alert(e.message); 
-  }
+    await api("/api/admin/offers", { method: "POST", body: JSON.stringify(payload) });
+    alert("Offer Published!");
+    loadOffersData();
+  } catch (err) { alert(err.message); }
+};
+
+async function toggleStatus(id, currentStatus) {
+  const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+  await api(`/api/admin/offers/${id}/status`, { method: "POST", body: JSON.stringify({ status: newStatus }) });
+  loadOffersData();
+}
+
+async function deleteOffer(id) {
+  if (!confirm("Delete this offer?")) return;
+  await api(`/api/admin/offers/${id}`, { method: "DELETE" });
+  loadOffersData();
+}
+
+async function viewClaims(id, title) {
+  const res = await api(`/api/admin/offers/${id}/claims`);
+  if(res.claims.length === 0) return alert("No claims yet.");
+  let msg = `Claims for ${title}:\n\n`;
+  res.claims.forEach(c => {
+    msg += `${c.student_name} (${c.email})\nRef: ${c.reference} | Status: ${c.status}\n\n`;
+  });
+  alert(msg);
 }
 </script>
-
 </body>
 </html>
