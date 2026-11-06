@@ -55,8 +55,13 @@ CREATE TABLE IF NOT EXISTS settings(
 def connect():
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL is not set.")
-    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
-
+    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+    # Create an isolated schema for EduPoint and set it as the default
+    with conn.cursor() as cur:
+        cur.execute("CREATE SCHEMA IF NOT EXISTS edupoint;")
+        cur.execute("SET search_path TO edupoint;")
+    conn.commit()
+    return conn
 
 def init_db():
     with connect() as conn:
