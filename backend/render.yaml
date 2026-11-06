@@ -2,7 +2,7 @@ services:
   - type: web
     name: edupoint-api
     runtime: python
-    plan: starter
+    plan: free                     # change to 'starter' for production
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn -w 3 -k gthread --timeout 60 -b 0.0.0.0:$PORT app:app
     healthCheckPath: /health
@@ -14,15 +14,15 @@ services:
           name: edupoint-db
           property: connectionString
       - key: FRONTEND_URL
-        sync: false             # https://<your-project>.vercel.app
+        sync: false
       - key: FRONTEND_ORIGINS
-        sync: false             # https://<your-project>.vercel.app
+        sync: false
       - key: BACKEND_URL
-        sync: false             # https://edupoint-api.onrender.com
+        sync: false
       - key: PAYMENTS_PROVIDERS
         value: pesapal
       - key: PESAPAL_ENV
-        value: production
+        value: sandbox               # switch to 'production' later
       - key: PESAPAL_CONSUMER_KEY
         sync: false
       - key: PESAPAL_CONSUMER_SECRET
@@ -38,4 +38,4 @@ databases:
   - name: edupoint-db
     databaseName: edupoint
     user: edupoint
-    plan: starter           # free tier expires ~30 days; use starter for production
+    plan: free                       # change to 'basic-256mb' for production
