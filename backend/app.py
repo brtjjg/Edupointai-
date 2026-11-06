@@ -3,6 +3,8 @@ import os
 import uuid
 import logging
 from datetime import datetime, timezone
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 import psycopg
 from flask import Flask, request, jsonify
@@ -132,6 +134,40 @@ def login():
         redirect="/admin.html" if u["role"] == "admin" else "/dashboard.html",
     )
 
+@app.post("/api/auth/google")
+def google_login():
+    d = request.get_json(silent=True) or {}
+    token = d.get("credential")
+    if not token:
+        return jsonify(ok=False, error="No Google credential provided."), 400
+    
+    try:
+        # Verify the token with Google
+        idinfo = id_token.verify_oauth2_token(
+            token, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID")
+        )
+        email = idinfo["email"].strip().lower()
+        name = idinfo.get("name", "Google User")
+
+        with connect() as conn:
+            u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
+            if not u:
+                # Create new user (using dummy phone since Google doesn't provide it)
+                u = conn.execute(
+                    """INSERT INTO users(name, email, phone, password_hash, role)
+                       VALUES(%s, %s, %s, %s, 'student') RETURNING *""",
+                    (name, email, "0700000000", "GOOGLE_AUTH")
+                ).fetchone()
+        
+        session_token = create_session(u["id"])
+        return jsonify(
+            ok=True, 
+            token=session_token,
+            user=public_user(u),
+            redirect="/admin.html" if u["role"] == "admin" else "/dashboard.html"
+        )
+    except ValueError:
+        return jsonify(ok=False, error="Invalid Google token."), 401
 
 @app.post("/api/logout")
 @login_required
