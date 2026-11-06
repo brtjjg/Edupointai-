@@ -79,6 +79,12 @@ def ensure_admin():
             )
 ensure_admin()
 
+def sanitize_text(text):
+    """Removes characters that PDF Helvetica font cannot render."""
+    if not text: return ""
+    # Replace en-dash and em-dash with regular hyphens, then force latin-1
+    return str(text).replace("–", "-").replace("—", "-").encode('latin-1', 'replace').decode('latin-1')
+
 def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
     try:
         # 1. Generate PDF
@@ -99,8 +105,8 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
         pdf.set_font("Helvetica", 'B', size=12)
         pdf.cell(0, 10, txt="Student Information", ln=True)
         pdf.set_font("Helvetica", size=11)
-        pdf.cell(0, 8, txt=f"Name: {user_name}", ln=True)
-        pdf.cell(0, 8, txt=f"Email: {user_email}", ln=True)
+        pdf.cell(0, 8, txt=f"Name: {sanitize_text(user_name)}", ln=True)
+        pdf.cell(0, 8, txt=f"Email: {sanitize_text(user_email)}", ln=True)
         pdf.ln(5)
 
         # KCSE Subject Grades
@@ -108,8 +114,8 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
         pdf.cell(0, 10, txt="KCSE Subject Grades", ln=True)
         pdf.set_font("Helvetica", size=11)
         for i in range(7):
-            subj = subjects.get(str(i), f"Subject {i+1}")
-            grade = grades.get(str(i), "-")
+            subj = sanitize_text(subjects.get(str(i), f"Subject {i+1}"))
+            grade = sanitize_text(grades.get(str(i), "-"))
             pdf.cell(0, 8, txt=f"- {subj}: {grade}", ln=True)
         pdf.ln(5)
 
@@ -127,7 +133,9 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
             pdf.cell(0, 8, txt="No courses qualified for yet.", ln=True)
         else:
             for r in qualified[:25]: # Limit to top 25 to keep PDF clean
-                pdf.cell(0, 8, txt=f"- {r['n']} at {r['u']} (Cutoff: {r['c']})", ln=True)
+                course = sanitize_text(r['n'])
+                uni = sanitize_text(r['u'])
+                pdf.cell(0, 8, txt=f"- {course} at {uni} (Cutoff: {r['c']})", ln=True)
         pdf.ln(5)
 
         # Scholarship Opportunities
@@ -135,12 +143,14 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
         pdf.cell(0, 10, txt="Scholarship Opportunities", ln=True)
         pdf.set_font("Helvetica", size=11)
         for s in scholarships:
-            pdf.cell(0, 8, txt=f"- {s['name']} ({s['amount']})", ln=True)
+            name = sanitize_text(s['name'])
+            amount = sanitize_text(s['amount'])
+            pdf.cell(0, 8, txt=f"- {name} ({amount})", ln=True)
         pdf.ln(5)
 
         # Disclaimer
         pdf.set_font("Helvetica", 'I', size=9)
-        pdf.multi_cell(0, 6, txt="Disclaimer: Course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers.")
+        pdf.multi_cell(0, 6, txt=sanitize_text("Disclaimer: Course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers."))
 
         pdf_bytes = pdf.output()
         pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
@@ -155,7 +165,7 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
 
         client = Brevo(api_key=api_key)
 
-        # 3. HTML Email Body
+        # 3. HTML Email Body (Removed en-dash from subject just in case)
         email_html = f"""
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
             <h2 style="color: #1a1c33;">Dear {user_name},</h2>
@@ -195,7 +205,7 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
 
         # 4. Send Email via Brevo
         client.transactional_emails.send_transac_email(
-            subject="Your EduPointAI Calculation Report – Course & Scholarship Qualifications",
+            subject="Your EduPointAI Calculation Report - Course & Scholarship Qualifications",
             html_content=email_html,
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
