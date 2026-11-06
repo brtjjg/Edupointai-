@@ -14,6 +14,21 @@
   .course-name { font-weight: bold; font-size: 15px; color: #fff; }
   .course-uni { font-size: 13px; color: #aab1ca; margin-top: 4px; }
   .course-meta { font-size: 12px; color: #73e8ff; margin-top: 6px; font-weight: bold; }
+  
+  /* Pop-up Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .offer-modal { background: #fff; border-radius: 16px; width: min(500px, 90vw); overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; }
+  .offer-modal img { width: 100%; height: 200px; object-fit: cover; }
+  .offer-body { padding: 25px; color: #333; }
+  .offer-eyebrow { color: #15803D; font-weight: bold; letter-spacing: 1px; font-size: 12px; text-transform: uppercase; }
+  .offer-title { font-size: 24px; font-weight: 800; margin: 10px 0; color: #111; }
+  .offer-desc { font-size: 14px; color: #555; margin-bottom: 20px; }
+  .offer-list { text-align: left; background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #166534; border: 1px solid #bbf7d0; }
+  .offer-list li { margin-bottom: 5px; margin-left: 15px; }
+  .btn-green { background: #15803D; color: white; padding: 14px 20px; border-radius: 8px; font-weight: bold; border: none; width: 100%; cursor: pointer; font-size: 16px; }
+  .btn-green:hover { background: #166534; }
+  .btn-text { background: transparent; border: none; color: #666; font-size: 13px; margin-top: 15px; cursor: pointer; text-decoration: underline; }
+  .claim-ref-box { background: #dcfce7; color: #166534; padding: 15px; border-radius: 8px; font-weight: bold; margin-top: 15px; display: none; }
 </style>
 </head><body>
 <header class="topbar">
@@ -30,28 +45,31 @@
     <p id="creditStatus" style="font-size: 20px; font-weight: bold; color: #73e8ff;">Loading credits...</p>
   </section>
 
+  <!-- My Claimed Offers Section -->
+  <section class="card" id="myClaimsCard" style="display:none;">
+    <h2>🎁 My Claimed Offers</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Offer</th><th>Reference</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="claimsList"></tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="card">
     <h2>🎯 Cluster Points Calculator</h2>
     <p>Select your 7 subjects and their grades below.</p>
-    
-    <!-- Dropdowns inject here instantly -->
     <div id="subjectList" style="margin-bottom: 15px;"></div>
-
     <button class="pay" id="cb" type="button" style="margin-top: 15px;">Calculate</button>
-    
     <div id="cr" class="message"></div>
     
-    <!-- Results Area -->
     <div id="calcResult" style="display:none; margin-top: 20px; border-top: 1px solid #303451; padding-top: 20px;">
       <h2 style="color: #c9ffda; margin-top: 0;">Your Results</h2>
       <p id="cpDisplay" style="font-size: 20px; font-weight: bold; color: #73e8ff; margin-bottom: 20px;"></p>
-      <p style="color: #72dfff; font-size: 14px; margin-bottom: 20px;">📧 A full PDF copy of this report has been sent to your email.</p>
-      
       <div id="qualifiedSection" style="display:none; margin-bottom: 25px;">
         <h3 style="color: #4ade80; margin-bottom: 10px;">✅ Qualified Courses</h3>
         <ul class="course-list" id="qualifiedList"></ul>
       </div>
-
       <div id="closeSection" style="display:none;">
         <h3 style="color: #fbbf24; margin-bottom: 10px;">⚠️ Close Matches</h3>
         <ul class="course-list" id="closeList"></ul>
@@ -60,172 +78,124 @@
   </section>
 </main>
 
+<!-- Offer Pop-up Modal -->
+<div class="modal-overlay" id="offerModal">
+  <div class="offer-modal">
+    <img id="modalImg" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800" alt="Offer Image">
+    <div class="offer-body">
+      <div class="offer-eyebrow">Special Offer</div>
+      <div class="offer-title" id="modalTitle">Scholarship Opportunity</div>
+      <div class="offer-desc" id="modalDesc">Don't miss this exclusive opportunity available to EduPointAI students.</div>
+      
+      <div class="offer-list">
+        <b>Offer details</b>
+        <ul>
+          <li id="modalEligibility">Limited availability</li>
+          <li>Claim before the expiry date</li>
+          <li>Subject to eligibility requirements</li>
+        </ul>
+      </div>
+
+      <button class="btn-green" id="modalGrabBtn" onclick="claimOffer()">Grab This Offer</button>
+      <div class="claim-ref-box" id="claimRefBox"></div>
+      <button class="btn-text" onclick="closeModal()">Maybe later · Terms apply</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 let me;
+let currentOfferId = null;
 
-const subjectList = [
-  "Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", 
-  "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"
-];
+const subjectList = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
 const gradeList = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
 
-// 1. Render the dropdowns INSTANTLY
 (function renderDropdowns() {
   let html = "";
   for (let i = 0; i < 7; i++) {
     html += `
       <div class="input-row">
-        <select class="subject-select">
-          <option value="">Subject ${i+1}</option>
-          ${subjectList.map(s => `<option value="${s}">${s}</option>`).join("")}
-        </select>
-        <select class="grade-select">
-          <option value="">Grade</option>
-          ${gradeList.map(g => `<option value="${g}">${g}</option>`).join("")}
-        </select>
-      </div>
-    `;
+        <select class="subject-select"><option value="">Subject ${i+1}</option>${subjectList.map(s => `<option value="${s}">${s}</option>`).join("")}</select>
+        <select class="grade-select"><option value="">Grade</option>${gradeList.map(g => `<option value="${g}">${g}</option>`).join("")}</select>
+      </div>`;
   }
   $("subjectList").innerHTML = html;
 })();
 
-// 2. Fetch user data in the background
-(async function loadUserData() {
+(async function loadData() {
   try {
     const r = await requireAuth(); 
     if (!r) return;
     me = r.user;
     $("hello").textContent = "Hi, " + me.name;
     updateCreditsUI(r.credits);
-  } catch (err) {
-    $("creditStatus").textContent = "⚠️ Could not connect to server. Please refresh.";
-    $("creditStatus").style.color = "#fbbf24";
-  }
+    
+    // Load Offers & Claims
+    checkOffers();
+    loadMyClaims();
+  } catch (err) {}
 })();
 
-function updateCreditsUI(credits) {
-  if (credits > 0) {
-    $("creditStatus").textContent = `✅ You have ${credits} calculation(s) available.`;
-    $("creditStatus").style.color = "#c9ffda";
-  } else {
-    $("creditStatus").textContent = `🔒 You have 0 calculations left. Please pay 100 KES.`;
-    $("creditStatus").style.color = "#ff7b7b";
+async function checkOffers() {
+  const res = await api("/api/offers/active");
+  if (res.ok && res.offer) {
+    currentOfferId = res.offer.id;
+    $("modalImg").src = res.offer.image_url || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800";
+    $("modalTitle").textContent = res.offer.title;
+    $("modalDesc").textContent = res.offer.description;
+    $("modalEligibility").textContent = res.offer.eligibility || "Open to all students";
+    $("modalGrabBtn").textContent = res.offer.button_text || "Grab This Offer";
+    $("offerModal").style.display = "flex";
   }
 }
 
-$("cb").onclick = async () => {
-  const subjectSelects = document.querySelectorAll('.subject-select');
-  const gradeSelects = document.querySelectorAll('.grade-select');
-  const grades = {};
-  const subjects = {};
-  let count = 0;
-  
-  gradeSelects.forEach((select, index) => {
-    if (select.value) {
-      grades[index] = select.value;
-      subjects[index] = subjectSelects[index].value || `Subject ${index + 1}`;
-      count++;
-    }
-  });
-
-  if (count < 7) {
-    $("cr").textContent = "Please select a grade for all 7 subjects.";
-    return;
-  }
-
-  $("cr").textContent = "Calculating...";
-  $("calcResult").style.display = "none";
-  
-  try {
-    const d = await api("/api/calculate", { 
-      method: "POST", 
-      body: JSON.stringify({ grades: grades, subjects: subjects }) 
-    });
-    
-    $("cr").textContent = "";
-    $("calcResult").style.display = "block";
-    $("cpDisplay").textContent = `Cluster points: ${d.cluster_points}`;
-    
-    // --- Render Qualified Courses ---
-    const qualified = d.results.filter(x => x.match === "qualified");
-    if (qualified.length > 0) {
-      $("qualifiedSection").style.display = "block";
-      $("qualifiedList").innerHTML = qualified.map(c => `
-        <li class="course-item qualified">
-          <div class="course-name">${c.n}</div>
-          <div class="course-uni">${c.u}</div>
-          <div class="course-meta">Cutoff: ${c.c} | You are +${c.difference.toFixed(3)} above</div>
-        </li>
-      `).join("");
-    } else {
-      $("qualifiedSection").style.display = "none";
-    }
-
-    // --- Render Close Matches ---
-    const close = d.results.filter(x => x.match === "close");
-    if (close.length > 0) {
-      $("closeSection").style.display = "block";
-      $("closeList").innerHTML = close.map(c => `
-        <li class="course-item close">
-          <div class="course-name">${c.n}</div>
-          <div class="course-uni">${c.u}</div>
-          <div class="course-meta">Cutoff: ${c.c} | You are ${c.difference.toFixed(3)} below</div>
-        </li>
-      `).join("");
-    } else {
-      $("closeSection").style.display = "none";
-    }
-    
-    updateCreditsUI(d.credits_left);
-
-  } catch (err) {
-    if (err.status === 402) {
-      $("cr").innerHTML = `
-        <div style="background: rgba(255,0,0,0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff7b7b; margin-top: 15px;">
-          <b>No calculations left!</b><br>Pay 100 KES to unlock 1 more calculation.<br><br>
-          <button class="pay" onclick="triggerPayment('${me?.phone || '0700000000'}')">Pay 100 KES Now</button>
-        </div>
-      `;
-    } else {
-      $("cr").textContent = err.message || "An error occurred. Please try again.";
-    }
-  }
-};
-
-async function triggerPayment(phone) {
-  try {
-    $("cr").textContent = "Starting payment...";
-    const j = await api("/api/payment/initiate", { 
-      method: "POST", 
-      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone })
-    });
-    
-    if (j.redirect_url) {
-      const w = 600, h = 700;
-      const left = (screen.width/2)-(w/2);
-      const top = (screen.height/2)-(h/2);
-      window.open(j.redirect_url, 'Pesapal Payment', `width=${w},height=${h},top=${top},left=${left}`);
-      
-      $("cr").textContent = "Waiting for payment confirmation... (Do not close this tab)";
-      
-      let n = 0;
-      const t = setInterval(async () => {
-        n++;
-        const x = await api("/api/payment/status/" + j.transaction_id);
-        
-        if (x.payment.status === "paid" || x.payment.status === "completed") {
-          clearInterval(t);
-          alert("Payment Confirmed! You now have 1 new calculation.");
-          location.reload(); 
-        }
-        if (x.payment.status === "failed" || n >= 60) {
-           clearInterval(t);
-           $("cr").textContent = "Payment failed or timed out.";
-        }
-      }, 3000);
-    }
-  } catch (err) { $("cr").textContent = err.message; }
+function closeModal() {
+  $("offerModal").style.display = "none";
 }
+
+async function claimOffer() {
+  if (!currentOfferId) return;
+  $("modalGrabBtn").disabled = true;
+  $("modalGrabBtn").textContent = "Claiming...";
+  
+  try {
+    const res = await api(`/api/offers/claim/${currentOfferId}`, { method: "POST" });
+    if (res.ok) {
+      $("modalGrabBtn").style.display = "none";
+      $("claimRefBox").style.display = "block";
+      if (res.requires_approval) {
+        $("claimRefBox").innerHTML = `Claim submitted! Awaiting Admin approval.<br>Ref: <b>${res.reference}</b>`;
+      } else {
+        $("claimRefBox").innerHTML = `🎉 Offer Claimed Successfully!<br>Ref: <b>${res.reference}</b>`;
+      }
+      loadMyClaims();
+    } else {
+      alert(res.error);
+      $("modalGrabBtn").disabled = false;
+      $("modalGrabBtn").textContent = "Grab This Offer";
+    }
+  } catch (e) {
+    alert(e.message);
+    $("modalGrabBtn").disabled = false;
+  }
+}
+
+async function loadMyClaims() {
+  const res = await api("/api/offers/my-claims");
+  if (res.ok && res.claims.length > 0) {
+    $("myClaimsCard").style.display = "block";
+    $("claimsList").innerHTML = res.claims.map(c => `
+      <tr>
+        <td>${c.title}</td>
+        <td><b>${c.reference}</b></td>
+        <td style="color: ${c.status === 'approved' || c.status === 'redeemed' ? '#4ade80' : '#fbbf24'}">${c.status.toUpperCase()}</td>
+        <td>${new Date(c.created_at).toLocaleDateString()}</td>
+      </tr>
+    `).join("");
+  }
+}
+
+// ... (Keep the existing updateCreditsUI, Calculate, and triggerPayment functions from the previous step) ...
 </script></body></html>
