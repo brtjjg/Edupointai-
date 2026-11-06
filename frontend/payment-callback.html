@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verifying payment…</title>
+<link rel="stylesheet" href="/css/style.css">
+</head><body class="auth-page"><main class="auth-wrap"><div class="auth-card">
+  <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+  <h1 id="title">Verifying payment…</h1>
+  <p id="msg">Please wait while we confirm your transaction with Pesapal.</p>
+  <a class="pay nav-btn" id="go" href="/dashboard.html" style="display:none">Back to Dashboard</a>
+</div></main>
+<script src="/js/api.js"></script>
+<script>
+(async function () {
+  const q = new URLSearchParams(location.search);
+  const tx = q.get("OrderMerchantReference") || q.get("tx") || q.get("transaction_id");
+  const title = document.getElementById("title");
+  const msg = document.getElementById("msg");
+  const go = document.getElementById("go");
+
+  if (!tx) { title.textContent = "Missing reference"; msg.textContent = "No transaction reference was provided."; go.style.display = ""; return; }
+
+  for (let i = 0; i < 20; i++) {
+    try {
+      const r = await api("/api/payment/status/" + tx);
+      const s = r.payment.status;
+      if (s === "paid") {
+        title.textContent = "✅ Payment confirmed";
+        msg.textContent = "Your EduPoint AI features are now unlocked.";
+        go.style.display = ""; return;
+      }
+      if (s === "failed" || s === "reversed" || s === "amount_mismatch") {
+        title.textContent = "❌ Payment not completed";
+        msg.textContent = "Status: " + s + ". You can try again from the dashboard.";
+        go.style.display = ""; return;
+      }
+    } catch (_) {}
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  title.textContent = "⏳ Still processing";
+  msg.textContent = "We haven't received a final status yet. Check your dashboard in a moment.";
+  go.style.display = "";
+})();
+</script></body></html>
