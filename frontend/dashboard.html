@@ -3,6 +3,11 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashboard — EduPoint AI</title>
 <link rel="stylesheet" href="/css/style.css">
+<style>
+  .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .input-row select { flex: 1; }
+  .input-row select.grade-select { width: 100px; flex: none; }
+</style>
 </head><body>
 <header class="topbar">
   <div class="brand">🎓 EduPoint AI <span>v10</span></div>
@@ -20,8 +25,11 @@
 
   <section class="card">
     <h2>🎯 Cluster Points Calculator</h2>
-    <p>Enter at least 7 grades separated by commas.</p>
-    <textarea id="grades" rows="4" placeholder="A, B+, B, B-, C+, C, C"></textarea>
+    <p>Select your 7 subjects and their grades below.</p>
+    
+    <!-- Here is where they choose subjects and grades -->
+    <div id="subjectList" style="margin-bottom: 15px;"></div>
+
     <button class="pay" id="cb" type="button" style="margin-top: 15px;">Calculate</button>
     
     <div id="cr" class="message"></div>
@@ -33,8 +41,6 @@
       <p style="color: #72dfff; font-size: 14px;">📧 A PDF copy of this report has been sent to your email.</p>
     </div>
   </section>
-  
-  <!-- Add other tools below if needed (Scholarships, Chatbot) -->
 </main>
 
 <script src="/js/api.js"></script>
@@ -42,7 +48,32 @@
 const $ = id => document.getElementById(id);
 let me;
 
+const subjectList = [
+  "Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", 
+  "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"
+];
+const gradeList = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
+
 (async function () {
+  // 1. Generate the 7 dropdowns for subjects and grades
+  let html = "";
+  for (let i = 0; i < 7; i++) {
+    html += `
+      <div class="input-row">
+        <select class="subject-select">
+          <option value="">Subject ${i+1}</option>
+          ${subjectList.map(s => `<option value="${s}">${s}</option>`).join("")}
+        </select>
+        <select class="grade-select">
+          <option value="">Grade</option>
+          ${gradeList.map(g => `<option value="${g}">${g}</option>`).join("")}
+        </select>
+      </div>
+    `;
+  }
+  $("subjectList").innerHTML = html;
+
+  // 2. Load User Data
   const r = await requireAuth(); if (!r) return;
   me = r.user;
   $("hello").textContent = "Hi, " + me.name;
@@ -60,14 +91,28 @@ function updateCreditsUI(credits) {
 }
 
 $("cb").onclick = async () => {
+  // 3. Gather the grades from the dropdowns
+  const gradeSelects = document.querySelectorAll('.grade-select');
+  const grades = {};
+  let count = 0;
+  
+  gradeSelects.forEach((select, index) => {
+    if (select.value) {
+      grades[index] = select.value;
+      count++;
+    }
+  });
+
+  if (count < 7) {
+    $("cr").textContent = "Please select a grade for all 7 subjects.";
+    return;
+  }
+
   $("cr").textContent = "Calculating...";
   $("calcResult").style.display = "none";
   
-  const obj = {};
-  $("grades").value.split(",").forEach((v, i) => obj[i] = v.trim());
-  
   try {
-    const d = await api("/api/calculate", { method: "POST", body: JSON.stringify({ grades: obj }) });
+    const d = await api("/api/calculate", { method: "POST", body: JSON.stringify({ grades: grades }) });
     
     $("cr").textContent = "";
     $("calcResult").style.display = "block";
