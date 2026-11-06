@@ -75,6 +75,7 @@ ensure_admin()
 
 def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
     try:
+        # 1. Generate PDF
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=16)
@@ -85,27 +86,36 @@ def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
         pdf.cell(200, 10, txt=f"Qualified Courses: {qualified_count}", ln=True)
         pdf_bytes = pdf.output()
 
-        smtp_user = os.getenv("SMTP_EMAIL")
-        smtp_pass = os.getenv("SMTP_PASSWORD")
-        if not smtp_user or not smtp_pass:
-            logger.warning("SMTP credentials missing. Skipping email.")
+        # 2. Convert PDF to Base64 (Required by Brevo)
+        pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+
+        # 3. Setup Brevo Client
+        api_key = os.getenv("BREVO_API_KEY")
+        sender_email = os.getenv("SENDER_EMAIL")
+        
+        if not api_key or not sender_email:
+            logger.warning("Brevo API key or Sender Email missing. Skipping email.")
             return
 
-        msg = MIMEMultipart()
-        msg['From'] = smtp_user
-        msg['To'] = user_email
-        msg['Subject'] = "Your EduPoint AI Calculation Report"
-        msg.attach(MIMEText("Thank you for using EduPoint AI. Please find your report attached.", 'plain'))
+        client = Brevo(api_key=api_key)
 
-        attach = MIMEApplication(pdf_bytes, _subtype="pdf")
-        attach.add_header('Content-Disposition', 'attachment', filename="EduPoint_Report.pdf")
-        msg.attach(attach)
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
+        # 4. Send Email via Brevo
+        client.transactional_emails.send_transac_email(
+            subject="Your EduPoint AI Calculation Report",
+            html_content="<p>Thank you for using EduPoint AI. Please find your calculation report attached.</p>",
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI"),
+            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
+            attachment=[
+                {
+                    "content": pdf_base64,
+                    "name": "EduPoint_Report.pdf"
+                }
+            ]
+        )
+        logger.info(f"Email successfully sent to {user_email} via Brevo.")
+        
     except Exception as e:
-        logger.error(f"Failed to send email: {e}")
+        logger.error(f"Failed to send email via Brevo: {e}")
 
 @app.get("/health")
 def health(): return jsonify(ok=True, service="edupoint-api")
