@@ -6,126 +6,121 @@
 </head><body>
 <header class="topbar">
   <div class="brand">🎓 EduPoint AI <span>v10</span></div>
-  <nav class="top-actions"><span id="hello"></span>
-    <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a></nav>
+  <nav class="top-actions">
+    <span id="hello"></span>
+    <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a>
+  </nav>
 </header>
 <main class="container">
   <section class="hero">
     <p class="eyebrow">STUDENT DASHBOARD</p>
     <h1>Your EduPoint AI account</h1>
-    <p>Unlock all premium tools and calculators for just 100 KES via Pesapal.</p>
+    <p id="creditStatus" style="font-size: 20px; font-weight: bold; color: #73e8ff;">Loading credits...</p>
   </section>
 
   <section class="card">
-    <h2>Unlock Full Access — 100 KES</h2>
-    <form id="payForm">
-      <div class="field">
-        <label>Mobile-money number</label>
-        <input id="phone" inputmode="tel" required>
-      </div>
-      <button class="pay" type="submit">Pay 100 KES Now</button>
-      <div id="msg" class="message"></div>
-      <div id="status" class="status-box"></div>
-    </form>
+    <h2>🎯 Cluster Points Calculator</h2>
+    <p>Enter at least 7 grades separated by commas.</p>
+    <textarea id="grades" rows="4" placeholder="A, B+, B, B-, C+, C, C"></textarea>
+    <button class="pay" id="cb" type="button" style="margin-top: 15px;">Calculate</button>
+    
+    <div id="cr" class="message"></div>
+    
+    <!-- Results Area -->
+    <div id="calcResult" style="display:none; margin-top: 20px; border-top: 1px solid #303451; padding-top: 20px;">
+      <h3>Your Results</h3>
+      <p id="cpDisplay" style="font-size: 18px; font-weight: bold; color: #c9ffda;"></p>
+      <p style="color: #72dfff; font-size: 14px;">📧 A PDF copy of this report has been sent to your email.</p>
+    </div>
   </section>
-
-  <section class="grid" id="tools" style="display:none">
-    <div class="card"><h2>🎯 Cluster Points</h2><button class="nav-btn" onclick="openTool('calculator')">Open</button></div>
-    <div class="card"><h2>🎓 Scholarships</h2><button class="nav-btn" onclick="openTool('scholarships')">Open</button></div>
-    <div class="card"><h2>🤖 AI Chatbot</h2><button class="nav-btn" onclick="openTool('chat')">Open</button></div>
-  </section>
-
-  <section class="card" id="toolBox" style="display:none">
-    <h2 id="toolTitle"></h2><div id="toolContent"></div>
-  </section>
+  
+  <!-- Add other tools below if needed (Scholarships, Chatbot) -->
 </main>
+
 <script src="/js/api.js"></script>
 <script>
-let me;
 const $ = id => document.getElementById(id);
+let me;
 
 (async function () {
   const r = await requireAuth(); if (!r) return;
   me = r.user;
   $("hello").textContent = "Hi, " + me.name;
-  $("phone").value = me.phone === "0700000000" ? "" : (me.phone || ""); // Hide dummy google phone
-  
-  if (r.paid) {
-    $("status").textContent = "✅ Payment confirmed — features unlocked.";
-    $("tools").style.display = "";
-    $("payForm").style.display = "none"; // Hide payment form if already paid
-  } else {
-    $("status").textContent = "🔒 Payment required before protected tools can be used.";
-  }
+  updateCreditsUI(r.credits);
 })();
 
-$("payForm").onsubmit = async e => {
-  e.preventDefault();
-  $("msg").textContent = "Starting secure payment...";
+function updateCreditsUI(credits) {
+  if (credits > 0) {
+    $("creditStatus").textContent = `✅ You have ${credits} calculation(s) available.`;
+    $("creditStatus").style.color = "#c9ffda";
+  } else {
+    $("creditStatus").textContent = `🔒 You have 0 calculations left. Please pay 100 KES.`;
+    $("creditStatus").style.color = "#ff7b7b";
+  }
+}
+
+$("cb").onclick = async () => {
+  $("cr").textContent = "Calculating...";
+  $("calcResult").style.display = "none";
+  
+  const obj = {};
+  $("grades").value.split(",").forEach((v, i) => obj[i] = v.trim());
+  
   try {
-    const j = await api("/api/payment/initiate", { 
-      method: "POST", 
-      body: JSON.stringify({
-        plan: "standard", 
-        provider: "pesapal", 
-        phone: $("phone").value
-      })
-    });
+    const d = await api("/api/calculate", { method: "POST", body: JSON.stringify({ grades: obj }) });
     
-    $("msg").textContent = (j.message || "") + " " + (j.instructions || []).join(" ");
+    $("cr").textContent = "";
+    $("calcResult").style.display = "block";
+    $("cpDisplay").textContent = `Cluster points: ${d.cluster_points} — ${d.results.filter(x => x.match === "qualified").length} matching courses.`;
     
-    if (j.redirect_url) { 
-      location.href = j.redirect_url; 
-      return; 
+    updateCreditsUI(d.credits_left);
+
+  } catch (err) {
+    if (err.status === 402) {
+      $("cr").innerHTML = `
+        <div style="background: rgba(255,0,0,0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff7b7b; margin-top: 15px;">
+          <b>No calculations left!</b><br>Pay 100 KES to unlock 1 more calculation.<br><br>
+          <button class="pay" onclick="triggerPayment('${me.phone || '0700000000'}')">Pay 100 KES Now</button>
+        </div>
+      `;
+    } else {
+      $("cr").textContent = err.message;
     }
-    
-    // Fallback polling
-    let n = 0;
-    const t = setInterval(async () => {
-      n++;
-      try {
-        const x = await api("/api/payment/status/" + j.transaction_id);
-        $("status").textContent = "Transaction " + j.transaction_id + ": " + x.payment.status;
-        if (x.payment.status === "paid") { clearInterval(t); location.reload(); }
-        if (x.payment.status === "failed" || n >= 40) clearInterval(t);
-      } catch (_) { clearInterval(t); }
-    }, 3000);
-  } catch (err) { $("msg").textContent = err.message; }
+  }
 };
 
-async function openTool(kind) {
-  const box = $("toolBox"); box.style.display = "block";
-  if (kind === "scholarships") {
-    $("toolTitle").textContent = "Scholarships";
-    const data = await api("/api/scholarships");
-    $("toolContent").innerHTML = data.map(x =>
-      `<div class="mini-card"><b>${x.name}</b><p>${x.amount} • ${x.major}</p>
-        <a href="${x.link}" target="_blank">Official site</a></div>`).join("");
-  } else if (kind === "chat") {
-    $("toolTitle").textContent = "AI Chatbot";
-    $("toolContent").innerHTML = `<form id="cf"><input id="q" placeholder="Ask a KUCCPS question"><button class="pay" type="submit">Ask</button></form><div id="ca" class="message"></div>`;
+async function triggerPayment(phone) {
+  try {
+    $("cr").textContent = "Starting payment...";
+    const j = await api("/api/payment/initiate", { 
+      method: "POST", 
+      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone })
+    });
     
-    // Bind to cf explicitly to avoid globals
-    document.getElementById("cf").onsubmit = async e => {
-      e.preventDefault();
-      const qVal = document.getElementById("q").value;
-      const d = await api("/api/chat", { method: "POST", body: JSON.stringify({ question: qVal }) });
-      document.getElementById("ca").textContent = d.answer;
-    };
-  } else {
-    $("toolTitle").textContent = "Cluster Points Calculator";
-    $("toolContent").innerHTML = `<p>Enter at least 7 grades separated by commas.</p>
-      <textarea id="grades" rows="4" placeholder="A, B+, B, B-, C+, C, C"></textarea>
-      <button class="pay" id="cb" type="button">Calculate</button><div id="cr" class="message"></div>`;
+    if (j.redirect_url) {
+      const w = 600, h = 700;
+      const left = (screen.width/2)-(w/2);
+      const top = (screen.height/2)-(h/2);
+      window.open(j.redirect_url, 'Pesapal Payment', `width=${w},height=${h},top=${top},left=${left}`);
       
-    document.getElementById("cb").onclick = async () => {
-      const obj = {};
-      document.getElementById("grades").value.split(",").forEach((v, i) => obj[i] = v.trim());
-      const d = await api("/api/calculate", { method: "POST", body: JSON.stringify({ grades: obj }) });
-      document.getElementById("cr").textContent = d.ok
-        ? `Cluster points: ${d.cluster_points} — ${d.results.filter(x => x.match === "qualified").length} matching courses.`
-        : d.error;
-    };
-  }
+      $("cr").textContent = "Waiting for payment confirmation... (Do not close this tab)";
+      
+      let n = 0;
+      const t = setInterval(async () => {
+        n++;
+        const x = await api("/api/payment/status/" + j.transaction_id);
+        
+        if (x.payment.status === "paid" || x.payment.status === "completed") {
+          clearInterval(t);
+          alert("Payment Confirmed! You now have 1 new calculation.");
+          location.reload(); 
+        }
+        if (x.payment.status === "failed" || n >= 60) {
+           clearInterval(t);
+           $("cr").textContent = "Payment failed or timed out.";
+        }
+      }, 3000);
+    }
+  } catch (err) { $("cr").textContent = err.message; }
 }
 </script></body></html>
