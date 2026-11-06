@@ -5,6 +5,9 @@ import logging
 import base64
 import threading
 from datetime import datetime
+from datetime import datetime
+import random
+import string
 
 import psycopg
 from flask import Flask, request, jsonify
@@ -80,51 +83,73 @@ def ensure_admin():
             )
 ensure_admin()
 
-def send_pdf_email(user_email, user_name, cluster_points, results):
+ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
     try:
         # 1. Generate PDF
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', size=16)
-        pdf.cell(200, 10, txt="EduPoint AI - Results Report", ln=True, align='C')
         
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt=f"Student: {user_name}", ln=True)
-        pdf.cell(200, 10, txt=f"Cluster Points: {cluster_points}", ln=True)
-        pdf.ln(5) # Add space
-
-        # Filter results
-        qualified = [r for r in results if r['match'] == 'qualified']
-        close = [r for r in results if r['match'] == 'close']
-
-        # Qualified Courses Section
-        pdf.set_font("Arial", 'B', size=14)
-        pdf.cell(200, 10, txt=f"✅ Qualified Courses ({len(qualified)}):", ln=True)
-        pdf.set_font("Arial", size=11)
-        if not qualified:
-            pdf.cell(200, 8, txt="No courses qualified for yet.", ln=True)
-        else:
-            # Limit to top 20 to avoid massive PDF files
-            for r in qualified[:20]:
-                pdf.cell(200, 8, txt=f"- {r['n']} at {r['u']} (Cutoff: {r['c']})", ln=True)
+        # Header
+        pdf.set_font("Helvetica", 'B', size=18)
+        pdf.cell(0, 10, txt="EduPointAI Results Report", ln=True, align='C')
+        
+        pdf.set_font("Helvetica", size=10)
+        today = datetime.now().strftime("%Y-%m-%d")
+        ref = "EDU-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        pdf.cell(0, 10, txt=f"Date: {today} | Reference: {ref}", ln=True, align='C')
         pdf.ln(5)
 
-        # Close Matches Section
-        pdf.set_font("Arial", 'B', size=14)
-        pdf.cell(200, 10, txt=f"⚠️ Close Matches ({len(close)}):", ln=True)
-        pdf.set_font("Arial", size=11)
-        if not close:
-            pdf.cell(200, 8, txt="No close matches found.", ln=True)
-        else:
-            for r in close[:15]:
-                pdf.cell(200, 8, txt=f"- {r['n']} at {r['u']} (Cutoff: {r['c']})", ln=True)
-                
-        pdf_bytes = pdf.output()
+        # Student Information
+        pdf.set_font("Helvetica", 'B', size=12)
+        pdf.cell(0, 10, txt="Student Information", ln=True)
+        pdf.set_font("Helvetica", size=11)
+        pdf.cell(0, 8, txt=f"Name: {user_name}", ln=True)
+        pdf.cell(0, 8, txt=f"Email: {user_email}", ln=True)
+        pdf.ln(5)
 
-        # 2. Convert PDF to Base64 (Required by Brevo)
+        # KCSE Subject Grades
+        pdf.set_font("Helvetica", 'B', size=12)
+        pdf.cell(0, 10, txt="KCSE Subject Grades", ln=True)
+        pdf.set_font("Helvetica", size=11)
+        for i in range(7):
+            subj = subjects.get(str(i), f"Subject {i+1}")
+            grade = grades.get(str(i), "-")
+            pdf.cell(0, 8, txt=f"- {subj}: {grade}", ln=True)
+        pdf.ln(5)
+
+        # Cluster Points
+        pdf.set_font("Helvetica", 'B', size=12)
+        pdf.cell(0, 10, txt=f"Cluster Points: {cluster_points}", ln=True)
+        pdf.ln(5)
+
+        # Qualified Courses
+        qualified = [r for r in results if r['match'] == 'qualified']
+        pdf.set_font("Helvetica", 'B', size=12)
+        pdf.cell(0, 10, txt=f"Qualified Courses ({len(qualified)})", ln=True)
+        pdf.set_font("Helvetica", size=11)
+        if not qualified:
+            pdf.cell(0, 8, txt="No courses qualified for yet.", ln=True)
+        else:
+            for r in qualified[:25]: # Limit to top 25 to keep PDF clean
+                pdf.cell(0, 8, txt=f"- {r['n']} at {r['u']} (Cutoff: {r['c']})", ln=True)
+        pdf.ln(5)
+
+        # Scholarship Opportunities
+        pdf.set_font("Helvetica", 'B', size=12)
+        pdf.cell(0, 10, txt="Scholarship Opportunities", ln=True)
+        pdf.set_font("Helvetica", size=11)
+        for s in scholarships:
+            pdf.cell(0, 8, txt=f"- {s['name']} ({s['amount']})", ln=True)
+        pdf.ln(5)
+
+        # Disclaimer
+        pdf.set_font("Helvetica", 'I', size=9)
+        pdf.multi_cell(0, 6, txt="Disclaimer: Course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers.")
+
+        pdf_bytes = pdf.output()
         pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
-        # 3. Setup Brevo Client
+        # 2. Setup Brevo Client
         api_key = os.getenv("BREVO_API_KEY")
         sender_email = os.getenv("SENDER_EMAIL")
         
@@ -134,19 +159,56 @@ def send_pdf_email(user_email, user_name, cluster_points, results):
 
         client = Brevo(api_key=api_key)
 
+        # 3. HTML Email Body
+        email_html = f"""
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
+            <h2 style="color: #1a1c33;">Dear {user_name},</h2>
+            <p>Thank you for using <b>EduPointAI</b>.</p>
+            <p>Your academic assessment has been successfully processed. Your personalized calculation report is ready.</p>
+            
+            <div style="background: #f4f6f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #1a1c33;">Your assessment summary:</h3>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li><b>Cluster Points:</b> {cluster_points}</li>
+                    <li><b>Qualified Courses:</b> {len(qualified)}</li>
+                    <li><b>Scholarship Opportunities:</b> Included in your report</li>
+                </ul>
+            </div>
+
+            <h3 style="color: #1a1c33;">What you will find in your report:</h3>
+            <ol>
+                <li>Your calculated academic performance.</li>
+                <li>University courses you qualify for.</li>
+                <li>Available scholarship opportunities matching your academic profile.</li>
+                <li>Relevant eligibility information and guidance.</li>
+            </ol>
+
+            <h3 style="color: #1a1c33;">Access your results</h3>
+            <p>You can preview your complete report directly from your EduPointAI account. A PDF copy is also attached to this email for downloading and future reference.</p>
+            
+            <p style="font-size: 12px; color: #666; font-style: italic;">
+                Please remember that course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers.
+            </p>
+
+            <p>Thank you for trusting EduPointAI with your academic journey.</p>
+            <br>
+            <p>Kind regards,</p>
+            <p><b>EduPointAI Team</b><br><span style="color: #666; font-size: 12px;">Your Education. Your Future.</span></p>
+        </div>
+        """
+
         # 4. Send Email via Brevo
         client.transactional_emails.send_transac_email(
-            subject="Your EduPoint AI Calculation Report",
-            html_content="<p>Thank you for using EduPoint AI. Please find your detailed course report attached.</p>",
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI"),
+            subject="Your EduPointAI Calculation Report – Course & Scholarship Qualifications",
+            html_content=email_html,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=[{"content": pdf_base64, "name": "EduPoint_Report.pdf"}]
+            attachment=[{"content": pdf_base64, "name": "EduPointAI_Results_Report.pdf"}]
         )
         logger.info(f"Email successfully sent to {user_email} via Brevo.")
         
     except Exception as e:
         logger.error(f"Failed to send email via Brevo: {e}")
-
 @app.get("/health")
 def health(): 
     return jsonify(ok=True, service="edupoint-api")
@@ -349,23 +411,17 @@ def payment_webhook(provider):
 @login_required
 def calculate():
     u = current_user()
-    
-    # Check if user has a credit
     if u.get("credits", 0) <= 0:
-        return jsonify(
-            ok=False, 
-            error="You have 0 calculations left. Please pay 100 KES to buy 1 more calculation.", 
-            code="payment_required"
-        ), 402
+        return jsonify(ok=False, error="You have 0 calculations left. Please pay 100 KES to buy 1 more calculation.", code="payment_required"), 402
         
     d = request.get_json(silent=True) or {}
     grades = d.get("grades", {})
+    subjects = d.get("subjects", {})
     
     try:
         vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
         vals = sorted(vals, reverse=True)[:7]
-        if len(vals) < 7: 
-            return jsonify(ok=False, error="Enter at least 7 valid grades."), 400
+        if len(vals) < 7: return jsonify(ok=False, error="Enter at least 7 valid grades."), 400
         
         cp = (sum(vals) / BEST) * MAX
         out = []
@@ -373,24 +429,18 @@ def calculate():
             diff = cp - course["c"]
             out.append({**course, "difference": round(diff, 3), "match": "qualified" if diff >= 0 else ("close" if diff >= -2 else "not_qualified")})
             
-        qualified_count = len([x for x in out if x["match"] == "qualified"])
-        
-        # Deduct 1 credit from database
         with connect() as conn:
             conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
             
-        # Send email in background
-        threading.Thread(target=send_pdf_email, args=(u["email"], u["name"], round(cp, 3), out)).start()
+        # Send email in background with full data
+        threading.Thread(
+            target=send_pdf_email, 
+            args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
+        ).start()
             
-        return jsonify(
-            ok=True, 
-            cluster_points=round(cp, 3), 
-            results=out, 
-            credits_left=u["credits"] - 1
-        )
+        return jsonify(ok=True, cluster_points=round(cp, 3), results=out, credits_left=u["credits"] - 1)
     except Exception as e:
         return jsonify(ok=False, error=f"Invalid grades: {e}"), 400
-
 @app.get("/api/scholarships")
 @login_required
 def scholarships():
