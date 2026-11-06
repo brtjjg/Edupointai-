@@ -3,22 +3,24 @@ import os
 import uuid
 import logging
 import base64
-from brevo import Brevo
-from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
 import threading
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-from email.mime.text import MIMEText
-from fpdf import FPDF
 
 import psycopg
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
+from fpdf import FPDF
+
+# Google Auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
+# Brevo Email SDK
+from brevo import Brevo
+from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
+
+# Local imports
 from data import W, BEST, MAX, P, SCHOLARSHIPS, CHATBOT_QA, PAYMENT_PLANS
 from db import connect, init_db
 from auth import (
@@ -31,14 +33,18 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["JSON_SORT_KEYS"] = False
 
+# CORS for Vercel Frontend
 FRONTEND_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
 CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize DB and Payments
 init_db()
 payments = PaymentService()
+
+# ---------------- Helper Functions ----------------
 
 def has_paid_access(user_id):
     with connect() as conn:
@@ -55,6 +61,7 @@ def set_access(user_id, paid, plan=None, tx=None):
         )
 
 def add_credit(user_id):
+    """Adds 1 calculation credit to the user."""
     with connect() as conn:
         conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (user_id,))
 
@@ -74,6 +81,7 @@ def ensure_admin():
 ensure_admin()
 
 def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
+    """Generates PDF and sends it via Brevo API."""
     try:
         # 1. Generate PDF
         pdf = FPDF()
@@ -86,7 +94,7 @@ def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
         pdf.cell(200, 10, txt=f"Qualified Courses: {qualified_count}", ln=True)
         pdf_bytes = pdf.output()
 
-        # 2. Convert PDF to Base64 (Required by Brevo)
+        # 2. Convert PDF to Base64
         pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
 
         # 3. Setup Brevo Client
@@ -99,31 +107,32 @@ def send_pdf_email(user_email, user_name, cluster_points, qualified_count):
 
         client = Brevo(api_key=api_key)
 
-        # 4. Send Email via Brevo
+        # 4. Send Email
         client.transactional_emails.send_transac_email(
             subject="Your EduPoint AI Calculation Report",
             html_content="<p>Thank you for using EduPoint AI. Please find your calculation report attached.</p>",
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=[
-                {
-                    "content": pdf_base64,
-                    "name": "EduPoint_Report.pdf"
-                }
-            ]
+            attachment=[{"content": pdf_base64, "name": "EduPoint_Report.pdf"}]
         )
         logger.info(f"Email successfully sent to {user_email} via Brevo.")
         
     except Exception as e:
         logger.error(f"Failed to send email via Brevo: {e}")
 
+# ---------------- Routes ----------------
+
 @app.get("/health")
-def health(): return jsonify(ok=True, service="edupoint-api")
+def health(): 
+    return jsonify(ok=True, service="edupoint-api")
 
 @app.post("/api/register")
 def register():
     d = request.get_json(silent=True) or {}
-    name, email, phone, password = str(d.get("name", "")).strip(), str(d.get("email", "")).strip().lower(), normalize_phone(d.get("phone", "")), str(d.get("password", ""))
+    name = str(d.get("name", "")).strip()
+    email = str(d.get("email", "")).strip().lower()
+    phone = normalize_phone(d.get("phone", ""))
+    password = str(d.get("password", ""))
     ref = str(d.get("referral_code") or "").strip().upper() or None
 
     if len(name) < 2: return jsonify(ok=False, error="Enter your full name."), 400
@@ -133,7 +142,11 @@ def register():
 
     try:
         with connect() as conn:
-            row = conn.execute("""INSERT INTO users(name,email,phone,password_hash,referral_code,role) VALUES(%s,%s,%s,%s,%s,'student') RETURNING id""", (name, email, phone, hash_password(password), ref)).fetchone()
+            row = conn.execute(
+                """INSERT INTO users(name,email,phone,password_hash,referral_code,role) 
+                   VALUES(%s,%s,%s,%s,%s,'student') RETURNING id""", 
+                (name, email, phone, hash_password(password), ref)
+            ).fetchone()
             uid = row["id"]
     except psycopg.errors.UniqueViolation:
         return jsonify(ok=False, error="An account with that email already exists."), 409
@@ -144,13 +157,20 @@ def register():
 @app.post("/api/login")
 def login():
     d = request.get_json(silent=True) or {}
-    email, password = str(d.get("email", "")).strip().lower(), str(d.get("password", ""))
+    email = str(d.get("email", "")).strip().lower()
+    password = str(d.get("password", ""))
+    
     with connect() as conn:
         u = conn.execute("SELECT * FROM users WHERE email=%s AND active=1", (email,)).fetchone()
+        
     if not u or not verify_password(password, u["password_hash"]):
         return jsonify(ok=False, error="Incorrect email or password."), 401
+        
     token = create_session(u["id"])
-    return jsonify(ok=True, token=token, user=public_user(u), redirect="/admin.html" if u["role"] == "admin" else "/dashboard.html")
+    return jsonify(
+        ok=True, token=token, user=public_user(u), 
+        redirect="/admin.html" if u["role"] == "admin" else "/dashboard.html"
+    )
 
 @app.post("/api/auth/google")
 def google_login():
@@ -158,14 +178,21 @@ def google_login():
     token = d.get("credential")
     if not token:
         return jsonify(ok=False, error="No Google credential provided."), 400
+        
     try:
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
         email = idinfo["email"].strip().lower()
         name = idinfo.get("name", "Google User")
+        
         with connect() as conn:
             u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
             if not u:
-                u = conn.execute("""INSERT INTO users(name, email, phone, password_hash, role) VALUES(%s, %s, %s, %s, 'student') RETURNING *""", (name, email, "0700000000", "GOOGLE_AUTH")).fetchone()
+                u = conn.execute(
+                    """INSERT INTO users(name, email, phone, password_hash, role) 
+                       VALUES(%s, %s, %s, %s, 'student') RETURNING *""", 
+                    (name, email, "0700000000", "GOOGLE_AUTH")
+                ).fetchone()
+                
         session_token = create_session(u["id"])
         return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/dashboard.html")
     except ValueError:
@@ -181,33 +208,49 @@ def logout():
 @login_required
 def me():
     u = current_user()
-    return jsonify(ok=True, user=public_user(u), paid=has_paid_access(u["id"]), credits=u.get("credits", 0))
+    return jsonify(
+        ok=True, 
+        user=public_user(u), 
+        paid=has_paid_access(u["id"]), 
+        credits=u.get("credits", 0)
+    )
 
 @app.get("/api/plans")
-def plans(): return jsonify(PAYMENT_PLANS)
+def plans(): 
+    return jsonify(PAYMENT_PLANS)
 
 @app.get("/api/providers")
-def providers(): return jsonify(payments.available_providers())
+def providers(): 
+    return jsonify(payments.available_providers())
 
 @app.post("/api/payment/initiate")
 @login_required
 def initiate_payment():
     u = current_user()
     d = request.get_json(silent=True) or {}
-    provider, phone, plan = (d.get("provider") or "").strip().lower(), normalize_phone(d.get("phone") or u["phone"]), (d.get("plan") or "standard").strip().lower()
+    provider = (d.get("provider") or "").strip().lower()
+    phone = normalize_phone(d.get("phone") or u["phone"])
+    plan = (d.get("plan") or "standard").strip().lower()
 
     if plan not in PAYMENT_PLANS: return jsonify(ok=False, error="Invalid payment plan."), 400
     if not validate_provider(provider): return jsonify(ok=False, error="Unsupported payment network."), 400
     if not phone: return jsonify(ok=False, error="Enter a valid Kenyan mobile number."), 400
 
-    amount, tx = PAYMENT_PLANS[plan]["amount"], "EDU-" + uuid.uuid4().hex[:16].upper()
+    amount = PAYMENT_PLANS[plan]["amount"]
+    tx = "EDU-" + uuid.uuid4().hex[:16].upper()
     callback_url = f"{os.getenv('FRONTEND_URL', '').rstrip('/')}/payment-callback.html"
     
     payments.create_pending(transaction_id=tx, phone=phone, network=provider, amount=amount, plan=plan, user_id=u["id"])
+    
     try:
         r = payments.initiate(provider=provider, phone=phone, amount=amount, transaction_id=tx, plan=plan, user=u, callback_url=callback_url)
         payments.update(tx, status=r.get("status", "pending"), provider_reference=r.get("provider_reference"), message=r.get("message"), redirect_url=r.get("redirect_url"))
-        return jsonify(ok=True, transaction_id=tx, status=r.get("status", "pending"), message=r.get("message", "Payment request created."), instructions=r.get("instructions", []), redirect_url=r.get("redirect_url"))
+        return jsonify(
+            ok=True, transaction_id=tx, status=r.get("status", "pending"), 
+            message=r.get("message", "Payment request created."), 
+            instructions=r.get("instructions", []), 
+            redirect_url=r.get("redirect_url")
+        )
     except Exception:
         logger.exception("Payment initiation failed")
         payments.update(tx, status="failed", message="Payment could not be started.")
@@ -218,7 +261,9 @@ def initiate_payment():
 def payment_status(transaction_id):
     u = current_user()
     row = payments.get(transaction_id)
-    if not row or (row.get("user_id") and row["user_id"] != u["id"] and u["role"] != "admin"): return jsonify(ok=False, error="Transaction not found."), 404
+    
+    if not row or (row.get("user_id") and row["user_id"] != u["id"] and u["role"] != "admin"): 
+        return jsonify(ok=False, error="Transaction not found."), 404
 
     if row["status"] == "pending":
         try:
@@ -226,18 +271,26 @@ def payment_status(transaction_id):
             if rr:
                 payments.update(transaction_id, status=rr["status"], message=rr.get("message"))
                 row = payments.get(transaction_id)
-        except Exception: logger.exception("Status check failed")
+        except Exception: 
+            logger.exception("Status check failed")
 
+    # If payment just succeeded, add a credit and mark as completed
     if row["status"] == "paid" and row.get("user_id"):
         add_credit(row["user_id"])
         payments.update(transaction_id, status="completed")
         row["status"] = "completed"
 
-    return jsonify(ok=True, payment=row, credits=u.get("credits", 0))
+    # Fetch fresh user data to get updated credits
+    with connect() as conn:
+        fresh_u = conn.execute("SELECT credits FROM users WHERE id=%s", (u["id"],)).fetchone()
+
+    return jsonify(ok=True, payment=row, credits=fresh_u.get("credits", 0))
 
 @app.route("/api/payment/webhook/<provider>", methods=["GET", "POST"])
 def payment_webhook(provider):
-    if not validate_provider(provider): return jsonify(ok=False, error="Unsupported provider"), 404
+    if not validate_provider(provider): 
+        return jsonify(ok=False, error="Unsupported provider"), 404
+        
     payload = (request.get_json(silent=True) or request.form.to_dict() or request.args.to_dict())
 
     if provider == "pesapal":
@@ -247,21 +300,38 @@ def payment_webhook(provider):
             if row and row.get("user_id") and row["status"] == "paid":
                 add_credit(row["user_id"])
                 payments.update(row["transaction_id"], status="completed")
-        return jsonify({"orderNotificationType": payload.get("orderNotificationType", "IPNCHANGE"), "orderTrackingId": payload.get("orderTrackingId", ""), "orderMerchantReference": payload.get("orderMerchantReference", ""), "status": 200 if r.get("ok") else 500}), 200
+                
+        # Pesapal expects this exact JSON structure
+        return jsonify({
+            "orderNotificationType": payload.get("orderNotificationType", "IPNCHANGE"), 
+            "orderTrackingId": payload.get("orderTrackingId", ""), 
+            "orderMerchantReference": payload.get("orderMerchantReference", ""), 
+            "status": 200 if r.get("ok") else 500
+        }), 200
 
+    # Fallback for other providers
     r = payments.handle_webhook(provider, payload)
-    if not r.get("ok"): return jsonify(r), 400
+    if not r.get("ok"): 
+        return jsonify(r), 400
+        
     row = payments.get(r.get("transaction_id"))
     if row and r.get("status") == "paid" and row.get("user_id"):
         add_credit(row["user_id"])
+        
     return jsonify(ok=True)
 
 @app.post("/api/calculate")
 @login_required
 def calculate():
     u = current_user()
+    
+    # Check if user has a credit
     if u.get("credits", 0) <= 0:
-        return jsonify(ok=False, error="You have 0 calculations left. Please pay 100 KES to buy 1 more calculation.", code="payment_required"), 402
+        return jsonify(
+            ok=False, 
+            error="You have 0 calculations left. Please pay 100 KES to buy 1 more calculation.", 
+            code="payment_required"
+        ), 402
         
     d = request.get_json(silent=True) or {}
     grades = d.get("grades", {})
@@ -269,7 +339,8 @@ def calculate():
     try:
         vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
         vals = sorted(vals, reverse=True)[:7]
-        if len(vals) < 7: return jsonify(ok=False, error="Enter at least 7 valid grades."), 400
+        if len(vals) < 7: 
+            return jsonify(ok=False, error="Enter at least 7 valid grades."), 400
         
         cp = (sum(vals) / BEST) * MAX
         out = []
@@ -279,12 +350,19 @@ def calculate():
             
         qualified_count = len([x for x in out if x["match"] == "qualified"])
         
+        # Deduct 1 credit from database
         with connect() as conn:
             conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
             
+        # Send email in background
         threading.Thread(target=send_pdf_email, args=(u["email"], u["name"], round(cp, 3), qualified_count)).start()
             
-        return jsonify(ok=True, cluster_points=round(cp, 3), results=out, credits_left=u["credits"] - 1)
+        return jsonify(
+            ok=True, 
+            cluster_points=round(cp, 3), 
+            results=out, 
+            credits_left=u["credits"] - 1
+        )
     except Exception as e:
         return jsonify(ok=False, error=f"Invalid grades: {e}"), 400
 
@@ -297,10 +375,14 @@ def scholarships():
 @login_required
 def chat():
     q = str((request.get_json(silent=True) or {}).get("question", "")).lower().strip()
-    if not q: return jsonify(answer="Ask me a KUCCPS, course, cluster-points or scholarship question.")
+    if not q: 
+        return jsonify(answer="Ask me a KUCCPS, course, cluster-points or scholarship question.")
     for x in CHATBOT_QA:
-        if any(k in q for k in x["keywords"]): return jsonify(answer=x["answer"])
+        if any(k in q for k in x["keywords"]): 
+            return jsonify(answer=x["answer"])
     return jsonify(answer="I can help with cluster points, KUCCPS courses, admission chances, transfers, scholarships and university requirements.")
+
+# ---------------- Admin Routes ----------------
 
 @app.get("/api/admin/users")
 @admin_required
@@ -327,7 +409,8 @@ def admin_payments():
 def admin_toggle_user(user_id):
     with connect() as conn:
         r = conn.execute("SELECT active FROM users WHERE id=%s", (user_id,)).fetchone()
-        if not r: return jsonify(ok=False, error="User not found."), 404
+        if not r: 
+            return jsonify(ok=False, error="User not found."), 404
         conn.execute("UPDATE users SET active=%s WHERE id=%s", (0 if r["active"] else 1, user_id))
     return jsonify(ok=True)
 
@@ -336,7 +419,8 @@ def admin_toggle_user(user_id):
 def admin_access(user_id):
     d = request.get_json(silent=True) or {}
     paid = str(d.get("paid", "1")).lower() in {"1", "true", "yes"}
-    if paid: add_credit(user_id)
+    if paid: 
+        add_credit(user_id)
     return jsonify(ok=True, paid=paid)
 
 if __name__ == "__main__":
