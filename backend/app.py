@@ -418,10 +418,15 @@ def admin_toggle_user(user_id):
 @admin_required
 def admin_access(user_id):
     d = request.get_json(silent=True) or {}
-    paid = str(d.get("paid", "1")).lower() in {"1", "true", "yes"}
-    if paid: 
-        add_credit(user_id)
-    return jsonify(ok=True, paid=paid)
+    
+    # Get the custom amount of credits from the prompt (default to 1 if missing)
+    credits_to_add = int(d.get("credits", 1))
+    
+    if credits_to_add > 0:
+        with connect() as conn:
+            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
+            
+    return jsonify(ok=True, added=credits_to_add)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
