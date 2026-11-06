@@ -6,13 +6,13 @@ import base64
 import threading
 import random
 import string
+import io
 from datetime import datetime
 
 import psycopg
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
-from fpdf import FPDF
 
 # Google Auth
 from google.oauth2 import id_token
@@ -21,6 +21,16 @@ from google.auth.transport import requests as google_requests
 # Brevo Email SDK
 from brevo import Brevo
 from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
+
+# ReportLab PDF Libraries
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.colors import HexColor
+import qrcode
 
 # Local imports
 from data import W, BEST, MAX, P, SCHOLARSHIPS, CHATBOT_QA, PAYMENT_PLANS
@@ -79,81 +89,139 @@ def ensure_admin():
             )
 ensure_admin()
 
-def sanitize_text(text):
-    """Removes characters that PDF Helvetica font cannot render."""
-    if not text: return ""
-    # Replace en-dash and em-dash with regular hyphens, then force latin-1
-    return str(text).replace("–", "-").replace("—", "-").encode('latin-1', 'replace').decode('latin-1')
+def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
+    buffer = io.BytesIO()
+    
+    # Colors
+    NAVY = HexColor("#172554")
+    PURPLE = HexColor("#7546C8")
+    BLUE = HexColor("#38BDF8")
+    PALE = HexColor("#F4F6FC")
+    LIGHT_BLUE = HexColor("#EAF3FF")
+    LIGHT_PURPLE = HexColor("#F1ECFB")
+    INK = HexColor("#1F2937")
+    MUTED = HexColor("#64748B")
+    BORDER = HexColor("#DCE3EF")
+    GREEN = HexColor("#15803D")
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name="Brand", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=17, leading=20, textColor=colors.white, spaceAfter=2))
+    styles.add(ParagraphStyle(name="Tagline", parent=styles["Normal"], fontName="Helvetica", fontSize=8, leading=10, textColor=HexColor("#DCE8FF")))
+    styles.add(ParagraphStyle(name="HeroTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=22, leading=27, alignment=TA_LEFT, textColor=NAVY, spaceAfter=5))
+    styles.add(ParagraphStyle(name="Sub", parent=styles["Normal"], fontName="Helvetica", fontSize=9, leading=13, textColor=MUTED))
+    styles.add(ParagraphStyle(name="Section", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=12, leading=15, textColor=NAVY, spaceBefore=9, spaceAfter=6))
+    styles.add(ParagraphStyle(name="BodySmall", parent=styles["BodyText"], fontName="Helvetica", fontSize=8.5, leading=12, textColor=INK))
+    styles.add(ParagraphStyle(name="Tiny", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7, leading=9, textColor=MUTED))
+    styles.add(ParagraphStyle(name="CardLabel", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7.5, leading=9, textColor=MUTED))
+    styles.add(ParagraphStyle(name="CardValue", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=20, leading=23, textColor=NAVY))
+    styles.add(ParagraphStyle(name="WhiteSmall", parent=styles["Normal"], fontName="Helvetica", fontSize=8, leading=11, textColor=colors.white))
+
+    def P(text, style="BodySmall"): return Paragraph(str(text), styles[style])
+
+    def header_footer(canvas, doc):
+        canvas.saveState()
+        w, h = A4
+        canvas.setFillColor(NAVY)
+        canvas.rect(0, h-8mm, w, 8mm, stroke=0, fill=1)
+        canvas.setStrokeColor(BORDER)
+        canvas.setLineWidth(0.6)
+        canvas.line(18mm, 16mm, w-18mm, 16mm)
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(18mm, 10.5mm, "EduPointAI  |  Your Education. Your Future.")
+        canvas.drawRightString(w-18mm, 10.5mm, f"Page {doc.page}")
+        canvas.restoreState()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18mm, leftMargin=18mm, topMargin=17mm, bottomMargin=23mm)
+    story = []
+
+    # 1. Brand Banner
+    brand = Table([[P("EduPointAI", "Brand"), P("STUDENT RESULTS REPORT<br/>COURSE & SCHOLARSHIP MATCHING", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
+    brand.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), NAVY), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 12), ("RIGHTPADDING", (0,0), (-1,-1), 12), ("TOPPADDING", (0,0), (-1,-1), 7), ("BOTTOMPADDING", (0,0), (-1,-1), 7), ("ALIGN", (1,0), (1,0), "RIGHT")]))
+    story += [brand, Spacer(1, 8*mm)]
+
+    # 2. Hero Title
+    story += [P("Your academic assessment is ready", "HeroTitle"), P("A personalized overview of your academic performance, course qualifications and scholarship opportunities.", "Sub"), Spacer(1, 5*mm)]
+
+    # 3. Student Identity Strip
+    today = datetime.now().strftime("%d %b %Y, %H:%M")
+    ref = "EP-2026-" + ''.join(random.choices(string.digits, k=6))
+    student = Table([[P("STUDENT", "Tiny"), P("REPORT STATUS", "Tiny"), P("REPORT REFERENCE", "Tiny")],
+                     [P(user_name, "BodySmall"), P("Assessment complete", "BodySmall"), P(ref, "BodySmall")]],
+                    colWidths=[58*mm, 58*mm, 58*mm])
+    student.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), PALE), ("BOX", (0,0), (-1,-1), 0.7, BORDER), ("INNERGRID", (0,0), (-1,-1), 0.5, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 9), ("RIGHTPADDING", (0,0), (-1,-1), 9), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
+    story += [student, Spacer(1, 5*mm)]
+
+    # 4. KPI Cards
+    qualified = [r for r in results if r['match'] == 'qualified']
+    cards = Table([[P("CLUSTER POINTS", "CardLabel"), P("QUALIFIED COURSES", "CardLabel"), P("SCHOLARSHIP MATCHES", "CardLabel")],
+                   [P(str(cluster_points), "CardValue"), P(str(len(qualified)), "CardValue"), P("See below", "BodySmall")]],
+                  colWidths=[58*mm, 58*mm, 58*mm])
+    cards.setStyle(TableStyle([("BACKGROUND", (0,0), (0,-1), LIGHT_BLUE), ("BACKGROUND", (1,0), (1,-1), LIGHT_PURPLE), ("BACKGROUND", (2,0), (2,-1), PALE), ("BOX", (0,0), (-1,-1), 0.6, BORDER), ("INNERGRID", (0,0), (-1,-1), 1, colors.white), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 10), ("RIGHTPADDING", (0,0), (-1,-1), 10), ("TOPPADDING", (0,0), (-1,-1), 8), ("BOTTOMPADDING", (0,0), (-1,-1), 8)]))
+    story += [cards, Spacer(1, 5*mm)]
+
+    # 5. Academic Profile Table
+    story += [P("01  Academic profile", "Section")]
+    grades_data = [[P("SUBJECT", "Tiny"), P("GRADE", "Tiny"), P("POINTS", "Tiny")]]
+    for i in range(7):
+        subj_name = subjects.get(str(i), f"Subject {i+1}")
+        grade = grades.get(str(i), "-")
+        pts = W.get(grade.upper(), 0) if grade else 0
+        grades_data.append([P(subj_name, "BodySmall"), P(grade, "BodySmall"), P(str(pts), "BodySmall")])
+    
+    gt = Table(grades_data, colWidths=[100*mm, 37*mm, 37*mm], repeatRows=1)
+    gt.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), PALE), ("TEXTCOLOR", (0,0), (-1,0), NAVY), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 7), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
+    story += [gt, Spacer(1, 5*mm)]
+
+    # 6. Qualified Courses Table
+    story += [P("02  Qualified courses", "Section"), P("The following courses have been identified based on the assessment criteria applied by EduPointAI. Confirm current entry requirements with the relevant institution.", "Sub"), Spacer(1, 2*mm)]
+    course_data = [[P("#", "Tiny"), P("COURSE / PROGRAMME", "Tiny"), P("INSTITUTION", "Tiny"), P("CUTOFF", "Tiny")]]
+    for idx, c in enumerate(qualified[:15]): # Limit to 15 for fitting
+        course_data.append([P(str(idx+1), "BodySmall"), P(c['n'], "BodySmall"), P(c['u'], "BodySmall"), P(str(c['c']), "BodySmall")])
+    
+    if len(qualified) == 0:
+        course_data.append([P("-", "BodySmall"), P("No courses qualified for yet based on your current grades.", "BodySmall"), P("", "BodySmall"), P("", "BodySmall")])
+
+    ct = Table(course_data, colWidths=[10*mm, 70*mm, 60*mm, 34*mm], repeatRows=1)
+    ct.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), LIGHT_BLUE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6), ("TOPPADDING", (0,0), (-1,-1), 6), ("BOTTOMPADDING", (0,0), (-1,-1), 6)]))
+    story += [ct, Spacer(1, 5*mm)]
+
+    # 7. Scholarships
+    story += [P("03  Scholarship opportunities", "Section")]
+    sch_data = [[P("SCHOLARSHIP", "Tiny"), P("AMOUNT", "Tiny"), P("DEADLINE", "Tiny")]]
+    for s in scholarships[:10]: # Limit to 10 for fitting
+        sch_data.append([P(s['name'], "BodySmall"), P(s['amount'], "BodySmall"), P(s['deadline'], "BodySmall")])
+        
+    st = Table(sch_data, colWidths=[90*mm, 50*mm, 34*mm], repeatRows=1)
+    st.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), LIGHT_PURPLE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6), ("TOPPADDING", (0,0), (-1,-1), 6), ("BOTTOMPADDING", (0,0), (-1,-1), 6)]))
+    story += [st, Spacer(1, 6*mm)]
+
+    # 8. Footer Details & QR Code
+    qr = qrcode.QRCode(version=1, box_size=3, border=1)
+    qr.add_data(f"EduPointAI|Ref:{ref}|Name:{user_name}")
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    qr_buffer = io.BytesIO()
+    qr_img.save(qr_buffer, format="PNG")
+    qr_buffer.seek(0)
+
+    from reportlab.platypus import Image as RLImage
+    qr_image = RLImage(qr_buffer, width=18*mm, height=18*mm)
+    
+    footer_table = Table([[qr_image, P(f"Report Reference: {ref}<br/>Generated: {today}<br/>Valid for: 12 Months", "BodySmall"), P("EduPointAI<br/>Your Education. Your Future.", "Brand")]], colWidths=[20*mm, 60*mm, 94*mm])
+    footer_table.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 5), ("TEXTCOLOR", (2,0), (2,0), NAVY)]))
+    story += [footer_table]
+
+    # Build PDF
+    doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+    buffer.seek(0)
+    return buffer
 
 def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
     try:
-        # 1. Generate PDF
-        pdf = FPDF()
-        pdf.add_page()
-        
-        # Header
-        pdf.set_font("Helvetica", 'B', size=18)
-        pdf.cell(0, 10, txt="EduPointAI Results Report", ln=True, align='C')
-        
-        pdf.set_font("Helvetica", size=10)
-        today = datetime.now().strftime("%Y-%m-%d")
-        ref = "EDU-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        pdf.cell(0, 10, txt=f"Date: {today} | Reference: {ref}", ln=True, align='C')
-        pdf.ln(5)
-
-        # Student Information
-        pdf.set_font("Helvetica", 'B', size=12)
-        pdf.cell(0, 10, txt="Student Information", ln=True)
-        pdf.set_font("Helvetica", size=11)
-        pdf.cell(0, 8, txt=f"Name: {sanitize_text(user_name)}", ln=True)
-        pdf.cell(0, 8, txt=f"Email: {sanitize_text(user_email)}", ln=True)
-        pdf.ln(5)
-
-        # KCSE Subject Grades
-        pdf.set_font("Helvetica", 'B', size=12)
-        pdf.cell(0, 10, txt="KCSE Subject Grades", ln=True)
-        pdf.set_font("Helvetica", size=11)
-        for i in range(7):
-            subj = sanitize_text(subjects.get(str(i), f"Subject {i+1}"))
-            grade = sanitize_text(grades.get(str(i), "-"))
-            pdf.cell(0, 8, txt=f"- {subj}: {grade}", ln=True)
-        pdf.ln(5)
-
-        # Cluster Points
-        pdf.set_font("Helvetica", 'B', size=12)
-        pdf.cell(0, 10, txt=f"Cluster Points: {cluster_points}", ln=True)
-        pdf.ln(5)
-
-        # Qualified Courses
-        qualified = [r for r in results if r['match'] == 'qualified']
-        pdf.set_font("Helvetica", 'B', size=12)
-        pdf.cell(0, 10, txt=f"Qualified Courses ({len(qualified)})", ln=True)
-        pdf.set_font("Helvetica", size=11)
-        if not qualified:
-            pdf.cell(0, 8, txt="No courses qualified for yet.", ln=True)
-        else:
-            for r in qualified[:25]: # Limit to top 25 to keep PDF clean
-                course = sanitize_text(r['n'])
-                uni = sanitize_text(r['u'])
-                pdf.cell(0, 8, txt=f"- {course} at {uni} (Cutoff: {r['c']})", ln=True)
-        pdf.ln(5)
-
-        # Scholarship Opportunities
-        pdf.set_font("Helvetica", 'B', size=12)
-        pdf.cell(0, 10, txt="Scholarship Opportunities", ln=True)
-        pdf.set_font("Helvetica", size=11)
-        for s in scholarships:
-            name = sanitize_text(s['name'])
-            amount = sanitize_text(s['amount'])
-            pdf.cell(0, 8, txt=f"- {name} ({amount})", ln=True)
-        pdf.ln(5)
-
-        # Disclaimer
-        pdf.set_font("Helvetica", 'I', size=9)
-        pdf.multi_cell(0, 6, txt=sanitize_text("Disclaimer: Course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers."))
-
-        pdf_bytes = pdf.output()
-        pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        # 1. Generate PDF using ReportLab
+        pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
+        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
 
         # 2. Setup Brevo Client
         api_key = os.getenv("BREVO_API_KEY")
@@ -165,7 +233,8 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
 
         client = Brevo(api_key=api_key)
 
-        # 3. HTML Email Body (Removed en-dash from subject just in case)
+        # 3. HTML Email Body
+        qualified_count = len([r for r in results if r['match'] == 'qualified'])
         email_html = f"""
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
             <h2 style="color: #1a1c33;">Dear {user_name},</h2>
@@ -176,7 +245,7 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
                 <h3 style="margin-top: 0; color: #1a1c33;">Your assessment summary:</h3>
                 <ul style="list-style-type: none; padding-left: 0;">
                     <li><b>Cluster Points:</b> {cluster_points}</li>
-                    <li><b>Qualified Courses:</b> {len(qualified)}</li>
+                    <li><b>Qualified Courses:</b> {qualified_count}</li>
                     <li><b>Scholarship Opportunities:</b> Included in your report</li>
                 </ul>
             </div>
@@ -193,7 +262,7 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
             <p>You can preview your complete report directly from your EduPointAI account. A PDF copy is also attached to this email for downloading and future reference.</p>
             
             <p style="font-size: 12px; color: #666; font-style: italic;">
-                Please remember that course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers.
+                Please note that course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers.
             </p>
 
             <p>Thank you for trusting EduPointAI with your academic journey.</p>
