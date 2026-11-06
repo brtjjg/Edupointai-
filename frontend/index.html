@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduPoint AI — KUCCPS, Cluster Points, Scholarships</title>
+<link rel="stylesheet" href="/css/style.css">
+</head><body>
+<header class="topbar">
+  <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+  <nav class="top-actions" id="nav"></nav>
+</header>
+<main class="container">
+  <section class="hero">
+    <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
+    <h1>Find your course. Unlock premium features.</h1>
+    <p>Pay with M-PESA, Airtel Money, T-Kash or card via Pesapal.</p>
+  </section>
+  <section class="card">
+    <h2>Unlock Premium Features</h2>
+    <div class="feature-list">
+      <label>✓ Full cluster point calculation</label>
+      <label>✓ Course and university matching</label>
+      <label>✓ Scholarship information</label>
+      <label>✓ AI chatbot access</label>
+    </div>
+    <div class="plans" id="plans"></div>
+    <div class="grid" id="cta"></div>
+  </section>
+</main>
+<script src="/js/api.js"></script>
+<script>
+(async function () {
+  const nav = document.getElementById("nav");
+  const cta = document.getElementById("cta");
+  if (getToken()) {
+    try {
+      const me = await api("/api/me");
+      nav.innerHTML = `<span>${me.user.name}</span>
+        <a class="nav-btn" href="/dashboard.html">Dashboard</a>
+        <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a>`;
+      cta.innerHTML = `<a class="pay nav-btn" href="/dashboard.html">Continue to Dashboard</a>`;
+    } catch (_) { clearToken(); }
+  }
+  if (!nav.innerHTML) {
+    nav.innerHTML = `<a class="nav-btn" href="/login.html">Login</a>
+                     <a class="nav-btn primary" href="/register.html">Create Account</a>`;
+    cta.innerHTML = `<a class="pay nav-btn" href="/register.html">Create Account</a>
+                     <a class="nav-btn" href="/login.html">Login</a>`;
+  }
+  const plans = await fetch(window.EDUPOINT_API + "/api/plans").then(r => r.json());
+  document.getElementById("plans").innerHTML = Object.values(plans).map(p =>
+    `<div class="plan"><strong>${p.name}</strong><b>KES ${p.amount}</b><span>${p.features.join(" • ")}</span></div>`
+  ).join("");
+})();
+</script>
+</body></html>
