@@ -66,4 +66,16 @@ def connect():
 def init_db():
     with connect() as conn:
         with conn.cursor() as cur:
+            # 1. Create tables if they don't exist
             cur.execute(SCHEMA)
+            
+            # 2. Migration: Add 'credits' column if it's missing from existing tables
+            cur.execute("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                   WHERE table_schema='edupoint' AND table_name='users' AND column_name='credits') THEN
+                        ALTER TABLE edupoint.users ADD COLUMN credits INTEGER NOT NULL DEFAULT 1;
+                    END IF;
+                END $$;
+            """)
