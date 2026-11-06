@@ -3,6 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EduPoint AI — KUCCPS, Cluster Points, Scholarships</title>
 <link rel="stylesheet" href="/css/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body>
 <header class="topbar">
   <div class="brand">🎓 EduPoint AI <span>v10</span></div>
@@ -12,7 +13,7 @@
   <section class="hero">
     <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
     <h1>Find your course. Unlock premium features.</h1>
-    <p>Pay with M-PESA, Airtel Money, T-Kash or card via Pesapal.</p>
+    <p>Pay via Pesapal (M-PESA, Airtel, T-Kash, Card) to unlock all tools for just 100 KES.</p>
   </section>
   <section class="card">
     <h2>Unlock Premium Features</h2>
@@ -22,12 +23,25 @@
       <label>✓ Scholarship information</label>
       <label>✓ AI chatbot access</label>
     </div>
-    <div class="plans" id="plans"></div>
-    <div class="grid" id="cta"></div>
+    
+    <!-- Google Sign In Button -->
+    <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse">
+    </div>
+    <div class="g_id_signin" data-type="standard" style="margin-top: 20px;"></div>
+
+    <div class="grid" id="cta" style="margin-top: 20px;"></div>
   </section>
 </main>
 <script src="/js/api.js"></script>
 <script>
+function handleCredentialResponse(response) {
+  api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) })
+    .then(j => { setToken(j.token); location.href = j.redirect; })
+    .catch(err => alert(err.message));
+}
+
 (async function () {
   const nav = document.getElementById("nav");
   const cta = document.getElementById("cta");
@@ -43,13 +57,8 @@
   if (!nav.innerHTML) {
     nav.innerHTML = `<a class="nav-btn" href="/login.html">Login</a>
                      <a class="nav-btn primary" href="/register.html">Create Account</a>`;
-    cta.innerHTML = `<a class="pay nav-btn" href="/register.html">Create Account</a>
-                     <a class="nav-btn" href="/login.html">Login</a>`;
+    cta.innerHTML = `<a class="nav-btn" href="/login.html">Or Login with Email</a>`;
   }
-  const plans = await fetch(window.EDUPOINT_API + "/api/plans").then(r => r.json());
-  document.getElementById("plans").innerHTML = Object.values(plans).map(p =>
-    `<div class="plan"><strong>${p.name}</strong><b>KES ${p.amount}</b><span>${p.features.join(" • ")}</span></div>`
-  ).join("");
 })();
 </script>
 </body></html>
