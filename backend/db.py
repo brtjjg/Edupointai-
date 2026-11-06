@@ -50,6 +50,38 @@ CREATE TABLE IF NOT EXISTS settings(
     key TEXT PRIMARY KEY,
     value TEXT
 );
+CREATE TABLE IF NOT EXISTS offers(
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    image_url TEXT,
+    offer_type TEXT NOT NULL,
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
+    max_claims INTEGER NOT NULL,
+    eligibility TEXT,
+    button_text TEXT DEFAULT 'Grab This Offer',
+    terms TEXT,
+    visibility TEXT DEFAULT 'all',
+    status TEXT DEFAULT 'active', -- draft, active, paused
+    requires_approval BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS offer_claims(
+    id SERIAL PRIMARY KEY,
+    offer_id INTEGER REFERENCES offers(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    reference TEXT UNIQUE NOT NULL,
+    status TEXT DEFAULT 'approved', -- pending, approved, rejected, redeemed
+    created_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(offer_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS offer_redemptions(
+    id SERIAL PRIMARY KEY,
+    claim_id INTEGER REFERENCES offer_claims(id) ON DELETE CASCADE,
+    redeemed_at TIMESTAMPTZ DEFAULT now(),
+    notes TEXT
+);
 """
 
 def connect():
