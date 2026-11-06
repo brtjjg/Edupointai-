@@ -7,8 +7,6 @@
   .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
   .input-row select { flex: 1; }
   .input-row select.grade-select { width: 100px; flex: none; }
-  
-  /* Styles for Results */
   .course-list { list-style: none; padding: 0; margin: 0; }
   .course-item { background: #1a1c33; margin-bottom: 10px; padding: 12px; border-radius: 8px; border-left: 4px solid #303451; }
   .course-item.qualified { border-left-color: #4ade80; background: rgba(74, 222, 128, 0.05); }
@@ -36,6 +34,7 @@
     <h2>🎯 Cluster Points Calculator</h2>
     <p>Select your 7 subjects and their grades below.</p>
     
+    <!-- Dropdowns inject here instantly -->
     <div id="subjectList" style="margin-bottom: 15px;"></div>
 
     <button class="pay" id="cb" type="button" style="margin-top: 15px;">Calculate</button>
@@ -72,7 +71,8 @@ const subjectList = [
 ];
 const gradeList = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
 
-(async function () {
+// 1. Render the dropdowns INSTANTLY
+(function renderDropdowns() {
   let html = "";
   for (let i = 0; i < 7; i++) {
     html += `
@@ -89,11 +89,20 @@ const gradeList = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-",
     `;
   }
   $("subjectList").innerHTML = html;
+})();
 
-  const r = await requireAuth(); if (!r) return;
-  me = r.user;
-  $("hello").textContent = "Hi, " + me.name;
-  updateCreditsUI(r.credits);
+// 2. Fetch user data in the background
+(async function loadUserData() {
+  try {
+    const r = await requireAuth(); 
+    if (!r) return;
+    me = r.user;
+    $("hello").textContent = "Hi, " + me.name;
+    updateCreditsUI(r.credits);
+  } catch (err) {
+    $("creditStatus").textContent = "⚠️ Could not connect to server. Please refresh.";
+    $("creditStatus").style.color = "#fbbf24";
+  }
 })();
 
 function updateCreditsUI(credits) {
@@ -106,7 +115,6 @@ function updateCreditsUI(credits) {
   }
 }
 
-$("cb").onclick = async () => {
 $("cb").onclick = async () => {
   const subjectSelects = document.querySelectorAll('.subject-select');
   const gradeSelects = document.querySelectorAll('.grade-select');
@@ -136,7 +144,55 @@ $("cb").onclick = async () => {
       body: JSON.stringify({ grades: grades, subjects: subjects }) 
     });
     
-    // ... (The rest of the rendering code remains exactly the same as before) ...
+    $("cr").textContent = "";
+    $("calcResult").style.display = "block";
+    $("cpDisplay").textContent = `Cluster points: ${d.cluster_points}`;
+    
+    // --- Render Qualified Courses ---
+    const qualified = d.results.filter(x => x.match === "qualified");
+    if (qualified.length > 0) {
+      $("qualifiedSection").style.display = "block";
+      $("qualifiedList").innerHTML = qualified.map(c => `
+        <li class="course-item qualified">
+          <div class="course-name">${c.n}</div>
+          <div class="course-uni">${c.u}</div>
+          <div class="course-meta">Cutoff: ${c.c} | You are +${c.difference.toFixed(3)} above</div>
+        </li>
+      `).join("");
+    } else {
+      $("qualifiedSection").style.display = "none";
+    }
+
+    // --- Render Close Matches ---
+    const close = d.results.filter(x => x.match === "close");
+    if (close.length > 0) {
+      $("closeSection").style.display = "block";
+      $("closeList").innerHTML = close.map(c => `
+        <li class="course-item close">
+          <div class="course-name">${c.n}</div>
+          <div class="course-uni">${c.u}</div>
+          <div class="course-meta">Cutoff: ${c.c} | You are ${c.difference.toFixed(3)} below</div>
+        </li>
+      `).join("");
+    } else {
+      $("closeSection").style.display = "none";
+    }
+    
+    updateCreditsUI(d.credits_left);
+
+  } catch (err) {
+    if (err.status === 402) {
+      $("cr").innerHTML = `
+        <div style="background: rgba(255,0,0,0.1); padding: 15px; border-radius: 8px; border: 1px solid #ff7b7b; margin-top: 15px;">
+          <b>No calculations left!</b><br>Pay 100 KES to unlock 1 more calculation.<br><br>
+          <button class="pay" onclick="triggerPayment('${me?.phone || '0700000000'}')">Pay 100 KES Now</button>
+        </div>
+      `;
+    } else {
+      $("cr").textContent = err.message || "An error occurred. Please try again.";
+    }
+  }
+};
 
 async function triggerPayment(phone) {
   try {
