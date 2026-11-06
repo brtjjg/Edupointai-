@@ -28,7 +28,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image as RLImage
 from reportlab.lib.colors import HexColor
 import qrcode
 
@@ -122,17 +122,18 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
         canvas.saveState()
         w, h = A4
         canvas.setFillColor(NAVY)
-        canvas.rect(0, h-8mm, w, 8mm, stroke=0, fill=1)
+        # FIXED: Proper Python math with * mm
+        canvas.rect(0, h - 8*mm, w, 8*mm, stroke=0, fill=1)
         canvas.setStrokeColor(BORDER)
         canvas.setLineWidth(0.6)
-        canvas.line(18mm, 16mm, w-18mm, 16mm)
+        canvas.line(18*mm, 16*mm, w - 18*mm, 16*mm)
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(MUTED)
-        canvas.drawString(18mm, 10.5mm, "EduPointAI  |  Your Education. Your Future.")
-        canvas.drawRightString(w-18mm, 10.5mm, f"Page {doc.page}")
+        canvas.drawString(18*mm, 10.5*mm, "EduPointAI  |  Your Education. Your Future.")
+        canvas.drawRightString(w - 18*mm, 10.5*mm, f"Page {doc.page}")
         canvas.restoreState()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18mm, leftMargin=18mm, topMargin=17mm, bottomMargin=23mm)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=17*mm, bottomMargin=23*mm)
     story = []
 
     # 1. Brand Banner
@@ -205,7 +206,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     qr_img.save(qr_buffer, format="PNG")
     qr_buffer.seek(0)
 
-    from reportlab.platypus import Image as RLImage
     qr_image = RLImage(qr_buffer, width=18*mm, height=18*mm)
     
     footer_table = Table([[qr_image, P(f"Report Reference: {ref}<br/>Generated: {today}<br/>Valid for: 12 Months", "BodySmall"), P("EduPointAI<br/>Your Education. Your Future.", "Brand")]], colWidths=[20*mm, 60*mm, 94*mm])
