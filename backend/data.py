@@ -1,8 +1,8 @@
 PAYMENT_PLANS = {
     "standard": {
-        "amount": 100, 
-        "name": "Full Access (100 KES)", 
-        "features": ["Unlimited Searches", "Full Results", "Scholarship Info", "AI Chatbot"]
+        "amount": 100,
+        "name": "Single Calculation",
+        "features": ["1 Cluster Calculation", "PDF Report via Email"]
     }
 }
 
