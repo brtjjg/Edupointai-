@@ -7,3 +7,4 @@ google-auth>=2.28,<3
 brevo-python>=4.0.10,<5
 reportlab>=4.0,<5
 qrcode>=7.4,<8
+Pillow>=10.0,<11
