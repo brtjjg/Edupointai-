@@ -84,13 +84,17 @@ def ensure_admin():
     with connect() as conn:
         row = conn.execute("SELECT id FROM users WHERE email=%s", (email,)).fetchone()
         if row:
-            conn.execute("UPDATE users SET role='admin', password_hash=%s WHERE id=%s", (hash_password(password), row["id"]))
+            # FORCES the admin to be active, resets the password, and sets the role
+            conn.execute(
+                "UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", 
+                (hash_password(password), row["id"])
+            )
         else:
             conn.execute(
-                """INSERT INTO users(name,email,phone,password_hash,referral_code,role) VALUES(%s,%s,%s,%s,%s,'admin')""",
+                """INSERT INTO users(name,email,phone,password_hash,referral_code,role,active) 
+                   VALUES(%s,%s,%s,%s,%s,'admin',1)""",
                 ("EduPoint Administrator", email, "", hash_password(password), "ADMIN"),
             )
-ensure_admin()
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
     buffer = io.BytesIO()
