@@ -5,7 +5,6 @@ from psycopg.rows import dict_row
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 SCHEMA = """
-SCHEMA = """
 CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -15,11 +14,10 @@ CREATE TABLE IF NOT EXISTS users(
     referral_code TEXT,
     role TEXT NOT NULL DEFAULT 'student',
     active INTEGER NOT NULL DEFAULT 1,
-    calculation_count INTEGER NOT NULL DEFAULT 0, -- ADD THIS LINE
+    credits INTEGER NOT NULL DEFAULT 1, -- 1 Free calculation for new users
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- (Leave the rest of the schema exactly as it is)
-);
+-- (Leave the access, payments, sessions, and settings tables exactly as they are)
 CREATE TABLE IF NOT EXISTS access(
     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     paid INTEGER NOT NULL DEFAULT 0,
