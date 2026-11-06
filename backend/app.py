@@ -8,6 +8,9 @@ import random
 import string
 import io
 from datetime import datetime
+from datetime import datetime, timezone
+import random
+import string
 
 import psycopg
 from flask import Flask, request, jsonify
@@ -572,6 +575,135 @@ def admin_access(user_id):
             conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
             
     return jsonify(ok=True, added=credits_to_add)
+
+# ---------------- OFFERS ROUTES ----------------
+
+@app.get("/api/offers/active")
+@login_required
+def active_offers():
+    u = current_user()
+    with connect() as conn:
+        # Find active offers that the user hasn't claimed yet and haven't expired
+        row = conn.execute(
+            """SELECT o.* FROM offers o
+               WHERE o.status = 'active' 
+               AND o.start_date <= now() 
+               AND o.end_date >= now()
+               AND o.id NOT IN (SELECT offer_id FROM offer_claims WHERE user_id = %s)
+               AND (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) < o.max_claims
+               ORDER BY o.created_at DESC LIMIT 1""", (u["id"],)
+        ).fetchone()
+    return jsonify(ok=True, offer=row)
+
+@app.post("/api/offers/claim/<int:offer_id>")
+@login_required
+def claim_offer(offer_id):
+    u = current_user()
+    try:
+        with connect() as conn:
+            # Verify offer is still valid
+            offer = conn.execute("SELECT * FROM offers WHERE id=%s AND status='active' AND end_date >= now()", (offer_id,)).fetchone()
+            if not offer:
+                return jsonify(ok=False, error="Offer expired or unavailable."), 400
+            
+            # Check max claims
+            claims_count = conn.execute("SELECT COUNT(*) as c FROM offer_claims WHERE offer_id=%s", (offer_id,)).fetchone()["c"]
+            if claims_count >= offer["max_claims"]:
+                return jsonify(ok=False, error="This offer has been fully claimed."), 400
+            
+            # Generate reference
+            ref = "OFF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            status = "pending" if offer["requires_approval"] else "approved"
+            
+            conn.execute(
+                "INSERT INTO offer_claims (offer_id, user_id, reference, status) VALUES (%s, %s, %s, %s)",
+                (offer_id, u["id"], ref, status)
+            )
+            return jsonify(ok=True, reference=ref, status=status, requires_approval=offer["requires_approval"])
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="You have already claimed this offer."), 400
+
+@app.get("/api/offers/my-claims")
+@login_required
+def my_claims():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT c.*, o.title, o.offer_type FROM offer_claims c
+               JOIN offers o ON c.offer_id = o.id
+               WHERE c.user_id = %s ORDER BY c.created_at DESC""", (u["id"],)
+        ).fetchall()
+    return jsonify(ok=True, claims=rows)
+
+# ---------------- ADMIN OFFERS ROUTES ----------------
+
+@app.get("/api/admin/offers/stats")
+@admin_required
+def admin_offers_stats():
+    with connect() as conn:
+        total = conn.execute("SELECT COUNT(*) as c FROM offers").fetchone()["c"]
+        active = conn.execute("SELECT COUNT(*) as c FROM offers WHERE status='active' AND end_date >= now()").fetchone()["c"]
+        expired = conn.execute("SELECT COUNT(*) as c FROM offers WHERE end_date < now()").fetchone()["c"]
+        claims = conn.execute("SELECT COUNT(*) as c FROM offer_claims").fetchone()["c"]
+    return jsonify(ok=True, stats={"total": total, "active": active, "claims": claims, "expired": expired})
+
+@app.get("/api/admin/offers")
+@admin_required
+def admin_get_offers():
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT o.*, (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) as total_claims
+               FROM offers o ORDER BY o.created_at DESC"""
+        ).fetchall()
+    return jsonify(ok=True, offers=rows)
+
+@app.post("/api/admin/offers")
+@admin_required
+def admin_create_offer():
+    d = request.get_json(silent=True) or {}
+    try:
+        with connect() as conn:
+            conn.execute(
+                """INSERT INTO offers (title, description, image_url, offer_type, start_date, end_date, max_claims, eligibility, button_text, terms, requires_approval)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (d["title"], d["description"], d["image_url"], d["offer_type"], d["start_date"], d["end_date"], d["max_claims"], d.get("eligibility"), d.get("button_text", "Grab This Offer"), d.get("terms"), d.get("requires_approval", False))
+            )
+        return jsonify(ok=True)
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 400
+
+@app.post("/api/admin/offers/<int:offer_id>/status")
+@admin_required
+def admin_update_offer_status(offer_id):
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute("UPDATE offers SET status=%s WHERE id=%s", (d.get("status"), offer_id))
+    return jsonify(ok=True)
+
+@app.delete("/api/admin/offers/<int:offer_id>")
+@admin_required
+def admin_delete_offer(offer_id):
+    with connect() as conn:
+        conn.execute("DELETE FROM offers WHERE id=%s", (offer_id,))
+    return jsonify(ok=True)
+
+@app.get("/api/admin/offers/<int:offer_id>/claims")
+@admin_required
+def admin_offer_claims(offer_id):
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT c.*, u.name as student_name, u.email FROM offer_claims c
+               JOIN users u ON c.user_id = u.id WHERE c.offer_id = %s""", (offer_id,)
+        ).fetchall()
+    return jsonify(ok=True, claims=rows)
+
+@app.post("/api/admin/claims/<int:claim_id>/status")
+@admin_required
+def admin_update_claim(claim_id):
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute("UPDATE offer_claims SET status=%s WHERE id=%s", (d.get("status"), claim_id))
+    return jsonify(ok=True)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
