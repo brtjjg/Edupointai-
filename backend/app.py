@@ -2,7 +2,9 @@
 import os
 import uuid
 import logging
-import smtplib
+import base64
+from brevo import Brevo
+from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
 import threading
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
