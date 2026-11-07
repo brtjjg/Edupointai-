@@ -1,0 +1,170 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scholarships — EduPoint AI</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .dashboard-layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 250px; background: #0b0d1d; border-right: 1px solid #303451; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar h3 { color: #73e8ff; margin-bottom: 20px; font-size: 14px; letter-spacing: 1px; }
+  .sidebar a { color: #aab1ca; text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+  .sidebar a:hover, .sidebar a.active { background: #1a1c33; color: #fff; }
+  .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+  
+  .sch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  @media(max-width: 900px) { .sch-grid { grid-template-columns: 1fr; } }
+  
+  .card-box { background: #111326; border: 1px solid #303451; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+  .card-box h4 { margin: 0 0 10px 0; color: #fff; font-size: 16px; }
+  .card-box p { color: #aab1ca; font-size: 13px; margin: 5px 0; }
+  
+  .status-select { padding: 8px; border-radius: 6px; background: #080a18; color: #fff; border: 1px solid #303451; width: 100%; margin-top: 10px; }
+  .btn-save { background: #15803D; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
+  .btn-save:hover { background: #166534; }
+  
+  .notes-input { width: 100%; background: #080a18; border: 1px solid #303451; border-radius: 6px; color: #fff; padding: 10px; font-size: 13px; margin-top: 5px; resize: vertical; }
+  
+  .status-badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
+  .st-Discovered { background: rgba(115,232,255,0.1); color: #73e8ff; }
+  .st-Interested { background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .st-Applied { background: rgba(168,85,247,0.1); color: #c084fc; }
+  .st-Awarded { background: rgba(74,222,128,0.1); color: #4ade80; }
+</style>
+</head><body>
+
+<div class="dashboard-layout">
+  <div class="sidebar">
+    <h3>STUDENT DASHBOARD</h3>
+    <a href="/dashboard.html">Cluster Points Calculator</a>
+    <a href="/history.html">My Calculation History</a>
+    <a href="/comparison.html">Academic Comparison</a>
+    <a href="#" onclick="alert('Coming soon: Reports Centre!')">My Reports</a>
+    <a href="/scholarships.html" class="active">Scholarship Opportunities</a>
+    <a href="#" onclick="logout(); return false;" style="color: #ff7b7b; margin-top: auto;">Logout</a>
+  </div>
+
+  <div class="main-content">
+    <h1 style="font-size: 28px; margin-bottom: 5px;">Scholarship Opportunities</h1>
+    <p style="color: #aab1ca; margin-bottom: 20px;">Discover, track, and manage your scholarship applications.</p>
+
+    <div class="sch-grid">
+      <!-- Left Column: Available Scholarships -->
+      <div>
+        <h2 style="color: #73e8ff; font-size: 20px; border-bottom: 1px solid #303451; padding-bottom: 10px;">Available Scholarships</h2>
+        <div id="availableList" style="margin-top: 15px;"></div>
+      </div>
+
+      <!-- Right Column: My Tracker -->
+      <div>
+        <h2 style="color: #4ade80; font-size: 20px; border-bottom: 1px solid #303451; padding-bottom: 10px;">My Application Tracker</h2>
+        <div id="trackerList" style="margin-top: 15px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+let savedScholarships = [];
+
+(async function init() {
+  const r = await requireAuth();
+  if (!r) return;
+
+  await loadSaved();
+  loadAvailable();
+})();
+
+async function loadSaved() {
+  const res = await api("/api/scholarships/saved");
+  savedScholarships = res.saved;
+  
+  const tracker = document.getElementById("trackerList");
+  if (savedScholarships.length === 0) {
+    tracker.innerHTML = `<p style="color: #aab1ca;">You haven't saved any scholarships yet. Save one from the left to start tracking!</p>`;
+    return;
+  }
+
+  tracker.innerHTML = savedScholarships.map(s => {
+    const badgeClass = `st-${s.status.split(" ")[0]}`;
+    return `
+      <div class="card-box">
+        <span class="status-badge ${badgeClass}">${s.status}</span>
+        <h4>${s.scholarship_name}</h4>
+        
+        <select class="status-select" onchange="updateStatus(${s.id}, this.value)">
+          ${["Discovered", "Interested", "Preparing", "Applied", "Awarded", "Rejected"].map(st => 
+            `<option value="${st}" ${s.status === st ? 'selected' : ''}>${st}</option>`
+          ).join("")}
+        </select>
+        
+        <textarea class="notes-input" rows="2" placeholder="Add personal notes (e.g., missing documents, contact person)..." 
+          onblur="saveNotes(${s.id}, this.value)">${s.notes || ''}</textarea>
+        
+        <button onclick="removeSaved(${s.id})" style="background: transparent; border: none; color: #ff7b7b; font-size: 12px; margin-top: 10px; cursor: pointer;">Remove from tracker</button>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadAvailable() {
+  // We use the existing route that returns the global scholarships
+  const res = await api("/api/scholarships");
+  
+  const available = document.getElementById("availableList");
+  available.innerHTML = res.map((s, i) => {
+    // Check if already saved
+    const isSaved = savedScholarships.some(x => x.scholarship_name === s.name);
+    
+    return `
+      <div class="card-box">
+        <h4>${s.name}</h4>
+        <p><b>Amount:</b> ${s.amount}</p>
+        <p><b>Deadline:</b> ${s.deadline}</p>
+        <p><b>Requirements:</b> ${s.major} | ${s.income_req}</p>
+        <a href="${s.link}" target="_blank" style="color: #73e8ff; font-size: 12px;">Visit Official Website ↗</a>
+        <br>
+        ${isSaved 
+          ? `<button class="btn-save" style="background: #303451; cursor: not-allowed;" disabled>✓ Already Saved</button>` 
+          : `<button class="btn-save" onclick="saveScholarship('${s.name}')">Save to Tracker</button>`
+        }
+      </div>
+    `;
+  }).join("");
+}
+
+async function saveScholarship(name) {
+  try {
+    await api("/api/scholarships/save", { method: "POST", body: JSON.stringify({ name }) });
+    await loadSaved();
+    loadAvailable(); // Re-render available to show "Already Saved"
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function updateStatus(sid, status) {
+  const s = savedScholarships.find(x => x.id === sid);
+  await api(`/api/scholarships/${sid}/status`, { 
+    method: "POST", 
+    body: JSON.stringify({ status: status, notes: s.notes || "" }) 
+  });
+  await loadSaved(); // reload to refresh the badge
+}
+
+async function saveNotes(sid, notes) {
+  const s = savedScholarships.find(x => x.id === sid);
+  await api(`/api/scholarships/${sid}/status`, { 
+    method: "POST", 
+    body: JSON.stringify({ status: s.status, notes: notes }) 
+  });
+}
+
+async function removeSaved(sid) {
+  if (!confirm("Remove this scholarship from your tracker?")) return;
+  await api(`/api/scholarships/${sid}`, { method: "DELETE" });
+  await loadSaved();
+  loadAvailable();
+}
+</script>
+</body></html>
