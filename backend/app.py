@@ -11,6 +11,7 @@ from datetime import datetime
 from datetime import datetime, timezone
 import random
 import string
+import random
 
 import psycopg
 from flask import Flask, request, jsonify
@@ -510,17 +511,61 @@ def calculate():
             diff = cp - course["c"]
             out.append({**course, "difference": round(diff, 3), "match": "qualified" if diff >= 0 else ("close" if diff >= -2 else "not_qualified")})
             
+        # --- SAVE TO HISTORY ---
+        ref_code = "EPA-2026-" + ''.join(random.choices(string.digits, k=6))
+        
         with connect() as conn:
+            # Deduct credit
             conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
             
+            # Save main history record
+            history_row = conn.execute(
+                "INSERT INTO calculation_history (user_id, reference, cluster_points) VALUES (%s, %s, %s) RETURNING id",
+                (u["id"], ref_code, round(cp, 3))
+            ).fetchone()
+            history_id = history_row["id"]
+            
+            # Save subjects
+            for i in range(7):
+                subj = subjects.get(str(i), f"Subject {i+1}")
+                grade = grades.get(str(i), "-")
+                conn.execute("INSERT INTO calculation_subjects (history_id, subject, grade) VALUES (%s, %s, %s)", (history_id, subj, grade))
+            
+            # Save courses (qualified and close only)
+            for c in out:
+                if c["match"] in ["qualified", "close"]:
+                    conn.execute(
+                        "INSERT INTO calculation_courses (history_id, course_name, university, cutoff, difference, match_type) VALUES (%s, %s, %s, %s, %s, %s)",
+                        (history_id, c["n"], c["u"], c["c"], c["difference"], c["match"])
+                    )
+                    
         threading.Thread(
             target=send_pdf_email, 
             args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
         ).start()
             
-        return jsonify(ok=True, cluster_points=round(cp, 3), results=out, credits_left=u["credits"] - 1)
+        return jsonify(ok=True, reference=ref_code, cluster_points=round(cp, 3), results=out, credits_left=u["credits"] - 1)
     except Exception as e:
+        logger.error(f"Calculation failed: {e}")
         return jsonify(ok=False, error=f"Invalid grades: {e}"), 400
+
+@app.get("/api/history")
+@login_required
+def get_history():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT h.*, 
+               (SELECT COUNT(*) FROM calculation_courses WHERE history_id = h.id AND match_type = 'qualified') as qual_count,
+               (SELECT COUNT(*) FROM calculation_courses WHERE history_id = h.id AND match_type = 'close') as close_count
+               FROM calculation_history h
+               WHERE h.user_id = %s ORDER BY h.created_at DESC""", (u["id"],)
+        ).fetchall()
+    
+    for r in rows:
+        r["created_at"] = r["created_at"].isoformat()
+        r["cluster_points"] = float(r["cluster_points"])
+    return jsonify(ok=True, history=rows)
 
 @app.get("/api/scholarships")
 @login_required
