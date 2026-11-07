@@ -104,6 +104,15 @@ CREATE TABLE IF NOT EXISTS calculation_courses(
     difference NUMERIC(6,3),
     match_type TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS student_scholarships(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    scholarship_name TEXT NOT NULL,
+    status TEXT DEFAULT 'Discovered', -- Discovered, Interested, Preparing, Applied, Awarded, Rejected
+    notes TEXT,
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(user_id, scholarship_name)
+);
 """
 
 def connect():
