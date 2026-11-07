@@ -6,16 +6,17 @@
 <title>EduPoint Admin</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
-  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #303451; padding-bottom: 10px; }
-  .tab-btn { background: transparent; border: none; color: #aab1ca; font-size: 16px; cursor: pointer; padding: 10px; font-weight: bold; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #303451; padding-bottom: 10px; overflow-x: auto; }
+  .tab-btn { background: transparent; border: none; color: #aab1ca; font-size: 16px; cursor: pointer; padding: 10px; font-weight: bold; white-space: nowrap; }
   .tab-btn.active { color: #73e8ff; border-bottom: 2px solid #73e8ff; }
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
   .stat-card { background: #111326; border: 1px solid #303451; padding: 20px; border-radius: 12px; text-align: center; }
-  .stat-card h3 { margin: 0; color: #aab1ca; font-size: 14px; }
-  .stat-card p { margin: 10px 0 0; font-size: 28px; font-weight: bold; color: #73e8ff; }
+  .stat-card h3 { margin: 0; color: #aab1ca; font-size: 13px; text-transform: uppercase; }
+  .stat-card p { margin: 10px 0 0; font-size: 24px; font-weight: bold; color: #73e8ff; }
   .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
   .form-row > * { flex: 1; }
   .btn-green { background: #15803D; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+  .search-bar { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #303451; background: #080a18; color: #fff; margin-bottom: 15px; }
 </style>
 </head>
 <body>
@@ -30,9 +31,10 @@
 
 <main class="container">
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('users')">Users</button>
-    <button class="tab-btn" onclick="switchTab('payments')">Payments</button>
-    <button class="tab-btn" onclick="switchTab('offers')">🎁 Offers Management</button>
+    <button class="tab-btn active" onclick="switchTab('users', event)">Users</button>
+    <button class="tab-btn" onclick="switchTab('payments', event)">Payments</button>
+    <button class="tab-btn" onclick="switchTab('offers', event)">🎁 Offers Management</button>
+    <button class="tab-btn" onclick="switchTab('history', event)">📊 Academic History</button>
   </div>
 
   <!-- Users Tab -->
@@ -99,26 +101,53 @@
       </div>
     </section>
   </div>
+
+  <!-- Academic History Tab -->
+  <div id="tab-history" style="display:none;">
+    <div class="stats-grid">
+      <div class="stat-card"><h3>Total Calculations</h3><p id="histTotal">0</p></div>
+      <div class="stat-card"><h3>Active Students</h3><p id="histStudents">0</p></div>
+      <div class="stat-card" style="grid-column: span 2;"><h3>Most Qualified Course</h3><p id="histTopCourse" style="font-size: 18px; color: #4ade80;">-</p></div>
+    </div>
+
+    <section class="card">
+      <h2>Student Calculation Records</h2>
+      <input type="text" id="histSearch" class="search-bar" placeholder="Search by student name, email, or reference ID...">
+      
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Reference</th><th>Student Name</th><th>Email</th><th>Date</th><th>Cluster Points</th></tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </main>
 
 <script src="/js/api.js"></script>
 <script>
-function switchTab(tab) {
+function switchTab(tab, evt) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  evt.target.classList.add('active');
+  
   document.getElementById('tab-users').style.display = tab === 'users' ? 'block' : 'none';
   document.getElementById('tab-payments').style.display = tab === 'payments' ? 'block' : 'none';
   document.getElementById('tab-offers').style.display = tab === 'offers' ? 'block' : 'none';
+  document.getElementById('tab-history').style.display = tab === 'history' ? 'block' : 'none';
   
   if (tab === 'offers') loadOffersData();
+  if (tab === 'history') loadHistoryData();
 }
 
 (async function () {
   const me = await requireAuth(); 
   if (!me || me.user.role !== "admin") { location.href = "/dashboard.html"; return; }
-
-  // Load Users & Payments on start
-  loadUsers(); loadPayments();
+  loadUsers(); 
+  loadPayments();
 })();
 
 async function loadUsers() {
@@ -197,6 +226,45 @@ async function viewClaims(id, title) {
     msg += `${c.student_name} (${c.email})\nRef: ${c.reference} | Status: ${c.status}\n\n`;
   });
   alert(msg);
+}
+
+// ACADEMIC HISTORY FUNCTIONS
+async function loadHistoryData() {
+  // Load stats
+  const stats = await api("/api/admin/history/stats");
+  document.getElementById("histTotal").textContent = stats.stats.total_calcs;
+  document.getElementById("histStudents").textContent = stats.stats.unique_students;
+  document.getElementById("histTopCourse").textContent = stats.stats.top_course;
+
+  // Load table
+  fetchHistoryTable("");
+  
+  // Setup search
+  document.getElementById("histSearch").addEventListener("input", (e) => {
+    fetchHistoryTable(e.target.value);
+  });
+}
+
+async function fetchHistoryTable(searchTerm) {
+  const url = searchTerm ? `/api/admin/history?search=${encodeURIComponent(searchTerm)}` : "/api/admin/history";
+  const res = await api(url);
+  
+  document.getElementById("historyBody").innerHTML = res.history.map(h => `
+    <tr>
+      <td style="font-family: monospace;">${h.reference}</td>
+      <td>${h.student_name}</td>
+      <td>${h.email}</td>
+      <td>${new Date(h.created_at).toLocaleDateString()}</td>
+      <td><b>${h.cluster_points.toFixed(3)}</b></td>
+    </tr>
+  `).join("") || `<tr><td colspan="5" style="text-align: center;">No records found.</td></tr>`;
+}
+
+async function grant(id) {
+  const amount = prompt("How many credits to add?", "1");
+  if (amount === null || isNaN(amount)) return;
+  await api(`/api/admin/access/${id}`, { method: "POST", body: JSON.stringify({ credits: parseInt(amount) }) });
+  alert("Credits added!"); loadUsers();
 }
 </script>
 </body>
