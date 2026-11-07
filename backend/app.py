@@ -689,11 +689,62 @@ def compare_history():
         lost_courses=lost_courses,
         subject_changes=subject_changes
     )
-
-@app.get("/api/scholarships")
+@app.get("/api/scholarships/saved")
 @login_required
-def scholarships():
-    return jsonify(SCHOLARSHIPS)
+def get_saved_scholarships():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM student_scholarships WHERE user_id=%s ORDER BY updated_at DESC", 
+            (u["id"],)
+        ).fetchall()
+    for r in rows:
+        r["updated_at"] = r["updated_at"].isoformat()
+    return jsonify(ok=True, saved=rows)
+
+@app.post("/api/scholarships/save")
+@login_required
+def save_scholarship():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    name = d.get("name")
+    
+    if not name:
+        return jsonify(ok=False, error="Scholarship name required."), 400
+        
+    try:
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO student_scholarships (user_id, scholarship_name) VALUES (%s, %s)",
+                (u["id"], name)
+            )
+        return jsonify(ok=True)
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="Scholarship already saved."), 400
+
+@app.post("/api/scholarships/<int:sid>/status")
+@login_required
+def update_scholarship_status(sid):
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    status = d.get("status")
+    notes = d.get("notes", "")
+    
+    with connect() as conn:
+        conn.execute(
+            "UPDATE student_scholarships SET status=%s, notes=%s, updated_at=now() WHERE id=%s AND user_id=%s",
+            (status, notes, sid, u["id"])
+        )
+    return jsonify(ok=True)
+
+@app.delete("/api/scholarships/<int:sid>")
+@login_required
+def delete_scholarship(sid):
+    u = current_user()
+    with connect() as conn:
+        conn.execute("DELETE FROM student_scholarships WHERE id=%s AND user_id=%s", (sid, u["id"]))
+    return jsonify(ok=True)
+
 
 @app.post("/api/chat")
 @login_required
