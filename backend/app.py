@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+I'm#!/usr/bin/env python3
 import os
 import uuid
 import logging
@@ -566,6 +566,74 @@ def get_history():
         r["created_at"] = r["created_at"].isoformat()
         r["cluster_points"] = float(r["cluster_points"])
     return jsonify(ok=True, history=rows)
+
+@app.get("/api/history/<reference>")
+@login_required
+def get_history_details(reference):
+    u = current_user()
+    with connect() as conn:
+        # Fetch main record
+        h = conn.execute(
+            "SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", 
+            (reference, u["id"])
+        ).fetchone()
+        
+        if not h:
+            return jsonify(ok=False, error="Record not found."), 404
+            
+        # Fetch subjects
+        subs = conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h["id"],)).fetchall()
+        subjects_dict = {str(i): row["subject"] for i, row in enumerate(subs)}
+        grades_dict = {str(i): row["grade"] for i, row in enumerate(subs)}
+        
+        # Fetch courses
+        courses = conn.execute("SELECT course_name, university, cutoff, difference, match_type FROM calculation_courses WHERE history_id=%s", (h["id"],)).fetchall()
+        
+    return jsonify(
+        ok=True, 
+        record={
+            "reference": h["reference"],
+            "cluster_points": float(h["cluster_points"]),
+            "created_at": h["created_at"].isoformat()
+        }, 
+        subjects=subjects_dict, 
+        grades=grades_dict, 
+        courses=courses
+    )
+
+@app.post("/api/history/<reference>/email")
+@login_required
+def resend_history_email(reference):
+    u = current_user()
+    with connect() as conn:
+        h = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (reference, u["id"])).fetchone()
+        if not h:
+            return jsonify(ok=False, error="Record not found."), 404
+            
+        subs = conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h["id"],)).fetchall()
+        subjects_dict = {str(i): row["subject"] for i, row in enumerate(subs)}
+        grades_dict = {str(i): row["grade"] for i, row in enumerate(subs)}
+        
+        courses = conn.execute("SELECT course_name, university, cutoff, difference, match_type FROM calculation_courses WHERE history_id=%s", (h["id"],)).fetchall()
+        
+        # Reconstruct the results format expected by generate_report_pdf
+        results_formatted = []
+        for c in courses:
+            results_formatted.append({
+                "n": c["course_name"],
+                "u": c["university"],
+                "c": float(c["cutoff"]),
+                "difference": float(c["difference"]),
+                "match": c["match_type"]
+            })
+            
+    # Trigger email thread
+    threading.Thread(
+        target=send_pdf_email, 
+        args=(u["email"], u["name"], float(h["cluster_points"]), results_formatted, subjects_dict, grades_dict, SCHOLARSHIPS)
+    ).start()
+    
+    return jsonify(ok=True, message="Email is being sent!")
 
 @app.get("/api/scholarships")
 @login_required
