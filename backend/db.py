@@ -82,6 +82,28 @@ CREATE TABLE IF NOT EXISTS offer_redemptions(
     redeemed_at TIMESTAMPTZ DEFAULT now(),
     notes TEXT
 );
+CREATE TABLE IF NOT EXISTS calculation_history(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    reference TEXT UNIQUE NOT NULL,
+    cluster_points NUMERIC(6,3) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS calculation_subjects(
+    id SERIAL PRIMARY KEY,
+    history_id INTEGER REFERENCES calculation_history(id) ON DELETE CASCADE,
+    subject TEXT NOT NULL,
+    grade TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS calculation_courses(
+    id SERIAL PRIMARY KEY,
+    history_id INTEGER REFERENCES calculation_history(id) ON DELETE CASCADE,
+    course_name TEXT NOT NULL,
+    university TEXT NOT NULL,
+    cutoff NUMERIC(6,3),
+    difference NUMERIC(6,3),
+    match_type TEXT NOT NULL
+);
 """
 
 def connect():
