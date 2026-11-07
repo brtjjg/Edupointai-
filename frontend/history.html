@@ -1,0 +1,140 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>History — EduPoint AI</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .dashboard-layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 250px; background: #0b0d1d; border-right: 1px solid #303451; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar h3 { color: #73e8ff; margin-bottom: 20px; font-size: 14px; letter-spacing: 1px; }
+  .sidebar a { color: #aab1ca; text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+  .sidebar a:hover, .sidebar a.active { background: #1a1c33; color: #fff; }
+  .main-content { flex: 1; padding: 20px; overflow-x: auto; }
+  
+  .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #111326; border-radius: 12px; overflow: hidden; }
+  .history-table th { background: #1a1c33; color: #73e8ff; padding: 15px; text-align: left; font-size: 13px; }
+  .history-table td { padding: 15px; border-bottom: 1px solid #2a2e4d; color: #e2e8f0; font-size: 14px; }
+  .history-table tr:hover { background: rgba(255,255,255,0.02); }
+  
+  .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+  .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; }
+  .badge-orange { background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .btn-small { background: #24306d; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
+  
+  @media (max-width: 768px) {
+    .dashboard-layout { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; }
+    .sidebar h3 { display: none; }
+    .sidebar a { white-space: nowrap; padding: 10px; }
+  }
+</style>
+</head><body>
+
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3>STUDENT DASHBOARD</h3>
+    <a href="/dashboard.html">Cluster Points Calculator</a>
+    <a href="/history.html" class="active">My Calculation History</a>
+    <a href="#" onclick="alert('Coming soon: Comparison Centre!')">Academic Comparison</a>
+    <a href="#" onclick="alert('Coming soon: Reports Centre!')">My Reports</a>
+    <a href="#" onclick="alert('Coming soon: Scholarships!')">Scholarship Opportunities</a>
+    <a href="#" onclick="logout(); return false;" style="color: #ff7b7b; margin-top: auto;">Logout</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1 style="font-size: 28px; margin-bottom: 5px;">Your Academic Journey</h1>
+    <p style="color: #aab1ca; margin-bottom: 20px;">Every calculation. Every opportunity. Every step forward.</p>
+
+    <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+      <div class="summary-card" style="background: #111326; padding: 15px; border-radius: 8px; border: 1px solid #303451; text-align: center;">
+        <h4 style="color: #aab1ca; font-size: 12px; margin: 0;">Total Assessments</h4>
+        <p id="statTotal" style="font-size: 24px; color: #73e8ff; font-weight: bold; margin: 5px 0 0;">0</p>
+      </div>
+      <div class="summary-card" style="background: #111326; padding: 15px; border-radius: 8px; border: 1px solid #303451; text-align: center;">
+        <h4 style="color: #aab1ca; font-size: 12px; margin: 0;">Best Cluster Points</h4>
+        <p id="statBest" style="font-size: 24px; color: #4ade80; font-weight: bold; margin: 5px 0 0;">-</p>
+      </div>
+    </div>
+
+    <div class="card" style="background: #111326; border-radius: 12px; padding: 20px;">
+      <h2 style="margin-top: 0;">All Assessments</h2>
+      <input type="text" id="searchInput" placeholder="Search by reference or date..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #303451; background: #080a18; color: #fff; margin-bottom: 15px;">
+      
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Date</th>
+            <th>Cluster Points</th>
+            <th>Qualified</th>
+            <th>Close Matches</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="6" style="text-align: center;">Loading history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+(async function loadHistory() {
+  const r = await requireAuth();
+  if (!r) return;
+
+  try {
+    const res = await api("/api/history");
+    const history = res.history;
+    
+    // Update stats
+    document.getElementById("statTotal").textContent = history.length;
+    if (history.length > 0) {
+      const best = Math.max(...history.map(h => h.cluster_points));
+      document.getElementById("statBest").textContent = best.toFixed(3);
+    }
+
+    renderTable(history);
+
+    // Simple search filter
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = history.filter(h => 
+        h.reference.toLowerCase().includes(term) || 
+        new Date(h.created_at).toLocaleDateString().toLowerCase().includes(term)
+      );
+      renderTable(filtered);
+    });
+
+  } catch (err) {
+    document.getElementById("historyBody").innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">Failed to load history.</td></tr>`;
+  }
+})();
+
+function renderTable(data) {
+  const tbody = document.getElementById("historyBody");
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #aab1ca;">No calculations found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(h => {
+    const dateStr = new Date(h.created_at).toLocaleDateString("en-GB", { day: 'numeric', month: 'short', year: 'numeric' });
+    return `
+      <tr>
+        <td style="font-family: monospace;">${h.reference}</td>
+        <td>${dateStr}</td>
+        <td><b>${h.cluster_points.toFixed(3)}</b></td>
+        <td><span class="badge badge-green">${h.qual_count} Courses</span></td>
+        <td><span class="badge badge-orange">${h.close_count} Matches</span></td>
+        <td><button class="btn-small" onclick="alert('Viewing detailed report coming in the next update!')">View Details</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+</script>
+</body></html>
