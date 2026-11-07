@@ -635,6 +635,61 @@ def resend_history_email(reference):
     
     return jsonify(ok=True, message="Email is being sent!")
 
+@app.get("/api/history/compare")
+@login_required
+def compare_history():
+    u = current_user()
+    ref1 = request.args.get("ref1")
+    ref2 = request.args.get("ref2")
+    
+    if not ref1 or not ref2:
+        return jsonify(ok=False, error="Two references required."), 400
+    if ref1 == ref2:
+        return jsonify(ok=False, error="Cannot compare an assessment with itself."), 400
+
+    with connect() as conn:
+        # Fetch both records
+        h1 = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (ref1, u["id"])).fetchone()
+        h2 = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (ref2, u["id"])).fetchone()
+        
+        if not h1 or not h2:
+            return jsonify(ok=False, error="One or both records not found."), 404
+
+        # Fetch subjects for both
+        subs1 = {r["subject"]: r["grade"] for r in conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h1["id"],)).fetchall()}
+        subs2 = {r["subject"]: r["grade"] for r in conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h2["id"],)).fetchall()}
+
+        # Fetch courses for both (only qualified ones for comparison)
+        courses1 = {(r["course_name"], r["university"]): r["difference"] for r in conn.execute("SELECT course_name, university, difference FROM calculation_courses WHERE history_id=%s AND match_type='qualified'", (h1["id"],)).fetchall()}
+        courses2 = {(r["course_name"], r["university"]): r["difference"] for r in conn.execute("SELECT course_name, university, difference FROM calculation_courses WHERE history_id=%s AND match_type='qualified'", (h2["id"],)).fetchall()}
+
+    # Calculate course differences
+    gained_courses = [{"course": k[0], "university": k[1], "margin": float(courses2[k])} for k in courses2.keys() - courses1.keys()]
+    lost_courses = [{"course": k[0], "university": k[1], "margin": float(courses1[k])} for k in courses1.keys() - courses2.keys()]
+    
+    # Calculate subject differences (A=12 ... E=1)
+    subject_changes = []
+    for sub in subs1:
+        if sub in subs2:
+            old_grade = subs1[sub]
+            new_grade = subs2[sub]
+            if old_grade != new_grade:
+                subject_changes.append({
+                    "subject": sub,
+                    "old": old_grade,
+                    "new": new_grade
+                })
+
+    return jsonify(
+        ok=True,
+        assessment1={"ref": ref1, "cp": float(h1["cluster_points"]), "date": h1["created_at"].isoformat()},
+        assessment2={"ref": ref2, "cp": float(h2["cluster_points"]), "date": h2["created_at"].isoformat()},
+        cp_difference=round(float(h2["cluster_points"]) - float(h1["cluster_points"]), 3),
+        gained_courses=gained_courses,
+        lost_courses=lost_courses,
+        subject_changes=subject_changes
+    )
+
 @app.get("/api/scholarships")
 @login_required
 def scholarships():
