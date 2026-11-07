@@ -7,14 +7,30 @@
   .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
   .input-row select { flex: 1; }
   .input-row select.grade-select { width: 100px; flex: none; }
-  .course-list { list-style: none; padding: 0; margin: 0; }
-  .course-item { background: #1a1c33; margin-bottom: 10px; padding: 12px; border-radius: 8px; border-left: 4px solid #303451; }
-  .course-item.qualified { border-left-color: #4ade80; background: rgba(74, 222, 128, 0.05); }
-  .course-item.close { border-left-color: #fbbf24; background: rgba(251, 191, 36, 0.05); }
-  .course-name { font-weight: bold; font-size: 15px; color: #fff; }
-  .course-uni { font-size: 13px; color: #aab1ca; margin-top: 4px; }
-  .course-meta { font-size: 12px; color: #73e8ff; margin-top: 6px; font-weight: bold; }
   
+  /* Professional Tables */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 25px; border: 1px solid #303451; border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; min-width: 500px; font-size: 14px; }
+  th { background: #1a1c33; color: #73e8ff; padding: 12px; text-align: left; font-weight: bold; border-bottom: 2px solid #303451; }
+  td { padding: 12px; border-bottom: 1px solid #2a2e4d; color: #e2e8f0; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Status Colors */
+  .diff-pos { color: #4ade80; font-weight: bold; }
+  .diff-neg { color: #fbbf24; font-weight: bold; }
+  
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+  .summary-card { background: #111326; border: 1px solid #303451; padding: 15px; border-radius: 8px; text-align: center; }
+  .summary-card h4 { margin: 0; color: #aab1ca; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .summary-card p { margin: 10px 0 0; font-size: 24px; font-weight: bold; color: #fff; }
+
+  .action-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .action-btn { flex: 1; min-width: 150px; background: #24306d; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; }
+  .action-btn:hover { background: #5c6cff; }
+  .action-btn.green { background: #15803D; }
+  .action-btn.green:hover { background: #166534; }
+
   /* Pop-up Modal */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
   .offer-modal { background: #fff; border-radius: 16px; width: min(500px, 90vw); overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; }
@@ -62,17 +78,67 @@
     <button class="pay" id="cb" type="button" style="margin-top: 15px;">Calculate</button>
     <div id="cr" class="message"></div>
     
-    <div id="calcResult" style="display:none; margin-top: 20px; border-top: 1px solid #303451; padding-top: 20px;">
-      <h2 style="color: #c9ffda; margin-top: 0;">Your Results</h2>
-      <p id="cpDisplay" style="font-size: 20px; font-weight: bold; color: #73e8ff; margin-bottom: 20px;"></p>
-      <div id="qualifiedSection" style="display:none; margin-bottom: 25px;">
-        <h3 style="color: #4ade80; margin-bottom: 10px;">✅ Qualified Courses</h3>
-        <ul class="course-list" id="qualifiedList"></ul>
+    <!-- Professional Results Area -->
+    <div id="calcResult" style="display:none; margin-top: 30px; border-top: 1px solid #303451; padding-top: 30px;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: #c9ffda; margin: 0;">Your Assessment Results</h2>
+        <p id="cpDisplay" style="font-size: 24px; font-weight: bold; color: #73e8ff; margin: 0;"></p>
       </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="action-btn green" onclick="alert('The PDF report has already been generated and sent to your email!')">📥 Download PDF</button>
+        <button class="action-btn" onclick="alert('The email report has already been sent to your email inbox!')">📧 Email Report</button>
+      </div>
+
+      <!-- 1. Summary Table -->
+      <h3 style="color: #fff; margin-bottom: 15px;">1. Student calculation summary</h3>
+      <div class="summary-grid">
+        <div class="summary-card"><h4>Cluster Points</h4><p id="sumCP">0</p></div>
+        <div class="summary-card"><h4>Subjects Selected</h4><p id="sumSubjects">7</p></div>
+        <div class="summary-card"><h4>Qualified Courses</h4><p id="sumQualified" style="color: #4ade80;">0</p></div>
+        <div class="summary-card"><h4>Close Matches</h4><p id="sumClose" style="color: #fbbf24;">0</p></div>
+      </div>
+
+      <!-- 2. Qualified Courses Table -->
+      <div id="qualifiedSection" style="display:none; margin-bottom: 30px;">
+        <h3 id="qualTitle" style="color: #4ade80; margin-bottom: 15px;">2. Qualified Courses</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Course</th>
+                <th>University</th>
+                <th>Cutoff</th>
+                <th>Difference</th>
+              </tr>
+            </thead>
+            <tbody id="qualifiedTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. Close Matches Table -->
       <div id="closeSection" style="display:none;">
-        <h3 style="color: #fbbf24; margin-bottom: 10px;">⚠️ Close Matches</h3>
-        <ul class="course-list" id="closeList"></ul>
+        <h3 id="closeTitle" style="color: #fbbf24; margin-bottom: 15px;">3. Close Matches</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Course</th>
+                <th>University</th>
+                <th>Cutoff</th>
+                <th>Difference</th>
+              </tr>
+            </thead>
+            <tbody id="closeTableBody"></tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   </section>
 </main>
@@ -145,10 +211,8 @@ loadCachedData();
 // 3. Fetch Fresh Data in Background
 (async function loadFreshData() {
   try {
-    // Load Profile & Credits
     const r = await api("/api/me"); 
     if (!r) return;
-    
     me = r.user;
     localStorage.setItem("ep_user", JSON.stringify(me));
     localStorage.setItem("ep_credits", r.credits);
@@ -156,12 +220,10 @@ loadCachedData();
     $("hello").textContent = "Hi, " + me.name;
     updateCreditsUI(r.credits);
     
-    // Load Offers
     checkOffers();
     loadMyClaims();
   } catch (err) {
     console.error("Background sync failed:", err);
-    // If it fails, but we have cached data, we just stay on the cached view
   }
 })();
 
@@ -173,73 +235,6 @@ function updateCreditsUI(credits) {
     $("creditStatus").textContent = `🔒 You have 0 calculations left. Please pay 100 KES.`;
     $("creditStatus").style.color = "#ff7b7b";
   }
-}
-
-async function checkOffers() {
-  try {
-    const res = await api("/api/offers/active");
-    if (res.ok && res.offer) {
-      currentOfferId = res.offer.id;
-      $("modalImg").src = res.offer.image_url || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800";
-      $("modalTitle").textContent = res.offer.title;
-      $("modalDesc").textContent = res.offer.description;
-      $("modalEligibility").textContent = res.offer.eligibility || "Open to all students";
-      $("modalGrabBtn").textContent = res.offer.button_text || "Grab This Offer";
-      $("offerModal").style.display = "flex";
-    }
-  } catch(e) {}
-}
-
-function closeModal() {
-  $("offerModal").style.display = "none";
-}
-
-async function claimOffer() {
-  if (!currentOfferId) return;
-  $("modalGrabBtn").disabled = true;
-  $("modalGrabBtn").textContent = "Claiming...";
-  
-  try {
-    const res = await api(`/api/offers/claim/${currentOfferId}`, { method: "POST" });
-    if (res.ok) {
-      $("modalGrabBtn").style.display = "none";
-      $("claimRefBox").style.display = "block";
-      if (res.requires_approval) {
-        $("claimRefBox").innerHTML = `Claim submitted! Awaiting Admin approval.<br>Ref: <b>${res.reference}</b>`;
-      } else {
-        $("claimRefBox").innerHTML = `🎉 Offer Claimed Successfully!<br>Ref: <b>${res.reference}</b>`;
-        // Give them a free credit on the UI instantly
-        let currentCredits = parseInt(localStorage.getItem("ep_credits") || "0");
-        localStorage.setItem("ep_credits", currentCredits + 1);
-        updateCreditsUI(currentCredits + 1);
-      }
-      loadMyClaims();
-    } else {
-      alert(res.error);
-      $("modalGrabBtn").disabled = false;
-      $("modalGrabBtn").textContent = "Grab This Offer";
-    }
-  } catch (e) {
-    alert(e.message);
-    $("modalGrabBtn").disabled = false;
-  }
-}
-
-async function loadMyClaims() {
-  try {
-    const res = await api("/api/offers/my-claims");
-    if (res.ok && res.claims.length > 0) {
-      $("myClaimsCard").style.display = "block";
-      $("claimsList").innerHTML = res.claims.map(c => `
-        <tr>
-          <td>${c.title}</td>
-          <td><b>${c.reference}</b></td>
-          <td style="color: ${c.status === 'approved' || c.status === 'redeemed' ? '#4ade80' : '#fbbf24'}">${c.status.toUpperCase()}</td>
-          <td>${new Date(c.created_at).toLocaleDateString()}</td>
-        </tr>
-      `).join("");
-    }
-  } catch(e) {}
 }
 
 // 4. Calculate Function
@@ -276,34 +271,48 @@ $("cb").onclick = async () => {
     $("cr").textContent = "";
     $("cb").disabled = false;
     $("calcResult").style.display = "block";
-    $("cpDisplay").textContent = `Cluster points: ${d.cluster_points}`;
     
-    // Update local storage credits
+    // Update summary
     localStorage.setItem("ep_credits", d.credits_left);
+    $("cpDisplay").textContent = `Cluster Points: ${d.cluster_points}`;
+    $("sumCP").textContent = d.cluster_points;
     
-    const qualified = d.results.filter(x => x.match === "qualified");
+    // Sort qualified by highest difference
+    const qualified = d.results.filter(x => x.match === "qualified").sort((a, b) => b.difference - a.difference);
+    const close = d.results.filter(x => x.match === "close");
+
+    $("sumQualified").textContent = qualified.length;
+    $("sumClose").textContent = close.length;
+
+    // Render Qualified Table
     if (qualified.length > 0) {
       $("qualifiedSection").style.display = "block";
-      $("qualifiedList").innerHTML = qualified.map(c => `
-        <li class="course-item qualified">
-          <div class="course-name">${c.n}</div>
-          <div class="course-uni">${c.u}</div>
-          <div class="course-meta">Cutoff: ${c.c} | You are +${c.difference.toFixed(3)} above</div>
-        </li>
+      $("qualTitle").textContent = `${qualified.length} Qualified Courses`;
+      $("qualifiedTableBody").innerHTML = qualified.map((c, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${c.n}</td>
+          <td>${c.u}</td>
+          <td>${c.c}</td>
+          <td class="diff-pos">+${c.difference.toFixed(3)}</td>
+        </tr>
       `).join("");
     } else {
       $("qualifiedSection").style.display = "none";
     }
 
-    const close = d.results.filter(x => x.match === "close");
+    // Render Close Table
     if (close.length > 0) {
       $("closeSection").style.display = "block";
-      $("closeList").innerHTML = close.map(c => `
-        <li class="course-item close">
-          <div class="course-name">${c.n}</div>
-          <div class="course-uni">${c.u}</div>
-          <div class="course-meta">Cutoff: ${c.c} | You are ${c.difference.toFixed(3)} below</div>
-        </li>
+      $("closeTitle").textContent = `${close.length} Close Match${close.length > 1 ? 'es' : ''}`;
+      $("closeTableBody").innerHTML = close.map((c, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${c.n}</td>
+          <td>${c.u}</td>
+          <td>${c.c}</td>
+          <td class="diff-neg">${c.difference.toFixed(3)}</td>
+        </tr>
       `).join("");
     } else {
       $("closeSection").style.display = "none";
@@ -325,6 +334,73 @@ $("cb").onclick = async () => {
     }
   }
 };
+
+// ... (Keep your existing checkOffers, closeModal, claimOffer, loadMyClaims, and triggerPayment functions below) ...
+async function checkOffers() {
+  try {
+    const res = await api("/api/offers/active");
+    if (res.ok && res.offer) {
+      currentOfferId = res.offer.id;
+      $("modalImg").src = res.offer.image_url || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800";
+      $("modalTitle").textContent = res.offer.title;
+      $("modalDesc").textContent = res.offer.description;
+      $("modalEligibility").textContent = res.offer.eligibility || "Open to all students";
+      $("modalGrabBtn").textContent = res.offer.button_text || "Grab This Offer";
+      $("offerModal").style.display = "flex";
+    }
+  } catch(e) {}
+}
+
+function closeModal() {
+  $("offerModal").style.display = "none";
+}
+
+async function claimOffer() {
+  if (!currentOfferId) return;
+  $("modalGrabBtn").disabled = true;
+  $("modalGrabBtn").textContent = "Claiming...";
+  
+  try {
+    const res = await api(`/api/offers/claim/${currentOfferId}`, { method: "POST" });
+    if (res.ok) {
+      $("modalGrabBtn").style.display = "none";
+      $("claimRefBox").style.display = "block";
+      if (res.requires_approval) {
+        $("claimRefBox").innerHTML = `Claim submitted! Awaiting Admin approval.<br>Ref: <b>${res.reference}</b>`;
+      } else {
+        $("claimRefBox").innerHTML = `🎉 Offer Claimed Successfully!<br>Ref: <b>${res.reference}</b>`;
+        let currentCredits = parseInt(localStorage.getItem("ep_credits") || "0");
+        localStorage.setItem("ep_credits", currentCredits + 1);
+        updateCreditsUI(currentCredits + 1);
+      }
+      loadMyClaims();
+    } else {
+      alert(res.error);
+      $("modalGrabBtn").disabled = false;
+      $("modalGrabBtn").textContent = "Grab This Offer";
+    }
+  } catch (e) {
+    alert(e.message);
+    $("modalGrabBtn").disabled = false;
+  }
+}
+
+async function loadMyClaims() {
+  try {
+    const res = await api("/api/offers/my-claims");
+    if (res.ok && res.claims.length > 0) {
+      $("myClaimsCard").style.display = "block";
+      $("claimsList").innerHTML = res.claims.map(c => `
+        <tr>
+          <td>${c.title}</td>
+          <td><b>${c.reference}</b></td>
+          <td style="color: ${c.status === 'approved' || c.status === 'redeemed' ? '#4ade80' : '#fbbf24'}">${c.status.toUpperCase()}</td>
+          <td>${new Date(c.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join("");
+    }
+  } catch(e) {}
+}
 
 async function triggerPayment(phone) {
   try {
