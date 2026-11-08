@@ -24,6 +24,33 @@ CREATE TABLE IF NOT EXISTS access(
     transaction_id TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS saved_courses(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    course_name TEXT NOT NULL,
+    university TEXT NOT NULL,
+    cutoff NUMERIC(6,3),
+    UNIQUE(user_id, course_name, university)
+);
+CREATE TABLE IF NOT EXISTS student_cvs(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    full_name TEXT,
+    email TEXT,
+    phone TEXT,
+    education TEXT,
+    skills TEXT,
+    experience TEXT,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS quiz_results(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    subject TEXT NOT NULL,
+    score INTEGER NOT NULL,
+    total INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS payments(
     id SERIAL PRIMARY KEY,
     transaction_id TEXT UNIQUE NOT NULL,
