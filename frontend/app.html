@@ -1,785 +1,987 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EduPoint AI — Dashboard</title>
-<link rel="stylesheet" href="/css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  /* --- GLOBAL LAYOUT --- */
-  .app-container { display: flex; min-height: 100vh; background: #080916; }
-  
-  /* Mobile Header (Hidden on Desktop) */
-  .mobile-header { display: none; background: #0b0d1d; padding: 15px 20px; border-bottom: 1px solid #303451; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  .hamburger-btn { background: transparent; border: none; color: #fff; font-size: 28px; cursor: pointer; display: flex; align-items: center; }
-  
-  .sidebar { width: 260px; background: #0b0d1d; border-right: 1px solid #303451; padding: 20px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; position: fixed; height: 100vh; transition: transform 0.3s ease; z-index: 99; }
-  .sidebar h3 { color: #73e8ff; font-size: 11px; letter-spacing: 1px; margin: 15px 0 5px 10px; text-transform: uppercase; }
-  .sidebar a { color: #aab1ca; text-decoration: none; padding: 10px 12px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; gap: 10px; transition: 0.2s; cursor: pointer; }
-  .sidebar a:hover, .sidebar a.active { background: #1a1c33; color: #fff; }
-  
-  .main-content { flex: 1; margin-left: 260px; padding: 30px; overflow-y: auto; }
-  
-  .page-section { display: none; animation: fadeIn 0.3s ease; }
-  .page-section.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+#!/usr/bin/env python3
+import os
+import uuid
+import logging
+import base64
+import threading
+import random
+import string
+import io
+from datetime import datetime
 
-  /* --- COMPONENTS --- */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-  .stat-card { background: #111326; border: 1px solid #303451; padding: 20px; border-radius: 12px; }
-  .stat-card h4 { margin: 0; color: #aab1ca; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-  .stat-card p { margin: 10px 0 0; font-size: 28px; font-weight: bold; color: #73e8ff; }
-  
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media(max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+import psycopg
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-  /* Tables */
-  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #303451; }
-  table { width: 100%; border-collapse: collapse; min-width: 600px; }
-  th { background: #1a1c33; color: #73e8ff; padding: 12px; text-align: left; font-size: 13px; }
-  td { padding: 12px; border-bottom: 1px solid #2a2e4d; color: #e2e8f0; font-size: 14px; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-  
-  /* Modals */
-  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-  .modal-content { background: #111326; border: 1px solid #303451; border-radius: 12px; width: min(800px, 100%); max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
-  .close-btn { position: absolute; top: 15px; right: 15px; background: #ff7b7b; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; }
+# Google Auth
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
-  /* CV Builder */
-  .cv-preview { background: #fff; color: #000; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-  .cv-preview h1 { font-size: 28px; margin: 0 0 5px 0; color: #1a1c33; }
-  .cv-preview h2 { font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; color: #333; }
-  .cv-preview p { font-size: 13px; line-height: 1.5; margin: 5px 0; color: #444; }
-  
-  /* Quiz */
-  .option { background: #080a18; border: 1px solid #303451; padding: 15px; border-radius: 8px; color: #fff; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
-  .option:hover { border-color: #73e8ff; }
-  .option.correct { background: rgba(74,222,128,0.2); border-color: #4ade80; }
-  .option.wrong { background: rgba(255,123,123,0.2); border-color: #ff7b7b; }
+# Brevo Email SDK
+from brevo import Brevo
+from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
 
-  /* Mobile Responsive Layout */
-  @media (max-width: 768px) {
-    .mobile-header { display: flex; }
-    .sidebar { transform: translateX(-100%); padding-top: 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
-    .sidebar.open { transform: translateX(0); }
-    .main-content { margin-left: 0; padding: 20px 15px; }
-    .sidebar h3 { display: block; }
-  }
-  
-  @media print {
-    .sidebar, .mobile-header, .no-print { display: none !important; }
-    .main-content { margin-left: 0; padding: 0; }
-    .cv-preview { box-shadow: none; border: none; padding: 0; }
-  }
-</style>
-</head>
-<body>
+# ReportLab PDF Libraries
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image as RLImage
+from reportlab.lib.colors import HexColor
+import qrcode
 
-<!-- Mobile Header -->
-<div class="mobile-header">
-  <div class="brand" style="font-size: 16px; color: #fff;">🎓 EduPoint AI</div>
-  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
-</div>
+# Local imports
+from data import W, BEST, MAX, P, SCHOLARSHIPS, CHATBOT_QA, PAYMENT_PLANS
+from db import connect, init_db
+from auth import (
+    current_user, public_user, login_required, admin_required,
+    hash_password, verify_password, create_session, destroy_session, bearer_token,
+)
+from services.payments import PaymentService, normalize_phone, validate_provider
 
-<div class="app-container">
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <div class="brand" style="font-size: 18px; margin-bottom: 20px; color: #fff;">🎓 EduPoint AI <span style="color:#73e8ff; font-size: 12px;">v10</span></div>
+app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+app.config["JSON_SORT_KEYS"] = False
+
+FRONTEND_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
+CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "DELETE", "OPTIONS"])
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+init_db()
+payments = PaymentService()
+
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
+
+def has_paid_access(user_id):
+    with connect() as conn:
+        r = conn.execute("SELECT paid FROM access WHERE user_id=%s", (user_id,)).fetchone()
+    return bool(r and r["paid"])
+
+def add_credit(user_id):
+    with connect() as conn:
+        conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (user_id,))
+
+def ensure_admin():
+    email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+    password = os.getenv("ADMIN_PASSWORD", "")
+    if not email or not password: return
+    with connect() as conn:
+        row = conn.execute("SELECT id FROM users WHERE email=%s", (email,)).fetchone()
+        if row:
+            conn.execute("UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", (hash_password(password), row["id"]))
+        else:
+            conn.execute(
+                """INSERT INTO users(name,email,phone,password_hash,referral_code,role,active) 
+                   VALUES(%s,%s,%s,%s,%s,'admin',1)""",
+                ("EduPoint Administrator", email, "", hash_password(password), "ADMIN"),
+            )
+ensure_admin()
+
+def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
+    buffer = io.BytesIO()
     
-    <h3>Academics</h3>
-    <a onclick="showPage('dashboard')" id="nav-dashboard" class="active">🏠 Overview</a>
-    <a onclick="showPage('calculator')" id="nav-calculator">🧮 Calculator</a>
-    <a onclick="showPage('history')" id="nav-history">📊 History</a>
-    <a onclick="showPage('comparison')" id="nav-comparison">⚖️ Comparison</a>
-    <a onclick="showPage('courses')" id="nav-courses">🎓 My Courses</a>
-    
-    <h3>Opportunities</h3>
-    <a onclick="showPage('scholarships')" id="nav-scholarships">💰 Scholarships</a>
-    
-    <h3>Services</h3>
-    <a onclick="showPage('careers')" id="nav-careers">💼 CV & Careers</a>
-    <a onclick="showPage('learning')" id="nav-learning">📚 Learning Centre</a>
-    
-    <h3>Account</h3>
-    <a onclick="logout()" style="color: #ff7b7b; margin-top: 20px;">🚪 Logout</a>
-  </div>
+    NAVY = HexColor("#172554")
+    PALE = HexColor("#F4F6FC")
+    LIGHT_BLUE = HexColor("#EAF3FF")
+    LIGHT_PURPLE = HexColor("#F1ECFB")
+    INK = HexColor("#1F2937")
+    MUTED = HexColor("#64748B")
+    BORDER = HexColor("#DCE3EF")
 
-  <!-- MAIN CONTENT -->
-  <div class="main-content">
-    
-    <!-- 1. DASHBOARD -->
-    <div id="page-dashboard" class="page-section active">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Welcome back, <span id="dashName">Student</span> 👋</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Here is your academic overview.</p>
-      
-      <div class="stats-grid">
-        <div class="stat-card"><h4>Latest Cluster Points</h4><p id="statLatestCP">--</p></div>
-        <div class="stat-card"><h4>Calculations Done</h4><p id="statTotalCalcs">0</p></div>
-        <div class="stat-card"><h4>Saved Courses</h4><p id="statSavedCourses">0</p></div>
-        <div class="stat-card"><h4>Saved Scholarships</h4><p id="statSavedScholarships">0</p></div>
-      </div>
-      
-      <div class="card" style="background: #111326; border-radius: 12px; padding: 20px;">
-        <h2 style="margin-top: 0; color: #fff;">Quick Actions</h2>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="nav-btn" style="background: #15803D;" onclick="showPage('calculator')">Start Calculation</button>
-          <button class="nav-btn" style="background: #24306d;" onclick="showPage('courses')">Find Courses</button>
-          <button class="nav-btn" style="background: #6b21a8;" onclick="showPage('scholarships')">View Scholarships</button>
-        </div>
-      </div>
-    </div>
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name="Brand", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=17, leading=20, textColor=colors.white, spaceAfter=2))
+    styles.add(ParagraphStyle(name="HeroTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=22, leading=27, alignment=TA_LEFT, textColor=NAVY, spaceAfter=5))
+    styles.add(ParagraphStyle(name="Sub", parent=styles["Normal"], fontName="Helvetica", fontSize=9, leading=13, textColor=MUTED))
+    styles.add(ParagraphStyle(name="Section", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=12, leading=15, textColor=NAVY, spaceBefore=9, spaceAfter=6))
+    styles.add(ParagraphStyle(name="BodySmall", parent=styles["BodyText"], fontName="Helvetica", fontSize=8.5, leading=12, textColor=INK))
+    styles.add(ParagraphStyle(name="Tiny", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7, leading=9, textColor=MUTED))
+    styles.add(ParagraphStyle(name="CardLabel", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7.5, leading=9, textColor=MUTED))
+    styles.add(ParagraphStyle(name="CardValue", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=20, leading=23, textColor=NAVY))
+    styles.add(ParagraphStyle(name="WhiteSmall", parent=styles["Normal"], fontName="Helvetica", fontSize=8, leading=11, textColor=colors.white))
 
-    <!-- 2. CALCULATOR -->
-    <div id="page-calculator" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Cluster Points Calculator</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Select your 7 subjects and grades.</p>
-      
-      <div class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
-        <!-- Removed Loading Credits completely -->
-        <div id="subjectList" style="margin-bottom: 20px;"></div>
-        <button class="pay" id="btnCalculate" style="width: 100%;">Calculate</button>
-        <div id="calcMessage" class="message" style="margin-top: 15px; text-align: center;"></div>
+    def P(text, style="BodySmall"): return Paragraph(str(text), styles[style])
+
+    def header_footer(canvas, doc):
+        canvas.saveState()
+        w, h = A4
+        canvas.setFillColor(NAVY)
+        canvas.rect(0, h - 8*mm, w, 8*mm, stroke=0, fill=1)
+        canvas.setStrokeColor(BORDER)
+        canvas.line(18*mm, 16*mm, w - 18*mm, 16*mm)
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(18*mm, 10.5*mm, "EduPointAI  |  Your Education. Your Future.")
+        canvas.drawRightString(w - 18*mm, 10.5*mm, f"Page {doc.page}")
+        canvas.restoreState()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=17*mm, bottomMargin=23*mm)
+    story = []
+
+    brand = Table([[P("EduPointAI", "Brand"), P("STUDENT RESULTS REPORT<br/>COURSE & SCHOLARSHIP MATCHING", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
+    brand.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), NAVY), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 12), ("RIGHTPADDING", (0,0), (-1,-1), 12), ("TOPPADDING", (0,0), (-1,-1), 7), ("BOTTOMPADDING", (0,0), (-1,-1), 7), ("ALIGN", (1,0), (1,0), "RIGHT")]))
+    story += [brand, Spacer(1, 8*mm)]
+
+    story += [P("Your academic assessment is ready", "HeroTitle"), P("A personalized overview of your academic performance, course qualifications and scholarship opportunities.", "Sub"), Spacer(1, 5*mm)]
+
+    today = datetime.now().strftime("%d %b %Y, %H:%M")
+    ref = "EP-2026-" + ''.join(random.choices(string.digits, k=6))
+    student = Table([[P("STUDENT", "Tiny"), P("REPORT STATUS", "Tiny"), P("REPORT REFERENCE", "Tiny")],
+                     [P(user_name, "BodySmall"), P("Assessment complete", "BodySmall"), P(ref, "BodySmall")]],
+                    colWidths=[58*mm, 58*mm, 58*mm])
+    student.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), PALE), ("BOX", (0,0), (-1,-1), 0.7, BORDER), ("INNERGRID", (0,0), (-1,-1), 0.5, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 9), ("RIGHTPADDING", (0,0), (-1,-1), 9), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
+    story += [student, Spacer(1, 5*mm)]
+
+    qualified = [r for r in results if r['match'] == 'qualified']
+    cards = Table([[P("CLUSTER POINTS", "CardLabel"), P("QUALIFIED COURSES", "CardLabel"), P("SCHOLARSHIP MATCHES", "CardLabel")],
+                   [P(str(cluster_points), "CardValue"), P(str(len(qualified)), "CardValue"), P("See below", "BodySmall")]],
+                  colWidths=[58*mm, 58*mm, 58*mm])
+    cards.setStyle(TableStyle([("BACKGROUND", (0,0), (0,-1), LIGHT_BLUE), ("BACKGROUND", (1,0), (1,-1), LIGHT_PURPLE), ("BACKGROUND", (2,0), (2,-1), PALE), ("BOX", (0,0), (-1,-1), 0.6, BORDER), ("INNERGRID", (0,0), (-1,-1), 1, colors.white), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 10), ("RIGHTPADDING", (0,0), (-1,-1), 10), ("TOPPADDING", (0,0), (-1,-1), 8), ("BOTTOMPADDING", (0,0), (-1,-1), 8)]))
+    story += [cards, Spacer(1, 5*mm)]
+
+    story += [P("01  Academic profile", "Section")]
+    grades_data = [[P("SUBJECT", "Tiny"), P("GRADE", "Tiny"), P("POINTS", "Tiny")]]
+    for i in range(7):
+        subj_name = subjects.get(str(i), f"Subject {i+1}")
+        grade = grades.get(str(i), "-")
+        pts = W.get(grade.upper(), 0) if grade else 0
+        grades_data.append([P(subj_name, "BodySmall"), P(grade, "BodySmall"), P(str(pts), "BodySmall")])
+    
+    gt = Table(grades_data, colWidths=[100*mm, 37*mm, 37*mm], repeatRows=1)
+    gt.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), PALE), ("TEXTCOLOR", (0,0), (-1,0), NAVY), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 7), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
+    story += [gt, Spacer(1, 5*mm)]
+
+    story += [P("02  Qualified courses", "Section"), P("The following courses have been identified based on the assessment criteria applied by EduPointAI.", "Sub"), Spacer(1, 2*mm)]
+    course_data = [[P("#", "Tiny"), P("COURSE / PROGRAMME", "Tiny"), P("INSTITUTION", "Tiny"), P("CUTOFF", "Tiny")]]
+    for idx, c in enumerate(qualified[:15]):
+        course_data.append([P(str(idx+1), "BodySmall"), P(c['n'], "BodySmall"), P(c['u'], "BodySmall"), P(str(c['c']), "BodySmall")])
+    
+    if len(qualified) == 0:
+        course_data.append([P("-", "BodySmall"), P("No courses qualified for yet.", "BodySmall"), P("", "BodySmall"), P("", "BodySmall")])
+
+    ct = Table(course_data, colWidths=[10*mm, 70*mm, 60*mm, 34*mm], repeatRows=1)
+    ct.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), LIGHT_BLUE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6), ("TOPPADDING", (0,0), (-1,-1), 6), ("BOTTOMPADDING", (0,0), (-1,-1), 6)]))
+    story += [ct, Spacer(1, 5*mm)]
+
+    story += [P("03  Scholarship opportunities", "Section")]
+    sch_data = [[P("SCHOLARSHIP", "Tiny"), P("AMOUNT", "Tiny"), P("DEADLINE", "Tiny")]]
+    for s in scholarships[:10]:
+        sch_data.append([P(s['name'], "BodySmall"), P(s['amount'], "BodySmall"), P(s['deadline'], "BodySmall")])
         
-        <div id="calcResultsArea" style="display:none; margin-top: 30px; border-top: 1px solid #303451; padding-top: 30px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 style="color: #c9ffda; margin: 0;">Your Results</h2>
-            <p id="calcCPDisplay" style="font-size: 24px; font-weight: bold; color: #73e8ff; margin: 0;"></p>
-          </div>
-          <div class="table-wrap" style="margin-bottom: 20px;">
-            <table><thead><tr><th>Course</th><th>University</th><th>Cutoff</th><th>Difference</th></tr></thead><tbody id="calcQualifiedBody"></tbody></table>
-          </div>
-        </div>
-      </div>
-    </div>
+    st = Table(sch_data, colWidths=[90*mm, 50*mm, 34*mm], repeatRows=1)
+    st.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), LIGHT_PURPLE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6), ("TOPPADDING", (0,0), (-1,-1), 6), ("BOTTOMPADDING", (0,0), (-1,-1), 6)]))
+    story += [st, Spacer(1, 6*mm)]
 
-    <!-- 3. HISTORY -->
-    <div id="page-history" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Calculation History</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Review all your previous academic assessments.</p>
-      
-      <div class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
-        <input type="text" id="historySearch" placeholder="Search by reference or date..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #303451; background: #080a18; color: #fff; margin-bottom: 15px;">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Reference</th><th>Date</th><th>Cluster Points</th><th>Qualified</th><th>Actions</th></tr></thead>
-            <tbody id="historyBody"><tr><td colspan="5">Loading...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    qr = qrcode.QRCode(version=1, box_size=3, border=1)
+    qr.add_data(f"EduPointAI|Ref:{ref}|Name:{user_name}")
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    qr_buffer = io.BytesIO()
+    qr_img.save(qr_buffer, format="PNG")
+    qr_buffer.seek(0)
 
-    <!-- 4. COMPARISON -->
-    <div id="page-comparison" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Academic Comparison</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Compare two assessments to track your progress.</p>
-      
-      <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
-        <select id="compSelectA" style="flex:1; padding:12px; border-radius:8px; background:#111326; color:#fff; border:1px solid #303451;"></select>
-        <select id="compSelectB" style="flex:1; padding:12px; border-radius:8px; background:#111326; color:#fff; border:1px solid #303451;"></select>
-        <button class="nav-btn" style="background:#24306d;" onclick="runComparison()">Compare</button>
-      </div>
-
-      <div id="compResults" style="display: none;">
-        <div class="stats-grid">
-          <div class="stat-card"><h4>Previous Points</h4><p id="compOldCP" style="color:#aab1ca;">0.000</p></div>
-          <div class="stat-card"><h4>Latest Points</h4><p id="compNewCP" style="color:#73e8ff;">0.000</p></div>
-          <div class="stat-card"><h4>Difference</h4><p id="compDiffCP" style="color:#4ade80;">+0.000</p></div>
-        </div>
-        <div class="card" style="background: #111326; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-          <canvas id="compChart" height="100"></canvas>
-        </div>
-        <div class="grid-2">
-          <div class="card" style="border-color: #4ade80;"><h3 style="color:#4ade80; margin-top:0;">📈 Newly Qualified</h3><ul id="compGained" style="padding-left:20px; color:#e2e8f0;"></ul></div>
-          <div class="card" style="border-color: #ff7b7b;"><h3 style="color:#ff7b7b; margin-top:0;">📉 No Longer Qualified</h3><ul id="compLost" style="padding-left:20px; color:#e2e8f0;"></ul></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. COURSES -->
-    <div id="page-courses" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">My Courses</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Explore university programmes and save your favourites.</p>
-      
-      <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
-        <input type="text" id="courseSearch" placeholder="Search course or university..." style="flex:1; padding:12px; border-radius:8px; background:#111326; color:#fff; border:1px solid #303451;">
-        <button class="nav-btn" id="tabAllCourses" style="background: #24306d;" onclick="switchCourseTab('all')">All Courses</button>
-        <button class="nav-btn" id="tabSavedCourses" style="background: #111326;" onclick="switchCourseTab('saved')">My Saved</button>
-      </div>
-      <div id="courseGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
-    </div>
-
-    <!-- 6. SCHOLARSHIPS -->
-    <div id="page-scholarships" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Scholarships</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Discover and track opportunities.</p>
-      
-      <div class="grid-2">
-        <div>
-          <h3 style="color:#73e8ff; border-bottom:1px solid #303451; padding-bottom:10px;">Available</h3>
-          <div id="availableScholarships"></div>
-        </div>
-        <div>
-          <h3 style="color:#4ade80; border-bottom:1px solid #303451; padding-bottom:10px;">My Tracker</h3>
-          <div id="trackedScholarships"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 7. CAREERS -->
-    <div id="page-careers" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">CV Builder</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Create a professional CV for your applications.</p>
-      
-      <div class="grid-2">
-        <div class="no-print">
-          <div class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
-            <div class="field"><label style="color:#aab1ca; font-size:12px;">Full Name</label><input id="cvName" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;"></div>
-            <div class="field"><label style="color:#aab1ca; font-size:12px;">Email</label><input id="cvEmail" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;"></div>
-            <div class="field"><label style="color:#aab1ca; font-size:12px;">Phone</label><input id="cvPhone" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;"></div>
-            <div class="field"><label style="color:#aab1ca; font-size:12px;">Education</label><textarea id="cvEdu" rows="3" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;"></textarea></div>
-            <div class="field"><label style="color:#aab1ca; font-size:12px;">Skills</label><textarea id="cvSkills" rows="2" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;"></textarea></div>
-            <div class="field"><label style="color:#aab1ca; font-size:12px;">Experience</label><textarea id="cvExp" rows="4" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;"></textarea></div>
-            <button class="pay" onclick="saveCV()">Save & Print CV</button>
-          </div>
-        </div>
-        <div class="cv-preview" id="cvPreview">
-          <h1 id="pCVName">Your Name</h1>
-          <p id="pCVContact">email | phone</p>
-          <h2>Education</h2><p id="pCVEdu">...</p>
-          <h2>Skills</h2><p id="pCVSkills">...</p>
-          <h2>Experience</h2><p id="pCVExp">...</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 8. LEARNING -->
-    <div id="page-learning" class="page-section">
-      <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Learning Centre</h1>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Test your knowledge and track your scores.</p>
-      
-      <div class="card" style="background: #111326; padding: 30px; border-radius: 12px; max-width: 600px;">
-        <h3 style="color: #73e8ff; margin-top: 0;">Mathematics & Science Quiz</h3>
-        <div id="quizQuestion" style="font-size: 18px; color: #fff; margin-bottom: 20px; font-weight: bold;">Loading...</div>
-        <div id="quizOptions"></div>
-        <button class="pay" id="quizNextBtn" style="display: none; margin-top: 20px;" onclick="nextQuestion()">Next Question</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- HISTORY MODAL -->
-<div class="modal-overlay" id="historyModal">
-  <div class="modal-content">
-    <button class="close-btn" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
-    <h2 id="hmRef" style="color: #73e8ff; margin-top: 0;">EPA-XXXX</h2>
-    <p id="hmDate" style="color: #aab1ca; font-size: 14px;"></p>
-    <h3 id="hmCP" style="font-size: 28px; color: #fff; margin: 10px 0 20px;">0.000 Points</h3>
-    <button class="nav-btn" style="background: #15803D; width:100%; margin-bottom: 20px;" onclick="resendHistoryEmail()">📧 Email PDF Report</button>
-    <h3 style="color: #fff;">Subjects</h3>
-    <table class="detail-table" id="hmSubjects"></table>
-    <h3 style="color: #4ade80; margin-top: 20px;">Qualified Courses</h3>
-    <table class="detail-table"><thead><tr><th>Course</th><th>University</th><th>Cutoff</th></tr></thead><tbody id="hmQualified"></tbody></table>
-  </div>
-</div>
-
-<!-- OFFER MODAL -->
-<div class="modal-overlay" id="offerModal">
-  <div class="modal-content" style="text-align: center; background: #fff; color: #333; max-width: 400px;">
-    <img id="offerImg" src="" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 15px;">
-    <h2 style="color: #15803D; font-size: 12px; text-transform: uppercase; margin: 0;">Special Offer</h2>
-    <h3 id="offerTitle" style="margin: 10px 0; font-size: 22px; color: #111;">Offer Title</h3>
-    <p id="offerDesc" style="font-size: 14px; color: #555;">Description</p>
-    <button class="pay" style="background: #15803D;" id="offerBtn" onclick="claimOffer()">Grab This Offer</button>
-    <button style="background: transparent; border: none; color: #666; font-size: 12px; margin-top: 15px; cursor: pointer;" onclick="document.getElementById('offerModal').style.display='none'">Maybe later</button>
-  </div>
-</div>
-
-<script src="/js/api.js"></script>
-<script>
-let me;
-let historyData = [];
-let currentOfferId = null;
-let currentHistoryRef = null;
-
-// ==========================================
-// SIDEBAR & NAVIGATION
-// ==========================================
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
-}
-
-async function showPage(pageId) {
-  if(window.innerWidth <= 768) {
-    document.getElementById("sidebar").classList.remove("open");
-  }
-
-  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
-  
-  document.getElementById(`page-${pageId}`).classList.add('active');
-  document.getElementById(`nav-${pageId}`).classList.add('active');
-  
-  if (pageId === 'dashboard') loadDashboard();
-  if (pageId === 'history') loadHistory();
-  if (pageId === 'comparison') loadComparisonDropdowns();
-  if (pageId === 'courses') loadCourses();
-  if (pageId === 'scholarships') loadScholarships();
-  if (pageId === 'careers') loadCV();
-  if (pageId === 'learning') initQuiz();
-}
-
-// ==========================================
-// INIT APP & CALCULATOR
-// ==========================================
-(async function initApp() {
-  const r = await requireAuth();
-  if (!r) return;
-  me = r.user;
-  document.getElementById("dashName").textContent = me.name;
-  
-  const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
-  const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
-  let html = "";
-  for (let i = 0; i < 7; i++) {
-    html += `<div style="display:flex; gap:10px; margin-bottom:10px;">
-      <select class="sub-select" onchange="updateSubjectOptions()" style="flex:1; padding:10px; background:#080a18; color:#fff; border:1px solid #303451; border-radius:6px;">
-        <option value="">Subject ${i+1}</option>${subjects.map(s => `<option value="${s}">${s}</option>`).join("")}
-      </select>
-      <select class="grade-select" style="width:100px; padding:10px; background:#080a18; color:#fff; border:1px solid #303451; border-radius:6px;">
-        <option value="">Grade</option>${grades.map(g => `<option value="${g}">${g}</option>`).join("")}
-      </select>
-    </div>`;
-  }
-  document.getElementById("subjectList").innerHTML = html;
-  
-  loadDashboard();
-  checkOffers();
-})();
-
-function updateSubjectOptions() {
-  const selects = document.querySelectorAll('.sub-select');
-  const selectedValues = Array.from(selects).map(s => s.value).filter(v => v !== "");
-
-  selects.forEach(select => {
-    const currentVal = select.value;
-    Array.from(select.options).forEach(option => {
-      if (option.value === "") return;
-      if (option.value !== currentVal && selectedValues.includes(option.value)) {
-        option.disabled = true;
-      } else {
-        option.disabled = false;
-      }
-    });
-  });
-}
-
-function logout() { localStorage.clear(); location.href = "/login.html"; }
-
-// ==========================================
-// 1. DASHBOARD
-// ==========================================
-async function loadDashboard() {
-  try {
-    const h = await api("/api/history");
-    document.getElementById("statTotalCalcs").textContent = h.history.length;
-    if(h.history.length > 0) {
-      document.getElementById("statLatestCP").textContent = h.history[0].cluster_points.toFixed(3);
-    } else {
-      document.getElementById("statLatestCP").textContent = "N/A";
-    }
+    qr_image = RLImage(qr_buffer, width=18*mm, height=18*mm)
     
-    const c = await api("/api/courses/saved");
-    document.getElementById("statSavedCourses").textContent = c.courses.length;
-    
-    const s = await api("/api/scholarships/saved");
-    document.getElementById("statSavedScholarships").textContent = s.saved.length;
-  } catch(e) { console.error(e); }
-}
+    footer_table = Table([[qr_image, P(f"Report Reference: {ref}<br/>Generated: {today}<br/>Valid for: 12 Months", "BodySmall"), P("EduPointAI<br/>Your Education. Your Future.", "Brand")]], colWidths=[20*mm, 60*mm, 94*mm])
+    footer_table.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 5), ("TEXTCOLOR", (2,0), (2,0), NAVY)]))
+    story += [footer_table]
 
-// ==========================================
-// 2. CALCULATOR (Payment Popup Logic)
-// ==========================================
-document.getElementById("btnCalculate").onclick = async () => {
-  const subjects = {}, grades = {};
-  let count = 0;
-  document.querySelectorAll('.sub-select').forEach((s, i) => {
-    if(s.value && document.querySelectorAll('.grade-select')[i].value) {
-      subjects[i] = s.value;
-      grades[i] = document.querySelectorAll('.grade-select')[i].value;
-      count++;
-    }
-  });
-  
-  if(count < 7) return alert("Please select all 7 subjects and grades.");
-  
-  const btn = document.getElementById("btnCalculate");
-  btn.disabled = true; btn.textContent = "Calculating...";
-  document.getElementById("calcMessage").textContent = "";
-  
-  try {
-    const res = await api("/api/calculate", { method: "POST", body: JSON.stringify({ subjects, grades }) });
-    document.getElementById("calcResultsArea").style.display = "block";
-    document.getElementById("calcCPDisplay").textContent = `${res.cluster_points} Points`;
-    
-    const qual = res.results.filter(r => r.match === "qualified").sort((a,b) => b.difference - a.difference);
-    document.getElementById("calcQualifiedBody").innerHTML = qual.map(c => `
-      <tr><td>${c.n}</td><td>${c.u}</td><td>${c.c}</td><td style="color:#4ade80">+${c.difference.toFixed(3)}</td></tr>
-    `).join("") || `<tr><td colspan="4">No qualified courses.</td></tr>`;
-    
-    document.getElementById("calcMessage").innerHTML = `<span style="color:#4ade80">Calculation successful! PDF sent to email.</span>`;
-    btn.textContent = "Calculate Again";
-    btn.disabled = false;
-  } catch(e) {
-    // Detect if the error is because of 0 credits (402)
-    if (e.status === 402 || (e.data && e.data.code === "payment_required")) {
-       triggerPaymentPopup();
-    } else {
-       document.getElementById("calcMessage").textContent = e.message;
-    }
-    btn.textContent = "Calculate"; btn.disabled = false;
-  }
-};
+    doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
+    buffer.seek(0)
+    return buffer
 
-// Trigger Payment Popup directly
-async function triggerPaymentPopup() {
-  document.getElementById("calcMessage").innerHTML = `<span style="color:#fbbf24;">Opening Pesapal payment...</span>`;
-  try {
-    const j = await api("/api/payment/initiate", { 
-      method: "POST", 
-      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: me.phone || "0700000000" })
-    });
-    
-    if (j.redirect_url) {
-      const w = 600, h = 700;
-      const left = (screen.width/2)-(w/2);
-      const top = (screen.height/2)-(h/2);
-      window.open(j.redirect_url, 'Pesapal Payment', `width=${w},height=${h},top=${top},left=${left}`);
-      
-      document.getElementById("calcMessage").innerHTML = `<span style="color:#fbbf24;">Waiting for payment confirmation... (Do not close this page)</span>`;
-      
-      let n = 0;
-      const t = setInterval(async () => {
-        n++;
-        const x = await api("/api/payment/status/" + j.transaction_id);
+def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
+    try:
+        pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
+        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
+
+        api_key = os.getenv("BREVO_API_KEY")
+        sender_email = os.getenv("SENDER_EMAIL")
         
-        if (x.payment.status === "paid" || x.payment.status === "completed") {
-          clearInterval(t);
-          alert("Payment Confirmed! You can now calculate.");
-          document.getElementById("calcMessage").innerHTML = `<span style="color:#4ade80;">Payment successful. Click Calculate.</span>`;
-        }
-        if (x.payment.status === "failed" || n >= 60) {
-           clearInterval(t);
-           document.getElementById("calcMessage").textContent = "Payment failed or timed out.";
-        }
-      }, 3000);
-    }
-  } catch (err) { 
-    document.getElementById("calcMessage").textContent = err.message; 
-  }
-}
+        if not api_key or not sender_email:
+            logger.warning("Brevo API key or Sender Email missing. Skipping email.")
+            return
 
-// ==========================================
-// 3. HISTORY
-// ==========================================
-async function loadHistory() {
-  const res = await api("/api/history");
-  historyData = res.history;
-  renderHistoryTable(historyData);
-  
-  document.getElementById("historySearch").oninput = (e) => {
-    const term = e.target.value.toLowerCase();
-    renderHistoryTable(historyData.filter(h => h.reference.toLowerCase().includes(term)));
-  };
-}
+        client = Brevo(api_key=api_key)
 
-function renderHistoryTable(data) {
-  document.getElementById("historyBody").innerHTML = data.map(h => `
-    <tr>
-      <td style="font-family:monospace;">${h.reference}</td>
-      <td>${new Date(h.created_at).toLocaleDateString()}</td>
-      <td><b>${h.cluster_points.toFixed(3)}</b></td>
-      <td><span style="color:#4ade80">${h.qual_count} Courses</span></td>
-      <td><button class="nav-btn" style="padding:5px 10px; font-size:12px;" onclick="viewHistoryDetails('${h.reference}')">View</button></td>
-    </tr>
-  `).join("") || `<tr><td colspan="5">No records found.</td></tr>`;
-}
+        qualified_count = len([r for r in results if r['match'] == 'qualified'])
+        email_html = f"""
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
+            <h2 style="color: #1a1c33;">Dear {user_name},</h2>
+            <p>Thank you for using <b>EduPointAI</b>.</p>
+            <p>Your academic assessment has been successfully processed. Your personalized calculation report is ready.</p>
+            
+            <div style="background: #f4f6f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #1a1c33;">Your assessment summary:</h3>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li><b>Cluster Points:</b> {cluster_points}</li>
+                    <li><b>Qualified Courses:</b> {qualified_count}</li>
+                    <li><b>Scholarship Opportunities:</b> Included in your report</li>
+                </ul>
+            </div>
 
-async function viewHistoryDetails(ref) {
-  currentHistoryRef = ref;
-  const modal = document.getElementById("historyModal");
-  modal.style.display = "flex";
-  
-  const res = await api(`/api/history/${ref}`);
-  document.getElementById("hmRef").textContent = res.record.reference;
-  document.getElementById("hmDate").textContent = new Date(res.record.created_at).toLocaleString();
-  document.getElementById("hmCP").textContent = `${res.record.cluster_points} Points`;
-  
-  let subHtml = `<tr><th>Subject</th><th>Grade</th></tr>`;
-  for (let i = 0; i < 7; i++) {
-    if (res.subjects[i]) subHtml += `<tr><td>${res.subjects[i]}</td><td><b>${res.grades[i]}</b></td></tr>`;
-  }
-  document.getElementById("hmSubjects").innerHTML = subHtml;
-  
-  const qual = res.courses.filter(c => c.match_type === "qualified");
-  document.getElementById("hmQualified").innerHTML = qual.map(c => `
-    <tr><td>${c.course_name}</td><td>${c.university}</td><td>${c.cutoff}</td></tr>
-  `).join("") || `<tr><td colspan="3">None</td></tr>`;
-}
+            <h3 style="color: #1a1c33;">What you will find in your report:</h3>
+            <ol>
+                <li>Your calculated academic performance.</li>
+                <li>University courses you qualify for.</li>
+                <li>Available scholarship opportunities matching your academic profile.</li>
+                <li>Relevant eligibility information and guidance.</li>
+            </ol>
 
-async function resendHistoryEmail() {
-  await api(`/api/history/${currentHistoryRef}/email`, { method: "POST" });
-  alert("Email sent!");
-}
+            <h3 style="color: #1a1c33;">Access your results</h3>
+            <p>You can preview your complete report directly from your EduPointAI account. A PDF copy is also attached to this email for downloading and future reference.</p>
+            
+            <p style="font-size: 12px; color: #666; font-style: italic;">
+                Please note that course qualification and scholarship eligibility do not guarantee admission or scholarship awards. Final decisions are made by the respective institutions and scholarship providers.
+            </p>
 
-// ==========================================
-// 4. COMPARISON
-// ==========================================
-async function loadComparisonDropdowns() {
-  const res = await api("/api/history");
-  const opts = res.history.map(h => `<option value="${h.reference}">${h.reference} (${h.cluster_points.toFixed(3)} pts)</option>`).join("");
-  document.getElementById("compSelectA").innerHTML = opts;
-  document.getElementById("compSelectB").innerHTML = opts;
-  if(res.history.length >= 2) {
-    document.getElementById("compSelectA").value = res.history[1].reference;
-    document.getElementById("compSelectB").value = res.history[0].reference;
-  }
-}
+            <p>Thank you for trusting EduPointAI with your academic journey.</p>
+            <br>
+            <p>Kind regards,</p>
+            <p><b>EduPointAI Team</b><br><span style="color: #666; font-size: 12px;">Your Education. Your Future.</span></p>
+        </div>
+        """
 
-async function runComparison() {
-  const r1 = document.getElementById("compSelectA").value;
-  const r2 = document.getElementById("compSelectB").value;
-  if(!r1 || !r2 || r1 === r2) return alert("Select two different assessments.");
-  
-  const res = await api(`/api/history/compare?ref1=${r1}&ref2=${r2}`);
-  document.getElementById("compResults").style.display = "block";
-  
-  document.getElementById("compOldCP").textContent = res.assessment1.cp.toFixed(3);
-  document.getElementById("compNewCP").textContent = res.assessment2.cp.toFixed(3);
-  document.getElementById("compDiffCP").textContent = (res.cp_difference > 0 ? "+" : "") + res.cp_difference.toFixed(3);
-  
-  const ctx = document.getElementById("compChart").getContext("2d");
-  if(window.compChartInstance) window.compChartInstance.destroy();
-  window.compChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: [r1, r2],
-      datasets: [{ label: 'Points', data: [res.assessment1.cp, res.assessment2.cp], backgroundColor: ['#303451', '#73e8ff'] }]
-    },
-    options: { plugins: { legend: { display: false } }, scales: { y: { max: 48 } } }
-  });
-  
-  document.getElementById("compGained").innerHTML = res.gained_courses.map(c => `<li>${c.course} at ${c.university}</li>`).join("") || "<li>None</li>";
-  document.getElementById("compLost").innerHTML = res.lost_courses.map(c => `<li>${c.course} at ${c.university}</li>`).join("") || "<li>None</li>";
-}
+        client.transactional_emails.send_transac_email(
+            subject="Your EduPointAI Calculation Report - Course & Scholarship Qualifications",
+            html_content=email_html,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
+            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
+            attachment=[{"content": pdf_base64, "name": "EduPointAI_Results_Report.pdf"}]
+        )
+        logger.info(f"Email successfully sent to {user_email} via Brevo.")
+        
+    except Exception as e:
+        logger.error(f"Failed to send email via Brevo: {e}")
 
-// ==========================================
-// 5. COURSES
-// ==========================================
-const ALL_COURSES = [
-  { n: "Medicine", u: "UON", c: 45.5 }, { n: "Computer Science", u: "JKUAT", c: 44.1 },
-  { n: "Nursing", u: "UON", c: 43.6 }, { n: "Law", u: "UON", c: 42.5 },
-  { n: "Engineering", u: "UON", c: 43.4 }, { n: "Economics", u: "UON", c: 26.0 },
-  { n: "Business", u: "Kisii", c: 21.3 }, { n: "Arts", u: "Kenyatta", c: 24.0 }
-];
-let savedCourses = [];
-let courseTab = 'all';
+# ==========================================
+# API ROUTES
+# ==========================================
 
-async function loadCourses() {
-  const res = await api("/api/courses/saved");
-  savedCourses = res.courses;
-  renderCourses();
-  document.getElementById("courseSearch").oninput = renderCourses;
-}
+@app.get("/health")
+def health(): 
+    return jsonify(ok=True, service="edupoint-api")
 
-function switchCourseTab(tab) {
-  courseTab = tab;
-  document.getElementById("tabAllCourses").style.background = tab === 'all' ? '#24306d' : '#111326';
-  document.getElementById("tabSavedCourses").style.background = tab === 'saved' ? '#24306d' : '#111326';
-  renderCourses();
-}
+# ---------------- AUTH ----------------
 
-function renderCourses() {
-  const term = document.getElementById("courseSearch").value.toLowerCase();
-  let list = courseTab === 'all' ? ALL_COURSES : savedCourses;
-  if(term) list = list.filter(c => (c.n || c.course_name).toLowerCase().includes(term));
-  
-  document.getElementById("courseGrid").innerHTML = list.map(c => {
-    const name = c.n || c.course_name;
-    const uni = c.u || c.university;
-    const cutoff = c.c || c.cutoff;
-    const isSaved = savedCourses.some(s => s.course_name === name);
+@app.post("/api/register")
+def register():
+    d = request.get_json(silent=True) or {}
+    name = str(d.get("name", "")).strip()
+    email = str(d.get("email", "")).strip().lower()
+    phone = normalize_phone(d.get("phone", ""))
+    password = str(d.get("password", ""))
+    ref = str(d.get("referral_code") or "").strip().upper() or None
+
+    if len(name) < 2: return jsonify(ok=False, error="Enter your full name."), 400
+    if "@" not in email: return jsonify(ok=False, error="Enter a valid email address."), 400
+    if not phone: return jsonify(ok=False, error="Enter a valid Kenyan mobile number."), 400
+    if len(password) < 6: return jsonify(ok=False, error="Password must contain at least 6 characters."), 400
+
+    try:
+        with connect() as conn:
+            # CHANGED: Added credits=0 to the INSERT statement
+            row = conn.execute(
+                """INSERT INTO users(name,email,phone,password_hash,referral_code,role,credits) 
+                   VALUES(%s,%s,%s,%s,%s,'student',0) RETURNING id""", 
+                (name, email, phone, hash_password(password), ref)
+            ).fetchone()
+            uid = row["id"]
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="An account with that email already exists."), 409
+
+    token = create_session(uid)
+    return jsonify(ok=True, token=token, redirect="/app.html")
+
+@app.post("/api/login")
+def login():
+    d = request.get_json(silent=True) or {}
+    email = str(d.get("email", "")).strip().lower()
+    password = str(d.get("password", ""))
     
-    return `<div class="card" style="background:#111326; border:1px solid #303451; padding:20px; border-radius:12px;">
-      <h3 style="color:#73e8ff; margin:0 0 10px;">${name}</h3>
-      <p style="margin:0; color:#aab1ca; font-size:13px;">${uni}</p>
-      <p style="margin:5px 0 15px; color:#fff; font-weight:bold;">Cutoff: ${cutoff}</p>
-      ${isSaved 
-        ? `<button class="nav-btn" style="background:#303451; width:100%;" onclick="removeCourse('${name}', '${uni}')">Remove</button>`
-        : `<button class="nav-btn" style="background:#15803D; width:100%;" onclick="saveCourse('${name}', '${uni}', ${cutoff})">Save Course</button>`}
-    </div>`;
-  }).join("");
-}
+    with connect() as conn:
+        u = conn.execute("SELECT * FROM users WHERE email=%s AND active=1", (email,)).fetchone()
+        
+    if not u or not verify_password(password, u["password_hash"]):
+        return jsonify(ok=False, error="Incorrect email or password."), 401
+        
+    token = create_session(u["id"])
+    return jsonify(
+        ok=True, token=token, user=public_user(u), 
+        redirect="/admin.html" if u["role"] == "admin" else "/app.html"
+    )
 
-async function saveCourse(n, u, c) {
-  await api("/api/courses/save", { method: "POST", body: JSON.stringify({ course_name: n, university: u, cutoff: c }) });
-  await loadCourses();
-}
+@app.post("/api/auth/google")
+def google_login():
+    d = request.get_json(silent=True) or {}
+    token = d.get("credential")
+    if not token:
+        return jsonify(ok=False, error="No Google credential provided."), 400
+        
+    try:
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+        email = idinfo["email"].strip().lower()
+        name = idinfo.get("name", "Google User")
+        
+        with connect() as conn:
+            u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
+            if not u:
+                # CHANGED: Added credits=0 to the INSERT statement
+                u = conn.execute(
+                    """INSERT INTO users(name, email, phone, password_hash, role, credits) 
+                       VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *""", 
+                    (name, email, "0700000000", "GOOGLE_AUTH")
+                ).fetchone()
+                
+        session_token = create_session(u["id"])
+        return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/app.html")
+    except ValueError:
+        return jsonify(ok=False, error="Invalid Google token."), 401
 
-async function removeCourse(n, u) {
-  const match = savedCourses.find(x => x.course_name === n && x.university === u);
-  if(match) {
-    await api(`/api/courses/${match.id}`, { method: "DELETE" });
-    await loadCourses();
-  }
-}
+@app.post("/api/logout")
+@login_required
+def logout():
+    destroy_session(bearer_token())
+    return jsonify(ok=True)
 
-// ==========================================
-// 6. SCHOLARSHIPS
-// ==========================================
-async function loadScholarships() {
-  const avail = await api("/api/scholarships");
-  const saved = await api("/api/scholarships/saved");
-  
-  const savedNames = saved.saved.map(s => s.scholarship_name);
-  
-  document.getElementById("availableScholarships").innerHTML = avail.map(s => `
-    <div class="card" style="background:#111326; padding:15px; margin-bottom:10px; border-radius:8px;">
-      <h4 style="margin:0 0 5px; color:#fff;">${s.name}</h4>
-      <p style="margin:0; font-size:12px; color:#aab1ca;">${s.amount} | ${s.deadline}</p>
-      ${savedNames.includes(s.name) 
-        ? `<button class="nav-btn" style="background:#303451; width:100%; margin-top:10px;" disabled>Already Saved</button>`
-        : `<button class="nav-btn" style="background:#15803D; width:100%; margin-top:10px;" onclick="saveScholarship('${s.name}')">Save</button>`}
-    </div>
-  `).join("");
-  
-  document.getElementById("trackedScholarships").innerHTML = saved.saved.map(s => `
-    <div class="card" style="background:#111326; padding:15px; margin-bottom:10px; border-radius:8px;">
-      <h4 style="margin:0 0 5px; color:#4ade80;">${s.scholarship_name}</h4>
-      <p style="margin:0; font-size:12px; color:#aab1ca;">Status: ${s.status}</p>
-    </div>
-  `).join("") || "<p style='color:#aab1ca;'>No saved scholarships.</p>";
-}
+@app.get("/api/me")
+@login_required
+def me():
+    u = current_user()
+    return jsonify(
+        ok=True, 
+        user=public_user(u), 
+        paid=has_paid_access(u["id"]), 
+        credits=u.get("credits", 0)
+    )
 
-async function saveScholarship(name) {
-  await api("/api/scholarships/save", { method: "POST", body: JSON.stringify({ name }) });
-  await loadScholarships();
-}
+# ---------------- PAYMENTS ----------------
 
-// ==========================================
-// 7. CAREERS
-// ==========================================
-async function loadCV() {
-  const res = await api("/api/careers/cv");
-  const cv = res.cv;
-  document.getElementById("cvName").value = cv.full_name || me.name;
-  document.getElementById("cvEmail").value = cv.email || me.email;
-  document.getElementById("cvPhone").value = cv.phone || me.phone;
-  document.getElementById("cvEdu").value = cv.education || "";
-  document.getElementById("cvSkills").value = cv.skills || "";
-  document.getElementById("cvExp").value = cv.experience || "";
-  updateCVPreview();
-  
-  ["cvName", "cvEmail", "cvPhone", "cvEdu", "cvSkills", "cvExp"].forEach(id => {
-    document.getElementById(id).oninput = updateCVPreview;
-  });
-}
+@app.get("/api/plans")
+def plans(): 
+    return jsonify(PAYMENT_PLANS)
 
-function updateCVPreview() {
-  document.getElementById("pCVName").textContent = document.getElementById("cvName").value;
-  document.getElementById("pCVContact").textContent = `${document.getElementById("cvEmail").value} | ${document.getElementById("cvPhone").value}`;
-  document.getElementById("pCVEdu").textContent = document.getElementById("cvEdu").value || "Education details...";
-  document.getElementById("pCVSkills").textContent = document.getElementById("cvSkills").value || "Skills...";
-  document.getElementById("pCVExp").textContent = document.getElementById("cvExp").value || "Experience...";
-}
+@app.get("/api/providers")
+def providers(): 
+    return jsonify(payments.available_providers())
 
-async function saveCV() {
-  const payload = {
-    full_name: document.getElementById("cvName").value,
-    email: document.getElementById("cvEmail").value,
-    phone: document.getElementById("cvPhone").value,
-    education: document.getElementById("cvEdu").value,
-    skills: document.getElementById("cvSkills").value,
-    experience: document.getElementById("cvExp").value
-  };
-  await api("/api/careers/cv", { method: "POST", body: JSON.stringify(payload) });
-  window.print();
-}
+@app.post("/api/payment/initiate")
+@login_required
+def initiate_payment():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    provider = (d.get("provider") or "").strip().lower()
+    phone = normalize_phone(d.get("phone") or u["phone"])
+    plan = (d.get("plan") or "standard").strip().lower()
 
-// ==========================================
-// 8. LEARNING
-// ==========================================
-const QUIZ_DATA = [
-  { q: "Derivative of x²?", o: ["2x", "x", "x³"], a: 0 },
-  { q: "2x + 5 = 15. x = ?", o: ["5", "10", "7.5"], a: 0 },
-  { q: "Symbol for Gold?", o: ["Ag", "Au", "Gd"], a: 1 }
-];
-let qIndex = 0, qScore = 0, qAnswered = false;
+    if plan not in PAYMENT_PLANS: return jsonify(ok=False, error="Invalid payment plan."), 400
+    if not validate_provider(provider): return jsonify(ok=False, error="Unsupported payment network."), 400
+    if not phone: return jsonify(ok=False, error="Enter a valid Kenyan mobile number."), 400
 
-function initQuiz() {
-  qIndex = 0; qScore = 0;
-  loadQuizQuestion();
-}
+    amount = PAYMENT_PLANS[plan]["amount"]
+    tx = "EDU-" + uuid.uuid4().hex[:16].upper()
+    callback_url = f"{os.getenv('FRONTEND_URL', '').rstrip('/')}/payment-callback.html"
+    
+    payments.create_pending(transaction_id=tx, phone=phone, network=provider, amount=amount, plan=plan, user_id=u["id"])
+    
+    try:
+        r = payments.initiate(provider=provider, phone=phone, amount=amount, transaction_id=tx, plan=plan, user=u, callback_url=callback_url)
+        payments.update(tx, status=r.get("status", "pending"), provider_reference=r.get("provider_reference"), message=r.get("message"), redirect_url=r.get("redirect_url"))
+        return jsonify(
+            ok=True, transaction_id=tx, status=r.get("status", "pending"), 
+            message=r.get("message", "Payment request created."), 
+            instructions=r.get("instructions", []), 
+            redirect_url=r.get("redirect_url")
+        )
+    except Exception:
+        logger.exception("Payment initiation failed")
+        payments.update(tx, status="failed", message="Payment could not be started.")
+        return jsonify(ok=False, transaction_id=tx, error="Payment could not be started."), 502
 
-function loadQuizQuestion() {
-  if(qIndex >= QUIZ_DATA.length) {
-    document.getElementById("quizQuestion").textContent = `Quiz Complete! You scored ${qScore}/${QUIZ_DATA.length}`;
-    document.getElementById("quizOptions").innerHTML = "";
-    document.getElementById("quizNextBtn").style.display = "none";
-    api("/api/learning/quiz", { method: "POST", body: JSON.stringify({ subject: "General", score: qScore, total: QUIZ_DATA.length }) });
-    return;
-  }
-  
-  qAnswered = false;
-  const q = QUIZ_DATA[qIndex];
-  document.getElementById("quizQuestion").textContent = `Q${qIndex+1}: ${q.q}`;
-  document.getElementById("quizNextBtn").style.display = "none";
-  document.getElementById("quizOptions").innerHTML = q.o.map((opt, i) => 
-    `<div class="option" id="qo-${i}" onclick="checkQuizAnswer(${i})">${opt}</div>`
-  ).join("");
-}
+@app.get("/api/payment/status/<transaction_id>")
+@login_required
+def payment_status(transaction_id):
+    u = current_user()
+    row = payments.get(transaction_id)
+    
+    if not row or (row.get("user_id") and row["user_id"] != u["id"] and u["role"] != "admin"): 
+        return jsonify(ok=False, error="Transaction not found."), 404
 
-function checkQuizAnswer(sel) {
-  if(qAnswered) return;
-  qAnswered = true;
-  const correct = QUIZ_DATA[qIndex].a;
-  document.getElementById(`qo-${correct}`).classList.add("correct");
-  if(sel !== correct) document.getElementById(`qo-${sel}`).classList.add("wrong");
-  else qScore++;
-  document.getElementById("quizNextBtn").style.display = "block";
-}
+    if row["status"] == "pending":
+        try:
+            rr = payments.check_status(row)
+            if rr:
+                payments.update(transaction_id, status=rr["status"], message=rr.get("message"))
+                row = payments.get(transaction_id)
+        except Exception: 
+            logger.exception("Status check failed")
 
-function nextQuestion() { qIndex++; loadQuizQuestion(); }
+    if row["status"] == "paid" and row.get("user_id"):
+        add_credit(row["user_id"])
+        payments.update(transaction_id, status="completed")
+        row["status"] = "completed"
 
-// ==========================================
-// OFFERS MODAL
-// ==========================================
-async function checkOffers() {
-  const res = await api("/api/offers/active");
-  if (res.ok && res.offer) {
-    currentOfferId = res.offer.id;
-    document.getElementById("offerImg").src = res.offer.image_url || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800";
-    document.getElementById("offerTitle").textContent = res.offer.title;
-    document.getElementById("offerDesc").textContent = res.offer.description;
-    document.getElementById("offerBtn").textContent = res.offer.button_text || "Grab This Offer";
-    document.getElementById("offerModal").style.display = "flex";
-  }
-}
+    with connect() as conn:
+        fresh_u = conn.execute("SELECT credits FROM users WHERE id=%s", (u["id"],)).fetchone()
 
-async function claimOffer() {
-  if (!currentOfferId) return;
-  const btn = document.getElementById("offerBtn");
-  btn.disabled = true; btn.textContent = "Claiming...";
-  const res = await api(`/api/offers/claim/${currentOfferId}`, { method: "POST" });
-  if(res.ok) {
-    alert(`Offer Claimed! Ref: ${res.reference}`);
-    document.getElementById("offerModal").style.display = "none";
-  } else {
-    alert(res.error);
-    btn.disabled = false;
-  }
-}
-</script>
-</body>
-</html>
+    return jsonify(ok=True, payment=row, credits=fresh_u.get("credits", 0))
+
+@app.route("/api/payment/webhook/<provider>", methods=["GET", "POST"])
+def payment_webhook(provider):
+    if not validate_provider(provider): 
+        return jsonify(ok=False, error="Unsupported provider"), 404
+        
+    payload = (request.get_json(silent=True) or request.form.to_dict() or request.args.to_dict())
+
+    if provider == "pesapal":
+        r = payments.handle_pesapal_ipn(payload)
+        if r.get("ok"):
+            row = payments.get(r["transaction_id"])
+            if row and row.get("user_id") and row["status"] == "paid":
+                add_credit(row["user_id"])
+                payments.update(row["transaction_id"], status="completed")
+                
+        return jsonify({
+            "orderNotificationType": payload.get("orderNotificationType", "IPNCHANGE"), 
+            "orderTrackingId": payload.get("orderTrackingId", ""), 
+            "orderMerchantReference": payload.get("orderMerchantReference", ""), 
+            "status": 200 if r.get("ok") else 500
+        }), 200
+
+    r = payments.handle_webhook(provider, payload)
+    if not r.get("ok"): 
+        return jsonify(r), 400
+        
+    row = payments.get(r.get("transaction_id"))
+    if row and r.get("status") == "paid" and row.get("user_id"):
+        add_credit(row["user_id"])
+        
+    return jsonify(ok=True)
+
+# ---------------- CALCULATOR & HISTORY ----------------
+
+@app.post("/api/calculate")
+@login_required
+def calculate():
+    u = current_user()
+    if u.get("credits", 0) <= 0:
+        return jsonify(ok=False, error="You have 0 calculations left. Please pay 100 KES to buy 1 more calculation.", code="payment_required"), 402
+        
+    d = request.get_json(silent=True) or {}
+    grades = d.get("grades", {})
+    subjects = d.get("subjects", {})
+    
+    try:
+        vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
+        vals = sorted(vals, reverse=True)[:7]
+        if len(vals) < 7: return jsonify(ok=False, error="Enter at least 7 valid grades."), 400
+        
+        cp = (sum(vals) / BEST) * MAX
+        out = []
+        for course in P:
+            diff = cp - course["c"]
+            out.append({**course, "difference": round(diff, 3), "match": "qualified" if diff >= 0 else ("close" if diff >= -2 else "not_qualified")})
+            
+        ref_code = "EPA-2026-" + ''.join(random.choices(string.digits, k=6))
+        
+        with connect() as conn:
+            conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
+            
+            history_row = conn.execute(
+                "INSERT INTO calculation_history (user_id, reference, cluster_points) VALUES (%s, %s, %s) RETURNING id",
+                (u["id"], ref_code, round(cp, 3))
+            ).fetchone()
+            history_id = history_row["id"]
+            
+            for i in range(7):
+                subj = subjects.get(str(i), f"Subject {i+1}")
+                grade = grades.get(str(i), "-")
+                conn.execute("INSERT INTO calculation_subjects (history_id, subject, grade) VALUES (%s, %s, %s)", (history_id, subj, grade))
+            
+            for c in out:
+                if c["match"] in ["qualified", "close"]:
+                    conn.execute(
+                        "INSERT INTO calculation_courses (history_id, course_name, university, cutoff, difference, match_type) VALUES (%s, %s, %s, %s, %s, %s)",
+                        (history_id, c["n"], c["u"], c["c"], c["difference"], c["match"])
+                    )
+                    
+        threading.Thread(
+            target=send_pdf_email, 
+            args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
+        ).start()
+            
+        return jsonify(ok=True, reference=ref_code, cluster_points=round(cp, 3), results=out, credits_left=u["credits"] - 1)
+    except Exception as e:
+        logger.error(f"Calculation failed: {e}")
+        return jsonify(ok=False, error=f"Invalid grades: {e}"), 400
+
+@app.get("/api/history")
+@login_required
+def get_history():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute(
+            """SELECT h.*, 
+               (SELECT COUNT(*) FROM calculation_courses WHERE history_id = h.id AND match_type = 'qualified') as qual_count,
+               (SELECT COUNT(*) FROM calculation_courses WHERE history_id = h.id AND match_type = 'close') as close_count
+               FROM calculation_history h
+               WHERE h.user_id = %s ORDER BY h.created_at DESC""", (u["id"],)
+        ).fetchall()
+    
+    for r in rows:
+        r["created_at"] = r["created_at"].isoformat()
+        r["cluster_points"] = float(r["cluster_points"])
+    return jsonify(ok=True, history=rows)
+
+@app.get("/api/history/<reference>")
+@login_required
+def get_history_details(reference):
+    u = current_user()
+    with connect() as conn:
+        h = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (reference, u["id"])).fetchone()
+        if not h: return jsonify(ok=False, error="Record not found."), 404
+            
+        subs = conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h["id"],)).fetchall()
+        subjects_dict = {str(i): row["subject"] for i, row in enumerate(subs)}
+        grades_dict = {str(i): row["grade"] for i, row in enumerate(subs)}
+        
+        courses = conn.execute("SELECT course_name, university, cutoff, difference, match_type FROM calculation_courses WHERE history_id=%s", (h["id"],)).fetchall()
+        
+    return jsonify(
+        ok=True, 
+        record={
+            "reference": h["reference"],
+            "cluster_points": float(h["cluster_points"]),
+            "created_at": h["created_at"].isoformat()
+        }, 
+        subjects=subjects_dict, 
+        grades=grades_dict, 
+        courses=courses
+    )
+
+@app.post("/api/history/<reference>/email")
+@login_required
+def resend_history_email(reference):
+    u = current_user()
+    with connect() as conn:
+        h = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (reference, u["id"])).fetchone()
+        if not h: return jsonify(ok=False, error="Record not found."), 404
+            
+        subs = conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h["id"],)).fetchall()
+        subjects_dict = {str(i): row["subject"] for i, row in enumerate(subs)}
+        grades_dict = {str(i): row["grade"] for i, row in enumerate(subs)}
+        
+        courses = conn.execute("SELECT course_name, university, cutoff, difference, match_type FROM calculation_courses WHERE history_id=%s", (h["id"],)).fetchall()
+        
+        results_formatted = []
+        for c in courses:
+            results_formatted.append({
+                "n": c["course_name"],
+                "u": c["university"],
+                "c": float(c["cutoff"]),
+                "difference": float(c["difference"]),
+                "match": c["match_type"]
+            })
+            
+    threading.Thread(
+        target=send_pdf_email, 
+        args=(u["email"], u["name"], float(h["cluster_points"]), results_formatted, subjects_dict, grades_dict, SCHOLARSHIPS)
+    ).start()
+    
+    return jsonify(ok=True, message="Email is being sent!")
+
+@app.get("/api/history/compare")
+@login_required
+def compare_history():
+    u = current_user()
+    ref1 = request.args.get("ref1")
+    ref2 = request.args.get("ref2")
+    
+    if not ref1 or not ref2:
+        return jsonify(ok=False, error="Two references required."), 400
+    if ref1 == ref2:
+        return jsonify(ok=False, error="Cannot compare an assessment with itself."), 400
+
+    with connect() as conn:
+        h1 = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (ref1, u["id"])).fetchone()
+        h2 = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (ref2, u["id"])).fetchone()
+        
+        if not h1 or not h2:
+            return jsonify(ok=False, error="One or both records not found."), 404
+
+        subs1 = {r["subject"]: r["grade"] for r in conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h1["id"],)).fetchall()}
+        subs2 = {r["subject"]: r["grade"] for r in conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h2["id"],)).fetchall()}
+        courses1 = {(r["course_name"], r["university"]): r["difference"] for r in conn.execute("SELECT course_name, university, difference FROM calculation_courses WHERE history_id=%s AND match_type='qualified'", (h1["id"],)).fetchall()}
+        courses2 = {(r["course_name"], r["university"]): r["difference"] for r in conn.execute("SELECT course_name, university, difference FROM calculation_courses WHERE history_id=%s AND match_type='qualified'", (h2["id"],)).fetchall()}
+
+    gained_courses = [{"course": k[0], "university": k[1], "margin": float(courses2[k])} for k in courses2.keys() - courses1.keys()]
+    lost_courses = [{"course": k[0], "university": k[1], "margin": float(courses1[k])} for k in courses1.keys() - courses2.keys()]
+    
+    subject_changes = []
+    for sub in subs1:
+        if sub in subs2 and subs1[sub] != subs2[sub]:
+            subject_changes.append({"subject": sub, "old": subs1[sub], "new": subs2[sub]})
+
+    return jsonify(
+        ok=True,
+        assessment1={"ref": ref1, "cp": float(h1["cluster_points"]), "date": h1["created_at"].isoformat()},
+        assessment2={"ref": ref2, "cp": float(h2["cluster_points"]), "date": h2["created_at"].isoformat()},
+        cp_difference=round(float(h2["cluster_points"]) - float(h1["cluster_points"]), 3),
+        gained_courses=gained_courses,
+        lost_courses=lost_courses,
+        subject_changes=subject_changes
+    )
+
+# ---------------- COURSES ----------------
+
+@app.get("/api/courses/saved")
+@login_required
+def get_saved_courses():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM saved_courses WHERE user_id=%s ORDER BY id DESC", (u["id"],)).fetchall()
+    for r in rows: r["cutoff"] = float(r["cutoff"])
+    return jsonify(ok=True, courses=rows)
+
+@app.post("/api/courses/save")
+@login_required
+def save_course():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    try:
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO saved_courses (user_id, course_name, university, cutoff) VALUES (%s, %s, %s, %s)",
+                (u["id"], d["course_name"], d["university"], d["cutoff"])
+            )
+        return jsonify(ok=True)
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="Course already saved."), 400
+
+@app.delete("/api/courses/<int:cid>")
+@login_required
+def delete_saved_course(cid):
+    u = current_user()
+    with connect() as conn:
+        conn.execute("DELETE FROM saved_courses WHERE id=%s AND user_id=%s", (cid, u["id"]))
+    return jsonify(ok=True)
+
+# ---------------- CAREERS (CV) ----------------
+
+@app.get("/api/careers/cv")
+@login_required
+def get_cv():
+    u = current_user()
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM student_cvs WHERE user_id=%s", (u["id"],)).fetchone()
+    if not row:
+        return jsonify(ok=True, cv={"full_name": u["name"], "email": u["email"], "phone": u["phone"], "education": "", "skills": "", "experience": ""})
+    return jsonify(ok=True, cv=row)
+
+@app.post("/api/careers/cv")
+@login_required
+def save_cv():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO student_cvs (user_id, full_name, email, phone, education, skills, experience, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, now())
+               ON CONFLICT (user_id) DO UPDATE SET 
+               full_name=EXCLUDED.full_name, email=EXCLUDED.email, phone=EXCLUDED.phone,
+               education=EXCLUDED.education, skills=EXCLUDED.skills, experience=EXCLUDED.experience, updated_at=now()""",
+            (u["id"], d.get("full_name"), d.get("email"), d.get("phone"), d.get("education"), d.get("skills"), d.get("experience"))
+        )
+    return jsonify(ok=True)
+
+# ---------------- LEARNING (QUIZZES) ----------------
+
+@app.post("/api/learning/quiz")
+@login_required
+def save_quiz():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO quiz_results (user_id, subject, score, total) VALUES (%s, %s, %s, %s)",
+            (u["id"], d["subject"], d["score"], d["total"])
+        )
+    return jsonify(ok=True)
+
+@app.get("/api/learning/quiz-history")
+@login_required
+def get_quiz_history():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM quiz_results WHERE user_id=%s ORDER BY created_at DESC", (u["id"],)).fetchall()
+    for r in rows: r["created_at"] = r["created_at"].isoformat()
+    return jsonify(ok=True, history=rows)
+
+# ---------------- SCHOLARSHIPS ----------------
+
+@app.get("/api/scholarships")
+@login_required
+def scholarships():
+    return jsonify(SCHOLARSHIPS)
+
+@app.get("/api/scholarships/saved")
+@login_required
+def get_saved_scholarships():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM student_scholarships WHERE user_id=%s ORDER BY updated_at DESC", (u["id"],)).fetchall()
+    for r in rows: r["updated_at"] = r["updated_at"].isoformat()
+    return jsonify(ok=True, saved=rows)
+
+@app.post("/api/scholarships/save")
+@login_required
+def save_scholarship():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    name = d.get("name")
+    if not name: return jsonify(ok=False, error="Scholarship name required."), 400
+    try:
+        with connect() as conn:
+            conn.execute("INSERT INTO student_scholarships (user_id, scholarship_name) VALUES (%s, %s)", (u["id"], name))
+        return jsonify(ok=True)
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="Scholarship already saved."), 400
+
+@app.post("/api/scholarships/<int:sid>/status")
+@login_required
+def update_scholarship_status(sid):
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute("UPDATE student_scholarships SET status=%s, notes=%s, updated_at=now() WHERE id=%s AND user_id=%s", (d.get("status"), d.get("notes", ""), sid, u["id"]))
+    return jsonify(ok=True)
+
+@app.delete("/api/scholarships/<int:sid>")
+@login_required
+def delete_scholarship(sid):
+    u = current_user()
+    with connect() as conn:
+        conn.execute("DELETE FROM student_scholarships WHERE id=%s AND user_id=%s", (sid, u["id"]))
+    return jsonify(ok=True)
+
+# ---------------- AI CHATBOT ----------------
+
+@app.post("/api/chat")
+@login_required
+def chat():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    q = str(d.get("question", "")).lower().strip()
+    
+    if not q: 
+        return jsonify(answer="Ask me about your grades, courses, or scholarships!")
+
+    for x in CHATBOT_QA:
+        if any(k in q for k in x["keywords"]): 
+            return jsonify(answer=x["answer"])
+
+    with connect() as conn:
+        last_calc = conn.execute("SELECT * FROM calculation_history WHERE user_id=%s ORDER BY created_at DESC LIMIT 1", (u["id"],)).fetchone()
+        
+        if last_calc:
+            courses = conn.execute("SELECT course_name, university, match_type FROM calculation_courses WHERE history_id=%s", (last_calc["id"],)).fetchall()
+            qual = [c for c in courses if c["match_type"] == "qualified"]
+            
+            if "what courses" in q or "qualify" in q or "can i do" in q:
+                if len(qual) > 0:
+                    course_list = ", ".join([f"{c['course_name']} at {c['university']}" for c in qual[:5]])
+                    return jsonify(answer=f"Based on your latest assessment ({last_calc['cluster_points']} points), you qualify for {len(qual)} courses. Here are a few: {course_list}.")
+                else:
+                    return jsonify(answer="Based on your latest assessment, you don't currently qualify for any courses. Consider looking at diploma programs or improving your grades.")
+            
+            if "my points" in q or "my cluster" in q or "my grade" in q:
+                return jsonify(answer=f"Your most recent calculation resulted in {last_calc['cluster_points']} cluster points.")
+        else:
+            if "my points" in q or "my grade" in q:
+                return jsonify(answer="I don't have any academic records for you yet. Please use the Calculator to get your first cluster points!")
+
+    return jsonify(answer="I can help with cluster points, KUCCPS courses, admission chances, transfers, and scholarships. Try asking 'What courses do I qualify for?'")
+
+# ---------------- OFFERS ----------------
+
+@app.get("/api/offers/active")
+@login_required
+def active_offers():
+    u = current_user()
+    with connect() as conn:
+        row = conn.execute(
+            """SELECT o.* FROM offers o
+               WHERE o.status = 'active' AND o.start_date <= now() AND o.end_date >= now()
+               AND o.id NOT IN (SELECT offer_id FROM offer_claims WHERE user_id = %s)
+               AND (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) < o.max_claims
+               ORDER BY o.created_at DESC LIMIT 1""", (u["id"],)
+        ).fetchone()
+    return jsonify(ok=True, offer=row)
+
+@app.post("/api/offers/claim/<int:offer_id>")
+@login_required
+def claim_offer(offer_id):
+    u = current_user()
+    try:
+        with connect() as conn:
+            offer = conn.execute("SELECT * FROM offers WHERE id=%s AND status='active' AND end_date >= now()", (offer_id,)).fetchone()
+            if not offer: return jsonify(ok=False, error="Offer expired or unavailable."), 400
+            
+            claims_count = conn.execute("SELECT COUNT(*) as c FROM offer_claims WHERE offer_id=%s", (offer_id,)).fetchone()["c"]
+            if claims_count >= offer["max_claims"]: return jsonify(ok=False, error="This offer has been fully claimed."), 400
+            
+            ref = "OFF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            status = "pending" if offer["requires_approval"] else "approved"
+            
+            conn.execute("INSERT INTO offer_claims (offer_id, user_id, reference, status) VALUES (%s, %s, %s, %s)", (offer_id, u["id"], ref, status))
+            
+            if status == "approved":
+                conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (u["id"],))
+
+            return jsonify(ok=True, reference=ref, status=status, requires_approval=offer["requires_approval"])
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="You have already claimed this offer."), 400
+
+@app.get("/api/offers/my-claims")
+@login_required
+def my_claims():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("""SELECT c.*, o.title, o.offer_type FROM offer_claims c
+               JOIN offers o ON c.offer_id = o.id WHERE c.user_id = %s ORDER BY c.created_at DESC""", (u["id"],)).fetchall()
+    return jsonify(ok=True, claims=rows)
+
+# ---------------- ADMIN ROUTES ----------------
+
+@app.get("/api/admin/users")
+@admin_required
+def admin_users():
+    with connect() as conn:
+        rows = conn.execute("SELECT id,name,email,phone,role,active,referral_code,credits,created_at FROM users ORDER BY id DESC").fetchall()
+    for r in rows:
+        r["active"] = bool(r["active"])
+        r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
+    return jsonify(ok=True, users=rows)
+
+@app.get("/api/admin/payments")
+@admin_required
+def admin_payments():
+    with connect() as conn:
+        rows = conn.execute("SELECT id,transaction_id,user_id,phone,network,amount,plan,status,provider_reference,created_at FROM payments ORDER BY id DESC LIMIT 200").fetchall()
+    for r in rows:
+        r["amount"] = float(r["amount"])
+        r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
+    return jsonify(ok=True, payments=rows)
+
+@app.post("/api/admin/user/<int:user_id>/toggle")
+@admin_required
+def admin_toggle_user(user_id):
+    with connect() as conn:
+        r = conn.execute("SELECT active FROM users WHERE id=%s", (user_id,)).fetchone()
+        if not r: return jsonify(ok=False, error="User not found."), 404
+        conn.execute("UPDATE users SET active=%s WHERE id=%s", (0 if r["active"] else 1, user_id))
+    return jsonify(ok=True)
+
+@app.post("/api/admin/access/<int:user_id>")
+@admin_required
+def admin_access(user_id):
+    d = request.get_json(silent=True) or {}
+    credits_to_add = int(d.get("credits", 1))
+    if credits_to_add > 0:
+        with connect() as conn:
+            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
+    return jsonify(ok=True, added=credits_to_add)
+
+@app.get("/api/admin/offers/stats")
+@admin_required
+def admin_offers_stats():
+    with connect() as conn:
+        total = conn.execute("SELECT COUNT(*) as c FROM offers").fetchone()["c"]
+        active = conn.execute("SELECT COUNT(*) as c FROM offers WHERE status='active' AND end_date >= now()").fetchone()["c"]
+        expired = conn.execute("SELECT COUNT(*) as c FROM offers WHERE end_date < now()").fetchone()["c"]
+        claims = conn.execute("SELECT COUNT(*) as c FROM offer_claims").fetchone()["c"]
+    return jsonify(ok=True, stats={"total": total, "active": active, "claims": claims, "expired": expired})
+
+@app.get("/api/admin/offers")
+@admin_required
+def admin_get_offers():
+    with connect() as conn:
+        rows = conn.execute("""SELECT o.*, (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) as total_claims
+               FROM offers o ORDER BY o.created_at DESC""").fetchall()
+    return jsonify(ok=True, offers=rows)
+
+@app.post("/api/admin/offers")
+@admin_required
+def admin_create_offer():
+    d = request.get_json(silent=True) or {}
+    try:
+        with connect() as conn:
+            conn.execute(
+                """INSERT INTO offers (title, description, image_url, offer_type, start_date, end_date, max_claims, eligibility, button_text, terms, requires_approval)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (d["title"], d["description"], d["image_url"], d["offer_type"], d["start_date"], d["end_date"], d["max_claims"], d.get("eligibility"), d.get("button_text", "Grab This Offer"), d.get("terms"), d.get("requires_approval", False))
+            )
+        return jsonify(ok=True)
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 400
+
+@app.post("/api/admin/offers/<int:offer_id>/status")
+@admin_required
+def admin_update_offer_status(offer_id):
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute("UPDATE offers SET status=%s WHERE id=%s", (d.get("status"), offer_id))
+    return jsonify(ok=True)
+
+@app.delete("/api/admin/offers/<int:offer_id>")
+@admin_required
+def admin_delete_offer(offer_id):
+    with connect() as conn:
+        conn.execute("DELETE FROM offers WHERE id=%s", (offer_id,))
+    return jsonify(ok=True)
+
+@app.get("/api/admin/offers/<int:offer_id>/claims")
+@admin_required
+def admin_offer_claims(offer_id):
+    with connect() as conn:
+        rows = conn.execute("""SELECT c.*, u.name as student_name, u.email FROM offer_claims c
+               JOIN users u ON c.user_id = u.id WHERE c.offer_id = %s""", (offer_id,)).fetchall()
+    return jsonify(ok=True, claims=rows)
+
+@app.get("/api/admin/history/stats")
+@admin_required
+def admin_history_stats():
+    with connect() as conn:
+        total_calcs = conn.execute("SELECT COUNT(*) as c FROM calculation_history").fetchone()["c"]
+        unique_students = conn.execute("SELECT COUNT(DISTINCT user_id) as c FROM calculation_history").fetchone()["c"]
+        top_course_row = conn.execute("""SELECT course_name, COUNT(*) as c FROM calculation_courses 
+               WHERE match_type = 'qualified' GROUP BY course_name ORDER BY c DESC LIMIT 1""").fetchone()
+        top_course = top_course_row["course_name"] if top_course_row else "N/A"
+    return jsonify(ok=True, stats={"total_calcs": total_calcs, "unique_students": unique_students, "top_course": top_course})
+
+@app.get("/api/admin/history")
+@admin_required
+def admin_get_all_history():
+    search = request.args.get("search", "").strip()
+    with connect() as conn:
+        if search:
+            rows = conn.execute("""SELECT h.*, u.name as student_name, u.email 
+                   FROM calculation_history h JOIN users u ON h.user_id = u.id 
+                   WHERE u.name ILIKE %s OR u.email ILIKE %s OR h.reference ILIKE %s
+                   ORDER BY h.created_at DESC LIMIT 100""", (f"%{search}%", f"%{search}%", f"%{search}%")).fetchall()
+        else:
+            rows = conn.execute("""SELECT h.*, u.name as student_name, u.email 
+                   FROM calculation_history h JOIN users u ON h.user_id = u.id 
+                   ORDER BY h.created_at DESC LIMIT 100""").fetchall()
+    for r in rows:
+        r["created_at"] = r["created_at"].isoformat()
+        r["cluster_points"] = float(r["cluster_points"])
+    return jsonify(ok=True, history=rows)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
