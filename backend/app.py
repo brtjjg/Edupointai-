@@ -928,5 +928,90 @@ def admin_update_claim(claim_id):
         conn.execute("UPDATE offer_claims SET status=%s WHERE id=%s", (d.get("status"), claim_id))
     return jsonify(ok=True)
 
+# ---------------- COURSES ----------------
+
+@app.get("/api/courses/saved")
+@login_required
+def get_saved_courses():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM saved_courses WHERE user_id=%s ORDER BY id DESC", (u["id"],)).fetchall()
+    for r in rows: r["cutoff"] = float(r["cutoff"])
+    return jsonify(ok=True, courses=rows)
+
+@app.post("/api/courses/save")
+@login_required
+def save_course():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    try:
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO saved_courses (user_id, course_name, university, cutoff) VALUES (%s, %s, %s, %s)",
+                (u["id"], d["course_name"], d["university"], d["cutoff"])
+            )
+        return jsonify(ok=True)
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="Course already saved."), 400
+
+@app.delete("/api/courses/<int:cid>")
+@login_required
+def delete_saved_course(cid):
+    u = current_user()
+    with connect() as conn:
+        conn.execute("DELETE FROM saved_courses WHERE id=%s AND user_id=%s", (cid, u["id"]))
+    return jsonify(ok=True)
+
+# ---------------- CAREERS (CV) ----------------
+
+@app.get("/api/careers/cv")
+@login_required
+def get_cv():
+    u = current_user()
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM student_cvs WHERE user_id=%s", (u["id"],)).fetchone()
+    if not row:
+        return jsonify(ok=True, cv={"full_name": u["name"], "email": u["email"], "phone": u["phone"], "education": "", "skills": "", "experience": ""})
+    return jsonify(ok=True, cv=row)
+
+@app.post("/api/careers/cv")
+@login_required
+def save_cv():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO student_cvs (user_id, full_name, email, phone, education, skills, experience, updated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, now())
+               ON CONFLICT (user_id) DO UPDATE SET 
+               full_name=EXCLUDED.full_name, email=EXCLUDED.email, phone=EXCLUDED.phone,
+               education=EXCLUDED.education, skills=EXCLUDED.skills, experience=EXCLUDED.experience, updated_at=now()""",
+            (u["id"], d.get("full_name"), d.get("email"), d.get("phone"), d.get("education"), d.get("skills"), d.get("experience"))
+        )
+    return jsonify(ok=True)
+
+# ---------------- LEARNING (QUIZZES) ----------------
+
+@app.post("/api/learning/quiz")
+@login_required
+def save_quiz():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO quiz_results (user_id, subject, score, total) VALUES (%s, %s, %s, %s)",
+            (u["id"], d["subject"], d["score"], d["total"])
+        )
+    return jsonify(ok=True)
+
+@app.get("/api/learning/quiz-history")
+@login_required
+def get_quiz_history():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM quiz_results WHERE user_id=%s ORDER BY created_at DESC", (u["id"],)).fetchall()
+    for r in rows: r["created_at"] = r["created_at"].isoformat()
+    return jsonify(ok=True, history=rows)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
