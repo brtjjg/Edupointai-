@@ -1,0 +1,128 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Careers & CV — EduPoint AI</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .dashboard-layout { display: flex; min-height: 100vh; background: #080916; }
+  .sidebar { width: 260px; background: #0b0d1d; border-right: 1px solid #303451; padding: 20px; display: flex; flex-direction: column; gap: 5px; }
+  .sidebar h3 { color: #73e8ff; font-size: 11px; letter-spacing: 1px; margin: 15px 0 5px 10px; text-transform: uppercase; }
+  .sidebar a { color: #aab1ca; text-decoration: none; padding: 10px 12px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; gap: 10px; }
+  .sidebar a:hover, .sidebar a.active { background: #1a1c33; color: #fff; }
+  .main-content { flex: 1; padding: 30px; display: flex; gap: 30px; }
+  
+  .cv-form { flex: 1; background: #111326; border: 1px solid #303451; border-radius: 12px; padding: 25px; }
+  .cv-preview { flex: 1; background: #fff; color: #000; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 800px; overflow-y: auto; }
+  
+  .field { margin-bottom: 15px; }
+  .field label { display: block; color: #aab1ca; font-size: 12px; margin-bottom: 5px; font-weight: bold; }
+  .field input, .field textarea { width: 100%; background: #080a18; border: 1px solid #303451; border-radius: 8px; padding: 10px; color: #fff; font-size: 14px; }
+  
+  /* CV Print Styles */
+  .cv-preview h1 { font-size: 28px; margin: 0 0 5px 0; color: #1a1c33; }
+  .cv-preview h2 { font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; color: #333; }
+  .cv-preview p { font-size: 13px; line-height: 1.5; margin: 5px 0; color: #444; }
+  @media print {
+    .sidebar, .cv-form { display: none !important; }
+    .main-content { padding: 0; }
+    .cv-preview { box-shadow: none; border: none; padding: 0; }
+    body { background: #fff; }
+  }
+</style>
+</head><body>
+<div class="dashboard-layout">
+  <div class="sidebar">
+    <div class="brand" style="font-size: 18px; margin-bottom: 20px;">🎓 EduPoint AI</div>
+    <h3>Academics</h3>
+    <a href="/dashboard.html">🏠 Overview</a>
+    <a href="/history.html">📊 Calculation History</a>
+    <a href="/comparison.html">⚖️ Academic Comparison</a>
+    <a href="/courses.html">🎓 My Courses</a>
+    <h3>Opportunities</h3>
+    <a href="/scholarships.html">💰 Scholarships</a>
+    <h3>Services</h3>
+    <a href="/careers.html" class="active">💼 CV & Careers</a>
+    <a href="/learning.html">📚 Learning Centre</a>
+    <a href="#" onclick="logout(); return false;" style="color: #ff7b7b; margin-top: 20px;">🚪 Logout</a>
+  </div>
+
+  <div class="main-content">
+    <!-- Form -->
+    <div class="cv-form">
+      <h2 style="margin-top: 0;">CV Builder</h2>
+      <p style="color: #aab1ca; font-size: 13px; margin-bottom: 20px;">Fill in your details to generate a professional CV.</p>
+      
+      <div class="field"><label>Full Name</label><input id="cvName"></div>
+      <div class="field"><label>Email Address</label><input id="cvEmail"></div>
+      <div class="field"><label>Phone Number</label><input id="cvPhone"></div>
+      <div class="field"><label>Education (School, Degree, Year)</label><textarea id="cvEdu" rows="3"></textarea></div>
+      <div class="field"><label>Skills (Comma separated)</label><textarea id="cvSkills" rows="2"></textarea></div>
+      <div class="field"><label>Work Experience / Projects</label><textarea id="cvExp" rows="4"></textarea></div>
+      
+      <button class="pay" onclick="saveAndPrint()">Save & Download CV (PDF)</button>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="cv-preview" id="cvPreview">
+      <h1 id="pName">Your Name</h1>
+      <p id="pContact">email@example.com | 0700000000</p>
+      
+      <h2>Education</h2>
+      <p id="pEdu">Your education details...</p>
+      
+      <h2>Skills</h2>
+      <p id="pSkills">Your skills...</p>
+      
+      <h2>Experience</h2>
+      <p id="pExp">Your experience...</p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+(async function init() {
+  const r = await requireAuth(); if (!r) return;
+  const res = await api("/api/careers/cv");
+  const cv = res.cv;
+  
+  document.getElementById("cvName").value = cv.full_name || "";
+  document.getElementById("cvEmail").value = cv.email || "";
+  document.getElementById("cvPhone").value = cv.phone || "";
+  document.getElementById("cvEdu").value = cv.education || "";
+  document.getElementById("cvSkills").value = cv.skills || "";
+  document.getElementById("cvExp").value = cv.experience || "";
+  
+  updatePreview();
+  
+  // Live preview listeners
+  ["cvName", "cvEmail", "cvPhone", "cvEdu", "cvSkills", "cvExp"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updatePreview);
+  });
+})();
+
+function updatePreview() {
+  document.getElementById("pName").textContent = document.getElementById("cvName").value || "Your Name";
+  document.getElementById("pContact").textContent = `${document.getElementById("cvEmail").value} | ${document.getElementById("cvPhone").value}`;
+  document.getElementById("pEdu").textContent = document.getElementById("cvEdu").value || "Your education details...";
+  document.getElementById("pSkills").textContent = document.getElementById("cvSkills").value || "Your skills...";
+  document.getElementById("pExp").textContent = document.getElementById("cvExp").value || "Your experience...";
+}
+
+async function saveAndPrint() {
+  const payload = {
+    full_name: document.getElementById("cvName").value,
+    email: document.getElementById("cvEmail").value,
+    phone: document.getElementById("cvPhone").value,
+    education: document.getElementById("cvEdu").value,
+    skills: document.getElementById("cvSkills").value,
+    experience: document.getElementById("cvExp").value
+  };
+  
+  try {
+    await api("/api/careers/cv", { method: "POST", body: JSON.stringify(payload) });
+    window.print(); // Triggers browser print dialog (can be saved as PDF)
+  } catch(e) { alert("Failed to save CV."); }
+}
+</script>
+</body></html>
