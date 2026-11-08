@@ -64,7 +64,7 @@
     .sidebar { transform: translateX(-100%); padding-top: 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0; padding: 20px 15px; }
-    .sidebar h3 { display: block; } /* Keep headers for structure */
+    .sidebar h3 { display: block; }
   }
   
   @media print {
@@ -136,10 +136,10 @@
       <p style="color: #aab1ca; margin-bottom: 20px;">Select your 7 subjects and grades.</p>
       
       <div class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
-        <div id="calcStatus" style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #73e8ff;">Loading credits...</div>
+        <!-- Removed Loading Credits completely -->
         <div id="subjectList" style="margin-bottom: 20px;"></div>
         <button class="pay" id="btnCalculate" style="width: 100%;">Calculate</button>
-        <div id="calcMessage" class="message" style="margin-top: 15px;"></div>
+        <div id="calcMessage" class="message" style="margin-top: 15px; text-align: center;"></div>
         
         <div id="calcResultsArea" style="display:none; margin-top: 30px; border-top: 1px solid #303451; padding-top: 30px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -311,7 +311,6 @@ function toggleSidebar() {
 }
 
 async function showPage(pageId) {
-  // Close sidebar on mobile after clicking a link
   if(window.innerWidth <= 768) {
     document.getElementById("sidebar").classList.remove("open");
   }
@@ -340,7 +339,6 @@ async function showPage(pageId) {
   me = r.user;
   document.getElementById("dashName").textContent = me.name;
   
-  // Initialize Calculator Dropdowns
   const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
   const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
   let html = "";
@@ -360,7 +358,6 @@ async function showPage(pageId) {
   checkOffers();
 })();
 
-// Prevent Duplicate Subject Selection
 function updateSubjectOptions() {
   const selects = document.querySelectorAll('.sub-select');
   const selectedValues = Array.from(selects).map(s => s.value).filter(v => v !== "");
@@ -369,7 +366,6 @@ function updateSubjectOptions() {
     const currentVal = select.value;
     Array.from(select.options).forEach(option => {
       if (option.value === "") return;
-      // Disable if the option is selected in another dropdown
       if (option.value !== currentVal && selectedValues.includes(option.value)) {
         option.disabled = true;
       } else {
@@ -403,7 +399,7 @@ async function loadDashboard() {
 }
 
 // ==========================================
-// 2. CALCULATOR (Submit)
+// 2. CALCULATOR (Payment Popup Logic)
 // ==========================================
 document.getElementById("btnCalculate").onclick = async () => {
   const subjects = {}, grades = {};
@@ -436,10 +432,53 @@ document.getElementById("btnCalculate").onclick = async () => {
     btn.textContent = "Calculate Again";
     btn.disabled = false;
   } catch(e) {
-    document.getElementById("calcMessage").textContent = e.message;
+    // Detect if the error is because of 0 credits (402)
+    if (e.status === 402 || (e.data && e.data.code === "payment_required")) {
+       triggerPaymentPopup();
+    } else {
+       document.getElementById("calcMessage").textContent = e.message;
+    }
     btn.textContent = "Calculate"; btn.disabled = false;
   }
 };
+
+// Trigger Payment Popup directly
+async function triggerPaymentPopup() {
+  document.getElementById("calcMessage").innerHTML = `<span style="color:#fbbf24;">Opening Pesapal payment...</span>`;
+  try {
+    const j = await api("/api/payment/initiate", { 
+      method: "POST", 
+      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: me.phone || "0700000000" })
+    });
+    
+    if (j.redirect_url) {
+      const w = 600, h = 700;
+      const left = (screen.width/2)-(w/2);
+      const top = (screen.height/2)-(h/2);
+      window.open(j.redirect_url, 'Pesapal Payment', `width=${w},height=${h},top=${top},left=${left}`);
+      
+      document.getElementById("calcMessage").innerHTML = `<span style="color:#fbbf24;">Waiting for payment confirmation... (Do not close this page)</span>`;
+      
+      let n = 0;
+      const t = setInterval(async () => {
+        n++;
+        const x = await api("/api/payment/status/" + j.transaction_id);
+        
+        if (x.payment.status === "paid" || x.payment.status === "completed") {
+          clearInterval(t);
+          alert("Payment Confirmed! You can now calculate.");
+          document.getElementById("calcMessage").innerHTML = `<span style="color:#4ade80;">Payment successful. Click Calculate.</span>`;
+        }
+        if (x.payment.status === "failed" || n >= 60) {
+           clearInterval(t);
+           document.getElementById("calcMessage").textContent = "Payment failed or timed out.";
+        }
+      }, 3000);
+    }
+  } catch (err) { 
+    document.getElementById("calcMessage").textContent = err.message; 
+  }
+}
 
 // ==========================================
 // 3. HISTORY
