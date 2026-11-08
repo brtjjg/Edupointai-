@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users(
     referral_code TEXT,
     role TEXT NOT NULL DEFAULT 'student',
     active INTEGER NOT NULL DEFAULT 1,
-    credits INTEGER NOT NULL DEFAULT 1,
+    credits INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS access(
