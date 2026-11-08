@@ -1,4 +1,4 @@
-I'm#!/usr/bin/env python3
+#!/usr/bin/env python3
 import os
 import uuid
 import logging
@@ -8,10 +8,6 @@ import random
 import string
 import io
 from datetime import datetime
-from datetime import datetime, timezone
-import random
-import string
-import random
 
 import psycopg
 from flask import Flask, request, jsonify
@@ -50,7 +46,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["JSON_SORT_KEYS"] = False
 
 FRONTEND_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
-CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
+CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "DELETE", "OPTIONS"])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,21 +54,14 @@ logger = logging.getLogger(__name__)
 init_db()
 payments = PaymentService()
 
-# ---------------- Helper Functions ----------------
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
 
 def has_paid_access(user_id):
     with connect() as conn:
         r = conn.execute("SELECT paid FROM access WHERE user_id=%s", (user_id,)).fetchone()
     return bool(r and r["paid"])
-
-def set_access(user_id, paid, plan=None, tx=None):
-    with connect() as conn:
-        conn.execute(
-            """INSERT INTO access(user_id,paid,plan,transaction_id,updated_at)
-               VALUES(%s,%s,%s,%s,now())
-               ON CONFLICT(user_id) DO UPDATE SET paid=EXCLUDED.paid, plan=EXCLUDED.plan, transaction_id=EXCLUDED.transaction_id, updated_at=now()""",
-            (user_id, 1 if paid else 0, plan, tx),
-        )
 
 def add_credit(user_id):
     with connect() as conn:
@@ -85,36 +74,28 @@ def ensure_admin():
     with connect() as conn:
         row = conn.execute("SELECT id FROM users WHERE email=%s", (email,)).fetchone()
         if row:
-            # FORCES the admin to be active, resets the password, and sets the role
-            conn.execute(
-                "UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", 
-                (hash_password(password), row["id"])
-            )
+            conn.execute("UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", (hash_password(password), row["id"]))
         else:
             conn.execute(
                 """INSERT INTO users(name,email,phone,password_hash,referral_code,role,active) 
                    VALUES(%s,%s,%s,%s,%s,'admin',1)""",
                 ("EduPoint Administrator", email, "", hash_password(password), "ADMIN"),
             )
+ensure_admin()
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
     buffer = io.BytesIO()
     
-    # Colors
     NAVY = HexColor("#172554")
-    PURPLE = HexColor("#7546C8")
-    BLUE = HexColor("#38BDF8")
     PALE = HexColor("#F4F6FC")
     LIGHT_BLUE = HexColor("#EAF3FF")
     LIGHT_PURPLE = HexColor("#F1ECFB")
     INK = HexColor("#1F2937")
     MUTED = HexColor("#64748B")
     BORDER = HexColor("#DCE3EF")
-    GREEN = HexColor("#15803D")
 
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="Brand", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=17, leading=20, textColor=colors.white, spaceAfter=2))
-    styles.add(ParagraphStyle(name="Tagline", parent=styles["Normal"], fontName="Helvetica", fontSize=8, leading=10, textColor=HexColor("#DCE8FF")))
     styles.add(ParagraphStyle(name="HeroTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=22, leading=27, alignment=TA_LEFT, textColor=NAVY, spaceAfter=5))
     styles.add(ParagraphStyle(name="Sub", parent=styles["Normal"], fontName="Helvetica", fontSize=9, leading=13, textColor=MUTED))
     styles.add(ParagraphStyle(name="Section", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=12, leading=15, textColor=NAVY, spaceBefore=9, spaceAfter=6))
@@ -130,10 +111,8 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
         canvas.saveState()
         w, h = A4
         canvas.setFillColor(NAVY)
-        # FIXED: Proper Python math with * mm
         canvas.rect(0, h - 8*mm, w, 8*mm, stroke=0, fill=1)
         canvas.setStrokeColor(BORDER)
-        canvas.setLineWidth(0.6)
         canvas.line(18*mm, 16*mm, w - 18*mm, 16*mm)
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(MUTED)
@@ -144,15 +123,12 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=17*mm, bottomMargin=23*mm)
     story = []
 
-    # 1. Brand Banner
     brand = Table([[P("EduPointAI", "Brand"), P("STUDENT RESULTS REPORT<br/>COURSE & SCHOLARSHIP MATCHING", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
     brand.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), NAVY), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 12), ("RIGHTPADDING", (0,0), (-1,-1), 12), ("TOPPADDING", (0,0), (-1,-1), 7), ("BOTTOMPADDING", (0,0), (-1,-1), 7), ("ALIGN", (1,0), (1,0), "RIGHT")]))
     story += [brand, Spacer(1, 8*mm)]
 
-    # 2. Hero Title
     story += [P("Your academic assessment is ready", "HeroTitle"), P("A personalized overview of your academic performance, course qualifications and scholarship opportunities.", "Sub"), Spacer(1, 5*mm)]
 
-    # 3. Student Identity Strip
     today = datetime.now().strftime("%d %b %Y, %H:%M")
     ref = "EP-2026-" + ''.join(random.choices(string.digits, k=6))
     student = Table([[P("STUDENT", "Tiny"), P("REPORT STATUS", "Tiny"), P("REPORT REFERENCE", "Tiny")],
@@ -161,7 +137,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     student.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), PALE), ("BOX", (0,0), (-1,-1), 0.7, BORDER), ("INNERGRID", (0,0), (-1,-1), 0.5, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 9), ("RIGHTPADDING", (0,0), (-1,-1), 9), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
     story += [student, Spacer(1, 5*mm)]
 
-    # 4. KPI Cards
     qualified = [r for r in results if r['match'] == 'qualified']
     cards = Table([[P("CLUSTER POINTS", "CardLabel"), P("QUALIFIED COURSES", "CardLabel"), P("SCHOLARSHIP MATCHES", "CardLabel")],
                    [P(str(cluster_points), "CardValue"), P(str(len(qualified)), "CardValue"), P("See below", "BodySmall")]],
@@ -169,7 +144,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     cards.setStyle(TableStyle([("BACKGROUND", (0,0), (0,-1), LIGHT_BLUE), ("BACKGROUND", (1,0), (1,-1), LIGHT_PURPLE), ("BACKGROUND", (2,0), (2,-1), PALE), ("BOX", (0,0), (-1,-1), 0.6, BORDER), ("INNERGRID", (0,0), (-1,-1), 1, colors.white), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 10), ("RIGHTPADDING", (0,0), (-1,-1), 10), ("TOPPADDING", (0,0), (-1,-1), 8), ("BOTTOMPADDING", (0,0), (-1,-1), 8)]))
     story += [cards, Spacer(1, 5*mm)]
 
-    # 5. Academic Profile Table
     story += [P("01  Academic profile", "Section")]
     grades_data = [[P("SUBJECT", "Tiny"), P("GRADE", "Tiny"), P("POINTS", "Tiny")]]
     for i in range(7):
@@ -182,30 +156,27 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     gt.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), PALE), ("TEXTCOLOR", (0,0), (-1,0), NAVY), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 7), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
     story += [gt, Spacer(1, 5*mm)]
 
-    # 6. Qualified Courses Table
-    story += [P("02  Qualified courses", "Section"), P("The following courses have been identified based on the assessment criteria applied by EduPointAI. Confirm current entry requirements with the relevant institution.", "Sub"), Spacer(1, 2*mm)]
+    story += [P("02  Qualified courses", "Section"), P("The following courses have been identified based on the assessment criteria applied by EduPointAI.", "Sub"), Spacer(1, 2*mm)]
     course_data = [[P("#", "Tiny"), P("COURSE / PROGRAMME", "Tiny"), P("INSTITUTION", "Tiny"), P("CUTOFF", "Tiny")]]
-    for idx, c in enumerate(qualified[:15]): # Limit to 15 for fitting
+    for idx, c in enumerate(qualified[:15]):
         course_data.append([P(str(idx+1), "BodySmall"), P(c['n'], "BodySmall"), P(c['u'], "BodySmall"), P(str(c['c']), "BodySmall")])
     
     if len(qualified) == 0:
-        course_data.append([P("-", "BodySmall"), P("No courses qualified for yet based on your current grades.", "BodySmall"), P("", "BodySmall"), P("", "BodySmall")])
+        course_data.append([P("-", "BodySmall"), P("No courses qualified for yet.", "BodySmall"), P("", "BodySmall"), P("", "BodySmall")])
 
     ct = Table(course_data, colWidths=[10*mm, 70*mm, 60*mm, 34*mm], repeatRows=1)
     ct.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), LIGHT_BLUE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6), ("TOPPADDING", (0,0), (-1,-1), 6), ("BOTTOMPADDING", (0,0), (-1,-1), 6)]))
     story += [ct, Spacer(1, 5*mm)]
 
-    # 7. Scholarships
     story += [P("03  Scholarship opportunities", "Section")]
     sch_data = [[P("SCHOLARSHIP", "Tiny"), P("AMOUNT", "Tiny"), P("DEADLINE", "Tiny")]]
-    for s in scholarships[:10]: # Limit to 10 for fitting
+    for s in scholarships[:10]:
         sch_data.append([P(s['name'], "BodySmall"), P(s['amount'], "BodySmall"), P(s['deadline'], "BodySmall")])
         
     st = Table(sch_data, colWidths=[90*mm, 50*mm, 34*mm], repeatRows=1)
     st.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), LIGHT_PURPLE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 6), ("RIGHTPADDING", (0,0), (-1,-1), 6), ("TOPPADDING", (0,0), (-1,-1), 6), ("BOTTOMPADDING", (0,0), (-1,-1), 6)]))
     story += [st, Spacer(1, 6*mm)]
 
-    # 8. Footer Details & QR Code
     qr = qrcode.QRCode(version=1, box_size=3, border=1)
     qr.add_data(f"EduPointAI|Ref:{ref}|Name:{user_name}")
     qr.make(fit=True)
@@ -220,18 +191,15 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     footer_table.setStyle(TableStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 5), ("TEXTCOLOR", (2,0), (2,0), NAVY)]))
     story += [footer_table]
 
-    # Build PDF
     doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
     buffer.seek(0)
     return buffer
 
 def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
     try:
-        # 1. Generate PDF using ReportLab
         pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
         pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
 
-        # 2. Setup Brevo Client
         api_key = os.getenv("BREVO_API_KEY")
         sender_email = os.getenv("SENDER_EMAIL")
         
@@ -241,7 +209,6 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
 
         client = Brevo(api_key=api_key)
 
-        # 3. HTML Email Body
         qualified_count = len([r for r in results if r['match'] == 'qualified'])
         email_html = f"""
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
@@ -280,7 +247,6 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
         </div>
         """
 
-        # 4. Send Email via Brevo
         client.transactional_emails.send_transac_email(
             subject="Your EduPointAI Calculation Report - Course & Scholarship Qualifications",
             html_content=email_html,
@@ -293,11 +259,15 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
     except Exception as e:
         logger.error(f"Failed to send email via Brevo: {e}")
 
-# ---------------- Routes ----------------
+# ==========================================
+# API ROUTES
+# ==========================================
 
 @app.get("/health")
 def health(): 
     return jsonify(ok=True, service="edupoint-api")
+
+# ---------------- AUTH ----------------
 
 @app.post("/api/register")
 def register():
@@ -325,7 +295,7 @@ def register():
         return jsonify(ok=False, error="An account with that email already exists."), 409
 
     token = create_session(uid)
-    return jsonify(ok=True, token=token, redirect="/dashboard.html")
+    return jsonify(ok=True, token=token, redirect="/app.html")
 
 @app.post("/api/login")
 def login():
@@ -342,7 +312,7 @@ def login():
     token = create_session(u["id"])
     return jsonify(
         ok=True, token=token, user=public_user(u), 
-        redirect="/admin.html" if u["role"] == "admin" else "/dashboard.html"
+        redirect="/admin.html" if u["role"] == "admin" else "/app.html"
     )
 
 @app.post("/api/auth/google")
@@ -367,7 +337,7 @@ def google_login():
                 ).fetchone()
                 
         session_token = create_session(u["id"])
-        return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/dashboard.html")
+        return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/app.html")
     except ValueError:
         return jsonify(ok=False, error="Invalid Google token."), 401
 
@@ -387,6 +357,8 @@ def me():
         paid=has_paid_access(u["id"]), 
         credits=u.get("credits", 0)
     )
+
+# ---------------- PAYMENTS ----------------
 
 @app.get("/api/plans")
 def plans(): 
@@ -489,6 +461,8 @@ def payment_webhook(provider):
         
     return jsonify(ok=True)
 
+# ---------------- CALCULATOR & HISTORY ----------------
+
 @app.post("/api/calculate")
 @login_required
 def calculate():
@@ -511,27 +485,22 @@ def calculate():
             diff = cp - course["c"]
             out.append({**course, "difference": round(diff, 3), "match": "qualified" if diff >= 0 else ("close" if diff >= -2 else "not_qualified")})
             
-        # --- SAVE TO HISTORY ---
         ref_code = "EPA-2026-" + ''.join(random.choices(string.digits, k=6))
         
         with connect() as conn:
-            # Deduct credit
             conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
             
-            # Save main history record
             history_row = conn.execute(
                 "INSERT INTO calculation_history (user_id, reference, cluster_points) VALUES (%s, %s, %s) RETURNING id",
                 (u["id"], ref_code, round(cp, 3))
             ).fetchone()
             history_id = history_row["id"]
             
-            # Save subjects
             for i in range(7):
                 subj = subjects.get(str(i), f"Subject {i+1}")
                 grade = grades.get(str(i), "-")
                 conn.execute("INSERT INTO calculation_subjects (history_id, subject, grade) VALUES (%s, %s, %s)", (history_id, subj, grade))
             
-            # Save courses (qualified and close only)
             for c in out:
                 if c["match"] in ["qualified", "close"]:
                     conn.execute(
@@ -572,21 +541,13 @@ def get_history():
 def get_history_details(reference):
     u = current_user()
     with connect() as conn:
-        # Fetch main record
-        h = conn.execute(
-            "SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", 
-            (reference, u["id"])
-        ).fetchone()
-        
-        if not h:
-            return jsonify(ok=False, error="Record not found."), 404
+        h = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (reference, u["id"])).fetchone()
+        if not h: return jsonify(ok=False, error="Record not found."), 404
             
-        # Fetch subjects
         subs = conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h["id"],)).fetchall()
         subjects_dict = {str(i): row["subject"] for i, row in enumerate(subs)}
         grades_dict = {str(i): row["grade"] for i, row in enumerate(subs)}
         
-        # Fetch courses
         courses = conn.execute("SELECT course_name, university, cutoff, difference, match_type FROM calculation_courses WHERE history_id=%s", (h["id"],)).fetchall()
         
     return jsonify(
@@ -607,8 +568,7 @@ def resend_history_email(reference):
     u = current_user()
     with connect() as conn:
         h = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (reference, u["id"])).fetchone()
-        if not h:
-            return jsonify(ok=False, error="Record not found."), 404
+        if not h: return jsonify(ok=False, error="Record not found."), 404
             
         subs = conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h["id"],)).fetchall()
         subjects_dict = {str(i): row["subject"] for i, row in enumerate(subs)}
@@ -616,7 +576,6 @@ def resend_history_email(reference):
         
         courses = conn.execute("SELECT course_name, university, cutoff, difference, match_type FROM calculation_courses WHERE history_id=%s", (h["id"],)).fetchall()
         
-        # Reconstruct the results format expected by generate_report_pdf
         results_formatted = []
         for c in courses:
             results_formatted.append({
@@ -627,7 +586,6 @@ def resend_history_email(reference):
                 "match": c["match_type"]
             })
             
-    # Trigger email thread
     threading.Thread(
         target=send_pdf_email, 
         args=(u["email"], u["name"], float(h["cluster_points"]), results_formatted, subjects_dict, grades_dict, SCHOLARSHIPS)
@@ -648,37 +606,24 @@ def compare_history():
         return jsonify(ok=False, error="Cannot compare an assessment with itself."), 400
 
     with connect() as conn:
-        # Fetch both records
         h1 = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (ref1, u["id"])).fetchone()
         h2 = conn.execute("SELECT * FROM calculation_history WHERE reference=%s AND user_id=%s", (ref2, u["id"])).fetchone()
         
         if not h1 or not h2:
             return jsonify(ok=False, error="One or both records not found."), 404
 
-        # Fetch subjects for both
         subs1 = {r["subject"]: r["grade"] for r in conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h1["id"],)).fetchall()}
         subs2 = {r["subject"]: r["grade"] for r in conn.execute("SELECT subject, grade FROM calculation_subjects WHERE history_id=%s", (h2["id"],)).fetchall()}
-
-        # Fetch courses for both (only qualified ones for comparison)
         courses1 = {(r["course_name"], r["university"]): r["difference"] for r in conn.execute("SELECT course_name, university, difference FROM calculation_courses WHERE history_id=%s AND match_type='qualified'", (h1["id"],)).fetchall()}
         courses2 = {(r["course_name"], r["university"]): r["difference"] for r in conn.execute("SELECT course_name, university, difference FROM calculation_courses WHERE history_id=%s AND match_type='qualified'", (h2["id"],)).fetchall()}
 
-    # Calculate course differences
     gained_courses = [{"course": k[0], "university": k[1], "margin": float(courses2[k])} for k in courses2.keys() - courses1.keys()]
     lost_courses = [{"course": k[0], "university": k[1], "margin": float(courses1[k])} for k in courses1.keys() - courses2.keys()]
     
-    # Calculate subject differences (A=12 ... E=1)
     subject_changes = []
     for sub in subs1:
-        if sub in subs2:
-            old_grade = subs1[sub]
-            new_grade = subs2[sub]
-            if old_grade != new_grade:
-                subject_changes.append({
-                    "subject": sub,
-                    "old": old_grade,
-                    "new": new_grade
-                })
+        if sub in subs2 and subs1[sub] != subs2[sub]:
+            subject_changes.append({"subject": sub, "old": subs1[sub], "new": subs2[sub]})
 
     return jsonify(
         ok=True,
@@ -689,244 +634,6 @@ def compare_history():
         lost_courses=lost_courses,
         subject_changes=subject_changes
     )
-@app.get("/api/scholarships/saved")
-@login_required
-def get_saved_scholarships():
-    u = current_user()
-    with connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM student_scholarships WHERE user_id=%s ORDER BY updated_at DESC", 
-            (u["id"],)
-        ).fetchall()
-    for r in rows:
-        r["updated_at"] = r["updated_at"].isoformat()
-    return jsonify(ok=True, saved=rows)
-
-@app.post("/api/scholarships/save")
-@login_required
-def save_scholarship():
-    u = current_user()
-    d = request.get_json(silent=True) or {}
-    name = d.get("name")
-    
-    if not name:
-        return jsonify(ok=False, error="Scholarship name required."), 400
-        
-    try:
-        with connect() as conn:
-            conn.execute(
-                "INSERT INTO student_scholarships (user_id, scholarship_name) VALUES (%s, %s)",
-                (u["id"], name)
-            )
-        return jsonify(ok=True)
-    except psycopg.errors.UniqueViolation:
-        return jsonify(ok=False, error="Scholarship already saved."), 400
-
-@app.post("/api/scholarships/<int:sid>/status")
-@login_required
-def update_scholarship_status(sid):
-    u = current_user()
-    d = request.get_json(silent=True) or {}
-    status = d.get("status")
-    notes = d.get("notes", "")
-    
-    with connect() as conn:
-        conn.execute(
-            "UPDATE student_scholarships SET status=%s, notes=%s, updated_at=now() WHERE id=%s AND user_id=%s",
-            (status, notes, sid, u["id"])
-        )
-    return jsonify(ok=True)
-
-@app.delete("/api/scholarships/<int:sid>")
-@login_required
-def delete_scholarship(sid):
-    u = current_user()
-    with connect() as conn:
-        conn.execute("DELETE FROM student_scholarships WHERE id=%s AND user_id=%s", (sid, u["id"]))
-    return jsonify(ok=True)
-
-
-@app.post("/api/chat")
-@login_required
-def chat():
-    q = str((request.get_json(silent=True) or {}).get("question", "")).lower().strip()
-    if not q: 
-        return jsonify(answer="Ask me a KUCCPS, course, cluster-points or scholarship question.")
-    for x in CHATBOT_QA:
-        if any(k in q for k in x["keywords"]): 
-            return jsonify(answer=x["answer"])
-    return jsonify(answer="I can help with cluster points, KUCCPS courses, admission chances, transfers, scholarships and university requirements.")
-
-@app.get("/api/admin/users")
-@admin_required
-def admin_users():
-    with connect() as conn:
-        rows = conn.execute("SELECT id,name,email,phone,role,active,referral_code,credits,created_at FROM users ORDER BY id DESC").fetchall()
-    for r in rows:
-        r["active"] = bool(r["active"])
-        r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
-    return jsonify(ok=True, users=rows)
-
-@app.get("/api/admin/payments")
-@admin_required
-def admin_payments():
-    with connect() as conn:
-        rows = conn.execute("SELECT id,transaction_id,user_id,phone,network,amount,plan,status,provider_reference,created_at FROM payments ORDER BY id DESC LIMIT 200").fetchall()
-    for r in rows:
-        r["amount"] = float(r["amount"])
-        r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
-    return jsonify(ok=True, payments=rows)
-
-@app.post("/api/admin/user/<int:user_id>/toggle")
-@admin_required
-def admin_toggle_user(user_id):
-    with connect() as conn:
-        r = conn.execute("SELECT active FROM users WHERE id=%s", (user_id,)).fetchone()
-        if not r: 
-            return jsonify(ok=False, error="User not found."), 404
-        conn.execute("UPDATE users SET active=%s WHERE id=%s", (0 if r["active"] else 1, user_id))
-    return jsonify(ok=True)
-
-@app.post("/api/admin/access/<int:user_id>")
-@admin_required
-def admin_access(user_id):
-    d = request.get_json(silent=True) or {}
-    credits_to_add = int(d.get("credits", 1))
-    
-    if credits_to_add > 0:
-        with connect() as conn:
-            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
-            
-    return jsonify(ok=True, added=credits_to_add)
-
-# ---------------- OFFERS ROUTES ----------------
-
-@app.get("/api/offers/active")
-@login_required
-def active_offers():
-    u = current_user()
-    with connect() as conn:
-        # Find active offers that the user hasn't claimed yet and haven't expired
-        row = conn.execute(
-            """SELECT o.* FROM offers o
-               WHERE o.status = 'active' 
-               AND o.start_date <= now() 
-               AND o.end_date >= now()
-               AND o.id NOT IN (SELECT offer_id FROM offer_claims WHERE user_id = %s)
-               AND (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) < o.max_claims
-               ORDER BY o.created_at DESC LIMIT 1""", (u["id"],)
-        ).fetchone()
-    return jsonify(ok=True, offer=row)
-
-@app.post("/api/offers/claim/<int:offer_id>")
-@login_required
-def claim_offer(offer_id):
-    u = current_user()
-    try:
-        with connect() as conn:
-            # Verify offer is still valid
-            offer = conn.execute("SELECT * FROM offers WHERE id=%s AND status='active' AND end_date >= now()", (offer_id,)).fetchone()
-            if not offer:
-                return jsonify(ok=False, error="Offer expired or unavailable."), 400
-            
-            # Check max claims
-            claims_count = conn.execute("SELECT COUNT(*) as c FROM offer_claims WHERE offer_id=%s", (offer_id,)).fetchone()["c"]
-            if claims_count >= offer["max_claims"]:
-                return jsonify(ok=False, error="This offer has been fully claimed."), 400
-            
-            # Generate reference
-            ref = "OFF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            status = "pending" if offer["requires_approval"] else "approved"
-            
-            conn.execute(
-                "INSERT INTO offer_claims (offer_id, user_id, reference, status) VALUES (%s, %s, %s, %s)",
-                (offer_id, u["id"], ref, status)
-            )
-            return jsonify(ok=True, reference=ref, status=status, requires_approval=offer["requires_approval"])
-    except psycopg.errors.UniqueViolation:
-        return jsonify(ok=False, error="You have already claimed this offer."), 400
-
-@app.get("/api/offers/my-claims")
-@login_required
-def my_claims():
-    u = current_user()
-    with connect() as conn:
-        rows = conn.execute(
-            """SELECT c.*, o.title, o.offer_type FROM offer_claims c
-               JOIN offers o ON c.offer_id = o.id
-               WHERE c.user_id = %s ORDER BY c.created_at DESC""", (u["id"],)
-        ).fetchall()
-    return jsonify(ok=True, claims=rows)
-
-# ---------------- ADMIN OFFERS ROUTES ----------------
-
-@app.get("/api/admin/offers/stats")
-@admin_required
-def admin_offers_stats():
-    with connect() as conn:
-        total = conn.execute("SELECT COUNT(*) as c FROM offers").fetchone()["c"]
-        active = conn.execute("SELECT COUNT(*) as c FROM offers WHERE status='active' AND end_date >= now()").fetchone()["c"]
-        expired = conn.execute("SELECT COUNT(*) as c FROM offers WHERE end_date < now()").fetchone()["c"]
-        claims = conn.execute("SELECT COUNT(*) as c FROM offer_claims").fetchone()["c"]
-    return jsonify(ok=True, stats={"total": total, "active": active, "claims": claims, "expired": expired})
-
-@app.get("/api/admin/offers")
-@admin_required
-def admin_get_offers():
-    with connect() as conn:
-        rows = conn.execute(
-            """SELECT o.*, (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) as total_claims
-               FROM offers o ORDER BY o.created_at DESC"""
-        ).fetchall()
-    return jsonify(ok=True, offers=rows)
-
-@app.post("/api/admin/offers")
-@admin_required
-def admin_create_offer():
-    d = request.get_json(silent=True) or {}
-    try:
-        with connect() as conn:
-            conn.execute(
-                """INSERT INTO offers (title, description, image_url, offer_type, start_date, end_date, max_claims, eligibility, button_text, terms, requires_approval)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                (d["title"], d["description"], d["image_url"], d["offer_type"], d["start_date"], d["end_date"], d["max_claims"], d.get("eligibility"), d.get("button_text", "Grab This Offer"), d.get("terms"), d.get("requires_approval", False))
-            )
-        return jsonify(ok=True)
-    except Exception as e:
-        return jsonify(ok=False, error=str(e)), 400
-
-@app.post("/api/admin/offers/<int:offer_id>/status")
-@admin_required
-def admin_update_offer_status(offer_id):
-    d = request.get_json(silent=True) or {}
-    with connect() as conn:
-        conn.execute("UPDATE offers SET status=%s WHERE id=%s", (d.get("status"), offer_id))
-    return jsonify(ok=True)
-
-@app.delete("/api/admin/offers/<int:offer_id>")
-@admin_required
-def admin_delete_offer(offer_id):
-    with connect() as conn:
-        conn.execute("DELETE FROM offers WHERE id=%s", (offer_id,))
-    return jsonify(ok=True)
-
-@app.get("/api/admin/offers/<int:offer_id>/claims")
-@admin_required
-def admin_offer_claims(offer_id):
-    with connect() as conn:
-        rows = conn.execute(
-            """SELECT c.*, u.name as student_name, u.email FROM offer_claims c
-               JOIN users u ON c.user_id = u.id WHERE c.offer_id = %s""", (offer_id,)
-        ).fetchall()
-    return jsonify(ok=True, claims=rows)
-
-@app.post("/api/admin/claims/<int:claim_id>/status")
-@admin_required
-def admin_update_claim(claim_id):
-    d = request.get_json(silent=True) or {}
-    with connect() as conn:
-        conn.execute("UPDATE offer_claims SET status=%s WHERE id=%s", (d.get("status"), claim_id))
-    return jsonify(ok=True)
 
 # ---------------- COURSES ----------------
 
@@ -1011,6 +718,267 @@ def get_quiz_history():
     with connect() as conn:
         rows = conn.execute("SELECT * FROM quiz_results WHERE user_id=%s ORDER BY created_at DESC", (u["id"],)).fetchall()
     for r in rows: r["created_at"] = r["created_at"].isoformat()
+    return jsonify(ok=True, history=rows)
+
+# ---------------- SCHOLARSHIPS ----------------
+
+@app.get("/api/scholarships")
+@login_required
+def scholarships():
+    return jsonify(SCHOLARSHIPS)
+
+@app.get("/api/scholarships/saved")
+@login_required
+def get_saved_scholarships():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("SELECT * FROM student_scholarships WHERE user_id=%s ORDER BY updated_at DESC", (u["id"],)).fetchall()
+    for r in rows: r["updated_at"] = r["updated_at"].isoformat()
+    return jsonify(ok=True, saved=rows)
+
+@app.post("/api/scholarships/save")
+@login_required
+def save_scholarship():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    name = d.get("name")
+    if not name: return jsonify(ok=False, error="Scholarship name required."), 400
+    try:
+        with connect() as conn:
+            conn.execute("INSERT INTO student_scholarships (user_id, scholarship_name) VALUES (%s, %s)", (u["id"], name))
+        return jsonify(ok=True)
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="Scholarship already saved."), 400
+
+@app.post("/api/scholarships/<int:sid>/status")
+@login_required
+def update_scholarship_status(sid):
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute("UPDATE student_scholarships SET status=%s, notes=%s, updated_at=now() WHERE id=%s AND user_id=%s", (d.get("status"), d.get("notes", ""), sid, u["id"]))
+    return jsonify(ok=True)
+
+@app.delete("/api/scholarships/<int:sid>")
+@login_required
+def delete_scholarship(sid):
+    u = current_user()
+    with connect() as conn:
+        conn.execute("DELETE FROM student_scholarships WHERE id=%s AND user_id=%s", (sid, u["id"]))
+    return jsonify(ok=True)
+
+# ---------------- AI CHATBOT ----------------
+
+@app.post("/api/chat")
+@login_required
+def chat():
+    u = current_user()
+    d = request.get_json(silent=True) or {}
+    q = str(d.get("question", "")).lower().strip()
+    
+    if not q: 
+        return jsonify(answer="Ask me about your grades, courses, or scholarships!")
+
+    for x in CHATBOT_QA:
+        if any(k in q for k in x["keywords"]): 
+            return jsonify(answer=x["answer"])
+
+    with connect() as conn:
+        last_calc = conn.execute("SELECT * FROM calculation_history WHERE user_id=%s ORDER BY created_at DESC LIMIT 1", (u["id"],)).fetchone()
+        
+        if last_calc:
+            courses = conn.execute("SELECT course_name, university, match_type FROM calculation_courses WHERE history_id=%s", (last_calc["id"],)).fetchall()
+            qual = [c for c in courses if c["match_type"] == "qualified"]
+            
+            if "what courses" in q or "qualify" in q or "can i do" in q:
+                if len(qual) > 0:
+                    course_list = ", ".join([f"{c['course_name']} at {c['university']}" for c in qual[:5]])
+                    return jsonify(answer=f"Based on your latest assessment ({last_calc['cluster_points']} points), you qualify for {len(qual)} courses. Here are a few: {course_list}.")
+                else:
+                    return jsonify(answer="Based on your latest assessment, you don't currently qualify for any courses. Consider looking at diploma programs or improving your grades.")
+            
+            if "my points" in q or "my cluster" in q or "my grade" in q:
+                return jsonify(answer=f"Your most recent calculation resulted in {last_calc['cluster_points']} cluster points.")
+        else:
+            if "my points" in q or "my grade" in q:
+                return jsonify(answer="I don't have any academic records for you yet. Please use the Calculator to get your first cluster points!")
+
+    return jsonify(answer="I can help with cluster points, KUCCPS courses, admission chances, transfers, and scholarships. Try asking 'What courses do I qualify for?'")
+
+# ---------------- OFFERS ----------------
+
+@app.get("/api/offers/active")
+@login_required
+def active_offers():
+    u = current_user()
+    with connect() as conn:
+        row = conn.execute(
+            """SELECT o.* FROM offers o
+               WHERE o.status = 'active' AND o.start_date <= now() AND o.end_date >= now()
+               AND o.id NOT IN (SELECT offer_id FROM offer_claims WHERE user_id = %s)
+               AND (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) < o.max_claims
+               ORDER BY o.created_at DESC LIMIT 1""", (u["id"],)
+        ).fetchone()
+    return jsonify(ok=True, offer=row)
+
+@app.post("/api/offers/claim/<int:offer_id>")
+@login_required
+def claim_offer(offer_id):
+    u = current_user()
+    try:
+        with connect() as conn:
+            offer = conn.execute("SELECT * FROM offers WHERE id=%s AND status='active' AND end_date >= now()", (offer_id,)).fetchone()
+            if not offer: return jsonify(ok=False, error="Offer expired or unavailable."), 400
+            
+            claims_count = conn.execute("SELECT COUNT(*) as c FROM offer_claims WHERE offer_id=%s", (offer_id,)).fetchone()["c"]
+            if claims_count >= offer["max_claims"]: return jsonify(ok=False, error="This offer has been fully claimed."), 400
+            
+            ref = "OFF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            status = "pending" if offer["requires_approval"] else "approved"
+            
+            conn.execute("INSERT INTO offer_claims (offer_id, user_id, reference, status) VALUES (%s, %s, %s, %s)", (offer_id, u["id"], ref, status))
+            
+            if status == "approved":
+                conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (u["id"],))
+
+            return jsonify(ok=True, reference=ref, status=status, requires_approval=offer["requires_approval"])
+    except psycopg.errors.UniqueViolation:
+        return jsonify(ok=False, error="You have already claimed this offer."), 400
+
+@app.get("/api/offers/my-claims")
+@login_required
+def my_claims():
+    u = current_user()
+    with connect() as conn:
+        rows = conn.execute("""SELECT c.*, o.title, o.offer_type FROM offer_claims c
+               JOIN offers o ON c.offer_id = o.id WHERE c.user_id = %s ORDER BY c.created_at DESC""", (u["id"],)).fetchall()
+    return jsonify(ok=True, claims=rows)
+
+# ---------------- ADMIN ROUTES ----------------
+
+@app.get("/api/admin/users")
+@admin_required
+def admin_users():
+    with connect() as conn:
+        rows = conn.execute("SELECT id,name,email,phone,role,active,referral_code,credits,created_at FROM users ORDER BY id DESC").fetchall()
+    for r in rows:
+        r["active"] = bool(r["active"])
+        r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
+    return jsonify(ok=True, users=rows)
+
+@app.get("/api/admin/payments")
+@admin_required
+def admin_payments():
+    with connect() as conn:
+        rows = conn.execute("SELECT id,transaction_id,user_id,phone,network,amount,plan,status,provider_reference,created_at FROM payments ORDER BY id DESC LIMIT 200").fetchall()
+    for r in rows:
+        r["amount"] = float(r["amount"])
+        r["created_at"] = r["created_at"].isoformat() if r["created_at"] else None
+    return jsonify(ok=True, payments=rows)
+
+@app.post("/api/admin/user/<int:user_id>/toggle")
+@admin_required
+def admin_toggle_user(user_id):
+    with connect() as conn:
+        r = conn.execute("SELECT active FROM users WHERE id=%s", (user_id,)).fetchone()
+        if not r: return jsonify(ok=False, error="User not found."), 404
+        conn.execute("UPDATE users SET active=%s WHERE id=%s", (0 if r["active"] else 1, user_id))
+    return jsonify(ok=True)
+
+@app.post("/api/admin/access/<int:user_id>")
+@admin_required
+def admin_access(user_id):
+    d = request.get_json(silent=True) or {}
+    credits_to_add = int(d.get("credits", 1))
+    if credits_to_add > 0:
+        with connect() as conn:
+            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
+    return jsonify(ok=True, added=credits_to_add)
+
+@app.get("/api/admin/offers/stats")
+@admin_required
+def admin_offers_stats():
+    with connect() as conn:
+        total = conn.execute("SELECT COUNT(*) as c FROM offers").fetchone()["c"]
+        active = conn.execute("SELECT COUNT(*) as c FROM offers WHERE status='active' AND end_date >= now()").fetchone()["c"]
+        expired = conn.execute("SELECT COUNT(*) as c FROM offers WHERE end_date < now()").fetchone()["c"]
+        claims = conn.execute("SELECT COUNT(*) as c FROM offer_claims").fetchone()["c"]
+    return jsonify(ok=True, stats={"total": total, "active": active, "claims": claims, "expired": expired})
+
+@app.get("/api/admin/offers")
+@admin_required
+def admin_get_offers():
+    with connect() as conn:
+        rows = conn.execute("""SELECT o.*, (SELECT COUNT(*) FROM offer_claims WHERE offer_id = o.id) as total_claims
+               FROM offers o ORDER BY o.created_at DESC""").fetchall()
+    return jsonify(ok=True, offers=rows)
+
+@app.post("/api/admin/offers")
+@admin_required
+def admin_create_offer():
+    d = request.get_json(silent=True) or {}
+    try:
+        with connect() as conn:
+            conn.execute(
+                """INSERT INTO offers (title, description, image_url, offer_type, start_date, end_date, max_claims, eligibility, button_text, terms, requires_approval)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (d["title"], d["description"], d["image_url"], d["offer_type"], d["start_date"], d["end_date"], d["max_claims"], d.get("eligibility"), d.get("button_text", "Grab This Offer"), d.get("terms"), d.get("requires_approval", False))
+            )
+        return jsonify(ok=True)
+    except Exception as e:
+        return jsonify(ok=False, error=str(e)), 400
+
+@app.post("/api/admin/offers/<int:offer_id>/status")
+@admin_required
+def admin_update_offer_status(offer_id):
+    d = request.get_json(silent=True) or {}
+    with connect() as conn:
+        conn.execute("UPDATE offers SET status=%s WHERE id=%s", (d.get("status"), offer_id))
+    return jsonify(ok=True)
+
+@app.delete("/api/admin/offers/<int:offer_id>")
+@admin_required
+def admin_delete_offer(offer_id):
+    with connect() as conn:
+        conn.execute("DELETE FROM offers WHERE id=%s", (offer_id,))
+    return jsonify(ok=True)
+
+@app.get("/api/admin/offers/<int:offer_id>/claims")
+@admin_required
+def admin_offer_claims(offer_id):
+    with connect() as conn:
+        rows = conn.execute("""SELECT c.*, u.name as student_name, u.email FROM offer_claims c
+               JOIN users u ON c.user_id = u.id WHERE c.offer_id = %s""", (offer_id,)).fetchall()
+    return jsonify(ok=True, claims=rows)
+
+@app.get("/api/admin/history/stats")
+@admin_required
+def admin_history_stats():
+    with connect() as conn:
+        total_calcs = conn.execute("SELECT COUNT(*) as c FROM calculation_history").fetchone()["c"]
+        unique_students = conn.execute("SELECT COUNT(DISTINCT user_id) as c FROM calculation_history").fetchone()["c"]
+        top_course_row = conn.execute("""SELECT course_name, COUNT(*) as c FROM calculation_courses 
+               WHERE match_type = 'qualified' GROUP BY course_name ORDER BY c DESC LIMIT 1""").fetchone()
+        top_course = top_course_row["course_name"] if top_course_row else "N/A"
+    return jsonify(ok=True, stats={"total_calcs": total_calcs, "unique_students": unique_students, "top_course": top_course})
+
+@app.get("/api/admin/history")
+@admin_required
+def admin_get_all_history():
+    search = request.args.get("search", "").strip()
+    with connect() as conn:
+        if search:
+            rows = conn.execute("""SELECT h.*, u.name as student_name, u.email 
+                   FROM calculation_history h JOIN users u ON h.user_id = u.id 
+                   WHERE u.name ILIKE %s OR u.email ILIKE %s OR h.reference ILIKE %s
+                   ORDER BY h.created_at DESC LIMIT 100""", (f"%{search}%", f"%{search}%", f"%{search}%")).fetchall()
+        else:
+            rows = conn.execute("""SELECT h.*, u.name as student_name, u.email 
+                   FROM calculation_history h JOIN users u ON h.user_id = u.id 
+                   ORDER BY h.created_at DESC LIMIT 100""").fetchall()
+    for r in rows:
+        r["created_at"] = r["created_at"].isoformat()
+        r["cluster_points"] = float(r["cluster_points"])
     return jsonify(ok=True, history=rows)
 
 if __name__ == "__main__":
