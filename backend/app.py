@@ -85,7 +85,6 @@ ensure_admin()
 # ==========================================
 
 def process_calculation(u, subjects, grades, is_paid=False):
-    """Processes the calculation, saves to history, and returns the results."""
     vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
     vals = sorted(vals, reverse=True)[:7]
     if len(vals) < 7: raise ValueError("Enter at least 7 valid grades.")
@@ -123,7 +122,6 @@ def process_calculation(u, subjects, grades, is_paid=False):
                     (history_id, c["n"], c["u"], c["c"], c["difference"], c["match"])
                 )
                 
-    # Send email in background
     threading.Thread(
         target=send_pdf_email, 
         args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
@@ -133,14 +131,8 @@ def process_calculation(u, subjects, grades, is_paid=False):
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
     buffer = io.BytesIO()
-    
-    NAVY = HexColor("#172554")
-    PALE = HexColor("#F4F6FC")
-    LIGHT_BLUE = HexColor("#EAF3FF")
-    LIGHT_PURPLE = HexColor("#F1ECFB")
-    INK = HexColor("#1F2937")
-    MUTED = HexColor("#64748B")
-    BORDER = HexColor("#DCE3EF")
+    NAVY = HexColor("#172554"); PALE = HexColor("#F4F6FC"); LIGHT_BLUE = HexColor("#EAF3FF")
+    LIGHT_PURPLE = HexColor("#F1ECFB"); INK = HexColor("#1F2937"); MUTED = HexColor("#64748B"); BORDER = HexColor("#DCE3EF")
 
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="Brand", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=17, leading=20, textColor=colors.white))
@@ -166,7 +158,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
 
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=17*mm, bottomMargin=23*mm)
     story = []
-    
     brand = Table([[P("EduPointAI", "Brand"), P("ADVANCED RESULTS REPORT<br/>COURSE & SCHOLARSHIP MATCHING", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
     brand.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), NAVY), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 12), ("ALIGN", (1,0), (1,0), "RIGHT")]))
     story += [brand, Spacer(1, 8*mm)]
@@ -192,14 +183,12 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
         grade = grades.get(str(i), "-")
         pts = W.get(grade.upper(), 0) if grade else 0
         grades_data.append([P(subj, "BodySmall"), P(grade, "BodySmall"), P(str(pts), "BodySmall")])
-    
     gt = Table(grades_data, colWidths=[100*mm, 37*mm, 37*mm])
     gt.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), PALE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("LEFTPADDING", (0,0), (-1,-1), 7), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
     story += [gt, Spacer(1, 5*mm)]
 
     story.append(PageBreak())
     story += [P("02  Course Matching Analysis", "Section")]
-    
     if qualified:
         course_data = [[P("COURSE", "Tiny"), P("INSTITUTION", "Tiny"), P("CUTOFF", "Tiny"), P("GAP", "Tiny")]]
         for c in qualified[:15]: course_data.append([P(c['n'], "BodySmall"), P(c['u'], "BodySmall"), P(str(c['c']), "BodySmall"), P(f"+{c['difference']:.3f}", "BodySmall")])
@@ -234,20 +223,12 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
         api_key = os.getenv("BREVO_API_KEY"); sender_email = os.getenv("SENDER_EMAIL")
         if not api_key or not sender_email: return
         client = Brevo(api_key=api_key)
-        
-        html = f"""
-        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
-            <h2>Dear {user_name},</h2>
-            <p>Your academic assessment report is attached.</p>
-            <p>Cluster Points: <b>{cluster_points}</b></p>
-            <p><b>EduPointAI Team</b></p>
-        </div>
-        """
+        html = f"<div style='font-family: Arial;'><h2>Dear {user_name},</h2><p>Your report is attached. Cluster Points: <b>{cluster_points}</b></p><p>EduPointAI Team</p></div>"
         client.transactional_emails.send_transac_email(
             subject="Your EduPointAI Results Report",
             html_content=html,
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
-            to=[SendTransacEmailRequestItem(email=user_email, name=user_name)],
+            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
             attachment=[{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
         )
     except Exception as e:
@@ -264,33 +245,20 @@ def health(): return jsonify(ok=True, service="edupoint-api")
 def google_login():
     d = request.get_json(silent=True) or {}
     token = d.get("credential")
-    if not token:
-        return jsonify(ok=False, error="No Google credential provided."), 400
-        
+    if not token: return jsonify(ok=False, error="No Google credential provided."), 400
     try:
         client_id = os.getenv("GOOGLE_CLIENT_ID")
-        if not client_id:
-            raise ValueError("GOOGLE_CLIENT_ID environment variable is missing.")
-
+        if not client_id: raise ValueError("GOOGLE_CLIENT_ID missing in Render Environment.")
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
-        email = idinfo["email"].strip().lower()
-        name = idinfo.get("name", "Google User")
-        
+        email = idinfo["email"].strip().lower(); name = idinfo.get("name", "Google User")
         with connect() as conn:
             u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
             if not u:
-                u = conn.execute(
-                    """INSERT INTO users(name, email, phone, password_hash, role, credits) 
-                       VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *""", 
-                    (name, email, "0700000000", "GOOGLE_AUTH")
-                ).fetchone()
-                
+                u = conn.execute("INSERT INTO users(name, email, phone, password_hash, role, credits) VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *", (name, email, "0700000000", "GOOGLE_AUTH")).fetchone()
         session_token = create_session(u["id"])
         return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/")
-        
     except Exception as e:
-        error_msg = traceback.format_exc()
-        logger.error(f"Google login failed: {error_msg}")
+        logger.error(f"Google login failed: {traceback.format_exc()}")
         return jsonify(ok=False, error=f"Login failed: {str(e)}"), 500
 
 @app.post("/api/logout")
@@ -325,20 +293,24 @@ def initiate_payment():
     tx = "EDU-" + uuid.uuid4().hex[:16].upper()
     callback_url = f"{os.getenv('FRONTEND_URL', '').rstrip('/')}/"
     
-    payments.create_pending(
-        transaction_id=tx, user_id=u["id"], phone=phone, 
-        network=provider, amount=amount, plan=plan, 
-        calculation_data=calc_data
-    )
-    
     try:
+        payments.create_pending(
+            transaction_id=tx, user_id=u["id"], phone=phone, 
+            network=provider, amount=amount, plan=plan, 
+            calculation_data=calc_data
+        )
+        
         r = payments.initiate(provider=provider, phone=phone, amount=amount, transaction_id=tx, plan=plan, user=u, callback_url=callback_url)
+        
         payments.update(tx, status=r.get("status"), provider_reference=r.get("provider_reference"), message=r.get("message"), redirect_url=r.get("redirect_url"))
+        
         return jsonify(ok=True, transaction_id=tx, redirect_url=r.get("redirect_url"))
-    except Exception:
-        logger.exception("Payment initiation failed")
-        payments.update(tx, status="failed", message="Payment could not be started.")
-        return jsonify(ok=False, error="Payment could not be started."), 502
+        
+    except Exception as e:
+        error_msg = traceback.format_exc()
+        logger.error(f"Pesapal Initiation Failed: {error_msg}")
+        payments.update(tx, status="failed", message=str(e))
+        return jsonify(ok=False, error=f"Pesapal Error: {str(e)}"), 502
 
 @app.get("/api/payment/status/<transaction_id>")
 @login_required
@@ -362,10 +334,9 @@ def payment_status(transaction_id):
         add_credit(row["user_id"])
         payments.update(transaction_id, status="completed")
         row["status"] = "completed"
-        
         try:
             calc_results = process_calculation(u, row["calculation_data"]["subjects"], row["calculation_data"]["grades"], is_paid=True)
-            payments.update(transaction_id, calculation_data=None) # Clear data to prevent duplicate processing
+            payments.update(transaction_id, calculation_data=None)
         except Exception as e:
             logger.error(f"Calculation failed post-payment: {e}")
 
@@ -385,8 +356,6 @@ def get_history():
 @app.get("/api/scholarships")
 @login_required
 def scholarships(): return jsonify(SCHOLARSHIPS)
-
-# --- ADMIN ROUTES ---
 
 @app.get("/api/admin/users")
 @admin_required
