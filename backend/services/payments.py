@@ -57,7 +57,6 @@ class PaymentService:
         raise ValueError("Unsupported provider")
 
     def ensure_pesapal_ipn(self, client):
-        # Using the IPN registered in your Pesapal dashboard
         return os.getenv("PESAPAL_IPN_ID", "")
 
     def pesapal_collection(self, tx, amount, plan, phone, user, callback_url):
@@ -94,7 +93,7 @@ class PaymentService:
         tracking = row.get("provider_reference")
         if not tracking: return None
         
-        ttl = float(os.getenv("PESAPAL_STATUS_TTL", "5"))
+        ttl = float(os.getenv("PESAPAL_STATUS_TTL", "3"))
         now = time.monotonic()
         last = self._status_checked.get(row["transaction_id"])
         if last and now - last < ttl: return None
