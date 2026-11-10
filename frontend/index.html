@@ -4,33 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080916">
-<title>EduPoint AI v10.0</title>
+<title>EduPoint AI - Your Education. Your Future.</title>
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   /* --- GLOBAL THEME --- */
   :root {
-    --bg-color: #0b0f19;
-    --card-bg: #13192b;
+    --navy: #05081c;
+    --card-bg: #0f1430;
     --cyan: #00d4ff;
     --purple: #8a2be2;
     --gold: #ffd700;
-    --text-main: #ffffff;
+    --text-light: #e2e8f0;
     --text-muted: #94a3b8;
-    --border-color: #2a324b;
   }
-  body { background: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+  body { background: var(--navy); color: var(--text-light); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
   
   /* --- VIEW ROUTING --- */
   .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; }
   .view.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* --- LANDING PAGE (Unchanged) --- */
+  /* --- LANDING PAGE --- */
   .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
   .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; }
-  .hamburger { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 24px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
   
   .hero-section { position: relative; padding: 140px 20px 60px; max-width: 800px; margin: 0 auto; text-align: center; }
   .hero-content h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.1; margin-bottom: 20px; }
@@ -40,7 +38,7 @@
   .google-wrapper { display: flex; justify-content: center; margin: 30px 0; min-height: 50px; }
 
   .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-  .feature-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .feature-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   .feature-icon { font-size: 40px; margin-bottom: 15px; display: inline-block; padding: 15px; background: rgba(0,212,255,0.1); border-radius: 50%; }
   .feature-card h3 { color: #fff; margin: 0 0 10px; font-size: 20px; }
   .feature-card p { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
@@ -48,7 +46,6 @@
 
   /* --- STUDENT DASHBOARD (Scrolling Layout) --- */
   .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
-  
   .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
   .app-header h1 { font-size: 22px; margin: 0; }
   .app-header .logout { color: var(--text-muted); text-decoration: none; font-size: 14px; }
@@ -58,14 +55,13 @@
 
   /* Inputs */
   .subject-row { display: flex; gap: 10px; margin-bottom: 10px; }
-  .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid var(--border-color); border-radius: 8px; }
+  .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
   .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
   /* Summary Stats */
   .summary-banner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
   .summary-banner h2 { font-size: 42px; color: var(--cyan); margin: 0 0 5px 0; }
   .summary-banner p { color: var(--text-muted); margin: 0; font-size: 14px; }
-  
   .stats-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
   .stat-box { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; }
   .stat-box h3 { margin: 0 0 5px 0; font-size: 24px; }
@@ -76,15 +72,13 @@
   /* Tables */
   .table-wrap { overflow-x: auto; margin-bottom: 20px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { color: var(--cyan); text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); font-weight: 600; }
+  th { color: var(--cyan); text-align: left; padding: 10px; border-bottom: 1px solid #2a324b; font-weight: 600; }
   td { padding: 12px 10px; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
   tr:last-child td { border-bottom: none; }
-  
   .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .badge-yellow { background: rgba(251,191,36,0.1); color: #fbbf24; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .badge-red { background: rgba(255,123,123,0.1); color: #ff7b7b; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  
-  .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid var(--border-color); border-radius: 8px; color: #fff; margin-bottom: 15px; }
+  .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
 
   /* AI Career Advisor */
   .chips { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -92,22 +86,21 @@
   
   /* Scholarship Finder */
   .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-  .input-group input { flex: 1; padding: 12px; background: #080a18; border: 1px solid var(--border-color); border-radius: 8px; color: #fff; }
+  .input-group input { flex: 1; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
   .btn-orange { width: 100%; padding: 14px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
   /* EduBot Chat */
-  .chat-box { background: #080a18; border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+  .chat-box { background: #080a18; border: 1px solid #2a324b; border-radius: 12px; padding: 15px; }
   .chat-input-row { display: flex; gap: 10px; margin-top: 15px; }
-  .chat-input-row input { flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; }
+  .chat-input-row input { flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
   .btn-send { background: linear-gradient(90deg, #19c8ff, #9b59ff); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
-  .quick-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+  .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
 
   /* Socials & Founder */
   .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
   .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; text-decoration: none; }
   .bg-wa { background: #25D366; } .bg-li { background: #0077B5; } .bg-ig { background: #E1306C; } .bg-tt { background: #000; border: 1px solid #fff; } .bg-mail { background: #EA4335; }
-  
   .founder-card { border: 1px solid #8a2be2; text-align: center; }
   .btn-founder { background: transparent; border: 1px solid var(--text-muted); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
   
@@ -115,7 +108,7 @@
 
   /* Modal */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-  .modal-content { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; width: min(450px, 100%); padding: 25px; text-align: center; }
+  .modal-content { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; width: min(450px, 100%); padding: 25px; text-align: center; }
 </style>
 </head>
 <body>
@@ -126,7 +119,7 @@
 <div id="view-public" class="view active">
   <header class="header">
     <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
-    <button class="hamburger" onclick="alert('Menu coming soon!')">☰</button>
+    <!-- REMOVED HAMBURGER MENU HERE -->
   </header>
 
   <main class="hero-section">
@@ -153,6 +146,7 @@
     
     <div class="app-header">
       <h1>🎓 EduPoint AI</h1>
+      <!-- REMOVED HAMBURGER MENU HERE -->
       <a href="#" class="logout" onclick="logout()">Logout</a>
     </div>
 
@@ -166,8 +160,6 @@
 
     <!-- Results Section (Hidden until payment succeeds) -->
     <div id="resultsSection" style="display: none;">
-      
-      <!-- 1. Summary -->
       <div class="summary-banner">
         <h2 id="resPoints">0.000</h2>
         <p>Your Cluster Points</p>
@@ -179,43 +171,29 @@
         <div class="stat-box"><h3 class="stat-rate" id="resRate">0%</h3><p>Rate</p></div>
       </div>
 
-      <!-- 2. Qualified Courses -->
       <div class="card">
         <div class="card-title" style="color: #4ade80;">✅ <span id="qualCountTitle">0</span> Courses You Qualify For</div>
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>Course</th><th>University</th></tr></thead>
-            <tbody id="qualifiedTableBody"></tbody>
-          </table>
+          <table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="qualifiedTableBody"></tbody></table>
         </div>
       </div>
 
-      <!-- 3. Close Matches -->
       <div class="card">
         <div class="card-title" style="color: #fbbf24;">⚠️ <span id="closeCountTitle">0</span> Close Matches</div>
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>Course</th><th>University</th></tr></thead>
-            <tbody id="closeTableBody"></tbody>
-          </table>
+          <table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="closeTableBody"></tbody></table>
         </div>
       </div>
 
-      <!-- 4. All Courses (Filterable) -->
       <div class="card">
         <div class="card-title">📚 Courses Matching Your Points</div>
         <input type="text" class="filter-input" id="courseFilter" placeholder="🔍 Filter courses..." oninput="filterCourses()">
         <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
-          <table>
-            <thead><tr><th>#</th><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead>
-            <tbody id="allCoursesBody"></tbody>
-          </table>
+          <table><thead><tr><th>#</th><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead><tbody id="allCoursesBody"></tbody></table>
         </div>
       </div>
-
     </div>
 
-    <!-- AI Career Advisor -->
     <div class="card">
       <div class="card-title">👨‍🏫 AI Career Advisor</div>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px;">Select your interests to get personalised career guidance.</p>
@@ -230,7 +208,6 @@
       <div id="careerResult" style="margin-top: 15px; font-size: 13px; color: #4ade80;"></div>
     </div>
 
-    <!-- Scholarship Finder -->
     <div class="card">
       <div class="card-title">💰 Scholarship Finder</div>
       <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px;">Find scholarships that match your GPA and intended major.</p>
@@ -242,7 +219,6 @@
       <div id="scholarshipResults" style="margin-top: 15px;"></div>
     </div>
 
-    <!-- EduBot Chat -->
     <div class="card">
       <div class="card-title">💬 Ask EduBot (KUCCPS Assistant)</div>
       <div class="chat-box">
@@ -262,7 +238,6 @@
       </div>
     </div>
 
-    <!-- Follow Us -->
     <div class="card" style="text-align: center;">
       <div class="card-title" style="justify-content: center;">📢 Follow Us For More Information</div>
       <p style="font-size: 12px; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px;">Get KUCCPS updates, course tips & career guidance</p>
@@ -276,7 +251,6 @@
       <p style="font-size: 12px; color: var(--text-muted); margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
     </div>
 
-    <!-- Founder Section -->
     <div class="card founder-card">
       <div style="font-size: 40px; margin-bottom: 10px;">👨‍💻</div>
       <h3 style="color: var(--cyan); margin: 0 0 5px;">Founder & CEO</h3>
@@ -289,7 +263,6 @@
       </div>
     </div>
 
-    <!-- Footer -->
     <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 30px;">
       <p>© 2026 EduPoint AI v10.0 · All Rights Reserved</p>
       <p><a href="#" style="color: var(--cyan); text-decoration: none;">About Us</a> | <a href="#" style="color: var(--cyan); text-decoration: none;">Rules</a> | <a href="#" style="color: var(--cyan); text-decoration: none;">Terms</a> | <a href="#" style="color: var(--cyan); text-decoration: none;">Privacy</a></p>
@@ -298,7 +271,6 @@
   </div>
 </div>
 
-<!-- Floating Chat Widget -->
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
 <!-- PAYMENT MODAL -->
@@ -307,12 +279,12 @@
     <h2 style="color: #fff; margin-top: 0;">Unlock Results</h2>
     <p style="color: var(--text-muted); font-size: 14px;">Pay securely via Pesapal to view your results and receive a PDF copy.</p>
     
-    <div class="pesapal-box" style="border: 1px solid #4ade80; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <div style="border: 1px solid #4ade80; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <p><b>M-PESA, Airtel, T-Kash, Card</b></p>
       <p style="font-size: 24px; color: #4ade80; font-weight: bold; margin-top: 10px;">KES 100</p>
     </div>
 
-    <input type="tel" class="input-phone" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678" style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid var(--border-color); background:#080a18; color:#fff;">
+    <input type="tel" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678" style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #2a324b; background:#080a18; color:#fff;">
     <button class="btn-primary" id="payBtn" onclick="initiatePayment()">📱 Pay with Pesapal</button>
     <div id="payMessage" style="color: #fbbf24; font-size: 13px; margin-top: 15px;"></div>
     <button style="background: transparent; border: none; color: var(--text-muted); margin-top: 15px; cursor: pointer;" onclick="closeModal()">Cancel</button>
@@ -325,9 +297,6 @@ let me = null;
 let pendingCalculation = null;
 let allResultsData = [];
 
-// ==========================================
-// GOOGLE AUTH INITIALIZATION
-// ==========================================
 function initAuth() {
   if (typeof google === 'undefined') return;
   google.accounts.id.initialize({
@@ -337,9 +306,7 @@ function initAuth() {
   const container = document.getElementById('google-btn-landing');
   if (container) {
     container.innerHTML = '';
-    google.accounts.id.renderButton(container, {
-      theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill"
-    });
+    google.accounts.id.renderButton(container, { theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill" });
   }
 }
 
@@ -348,12 +315,11 @@ async function handleGoogleLogin(response) {
     const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
     setToken(res.token);
     location.reload();
-  } catch (err) { alert(err.message); }
+  } catch (err) { 
+    alert(err.message); // This will now show the exact backend error!
+  }
 }
 
-// ==========================================
-// ROUTING & INIT
-// ==========================================
 async function init() {
   if (getToken()) {
     try {
@@ -377,9 +343,6 @@ function showView(viewId) {
 
 function logout() { clearToken(); location.reload(); }
 
-// ==========================================
-// STUDENT LOGIC
-// ==========================================
 function setupCalculator() {
   const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
   const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
@@ -418,28 +381,21 @@ document.getElementById("btnCalculate").onclick = () => {
     }
   });
   if(count < 7) return alert("Please select all 7 subjects and grades.");
-  
   pendingCalculation = { subjects, grades };
   document.getElementById("paymentModal").style.display = "flex";
 };
 
-// Payment & Calculation Flow
 async function initiatePayment() {
   if (!pendingCalculation) return;
   const btn = document.getElementById("payBtn");
   const msg = document.getElementById("payMessage");
   const phone = document.getElementById("phoneInput").value;
-  
-  btn.disabled = true;
-  btn.textContent = "Connecting to Pesapal...";
+  btn.disabled = true; btn.textContent = "Connecting to Pesapal...";
 
   try {
     const j = await api("/api/payment/initiate", { 
       method: "POST", 
-      body: JSON.stringify({ 
-        plan: "standard", provider: "pesapal", phone: phone,
-        subjects: pendingCalculation.subjects, grades: pendingCalculation.grades
-      }) 
+      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone, subjects: pendingCalculation.subjects, grades: pendingCalculation.grades }) 
     });
 
     if (j.redirect_url) {
@@ -452,20 +408,13 @@ async function initiatePayment() {
         n++;
         const x = await api("/api/payment/status/" + j.transaction_id);
         if (x.payment.status === "paid" || x.payment.status === "completed") {
-          clearInterval(t); 
-          closeModal();
-          renderResults(x.calculation_results);
-          alert("Payment Confirmed! Results unlocked and emailed.");
+          clearInterval(t); closeModal(); renderResults(x.calculation_results); alert("Payment Confirmed! Results unlocked and emailed.");
         }
-        if (x.payment.status === "failed" || n >= 60) { 
-          clearInterval(t); msg.textContent = "Payment failed."; btn.disabled = false; btn.textContent = "📱 Pay with Pesapal";
-        }
+        if (x.payment.status === "failed" || n >= 60) { clearInterval(t); msg.textContent = "Payment failed."; btn.disabled = false; btn.textContent = "📱 Pay with Pesapal"; }
       }, 3000);
     }
   } catch (err) {
-    msg.textContent = err.message;
-    btn.disabled = false;
-    btn.textContent = "📱 Pay with Pesapal";
+    msg.textContent = err.message; btn.disabled = false; btn.textContent = "📱 Pay with Pesapal";
   }
 }
 
@@ -474,7 +423,6 @@ function closeModal() { document.getElementById("paymentModal").style.display = 
 function renderResults(data) {
   allResultsData = data.results;
   document.getElementById("resultsSection").style.display = "block";
-  
   const qualified = data.results.filter(r => r.match === "qualified");
   const close = data.results.filter(r => r.match === "close");
   const not = data.results.filter(r => r.match === "not_qualified");
@@ -483,21 +431,12 @@ function renderResults(data) {
   document.getElementById("resQualified").textContent = qualified.length;
   document.getElementById("resClose").textContent = close.length;
   document.getElementById("resNot").textContent = not.length;
-  
-  const rate = ((qualified.length / data.results.length) * 100).toFixed(1);
-  document.getElementById("resRate").textContent = rate + "%";
-  
+  document.getElementById("resRate").textContent = ((qualified.length / data.results.length) * 100).toFixed(1) + "%";
   document.getElementById("qualCountTitle").textContent = qualified.length;
   document.getElementById("closeCountTitle").textContent = close.length;
   
-  document.getElementById("qualifiedTableBody").innerHTML = qualified.map(c => `
-    <tr><td>💰 ${c.n}</td><td>${c.u}</td></tr>
-  `).join("");
-
-  document.getElementById("closeTableBody").innerHTML = close.map(c => `
-    <tr><td>🌐 ${c.n}</td><td>${c.u}</td></tr>
-  `).join("");
-
+  document.getElementById("qualifiedTableBody").innerHTML = qualified.map(c => `<tr><td>💰 ${c.n}</td><td>${c.u}</td></tr>`).join("");
+  document.getElementById("closeTableBody").innerHTML = close.map(c => `<tr><td>🌐 ${c.n}</td><td>${c.u}</td></tr>`).join("");
   renderAllCourses(allResultsData);
   document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
 }
@@ -505,87 +444,44 @@ function renderResults(data) {
 function renderAllCourses(data) {
   const term = document.getElementById("courseFilter").value.toLowerCase();
   const filtered = term ? data.filter(c => c.n.toLowerCase().includes(term) || c.u.toLowerCase().includes(term)) : data;
-  
   document.getElementById("allCoursesBody").innerHTML = filtered.map((c, i) => {
     let badge = `<span class="badge-red">✖ Not</span>`;
     if (c.match === "qualified") badge = `<span class="badge-green">✅ Qualified</span>`;
     if (c.match === "close") badge = `<span class="badge-yellow">⚠ Close</span>`;
-    
-    return `
-      <tr>
-        <td>${i+1}</td>
-        <td>${c.n}</td>
-        <td>${c.u}</td>
-        <td>${c.c}</td>
-        <td style="color:${c.difference > 0 ? '#4ade80' : '#ff7b7b'}">${c.difference > 0 ? '+' : ''}${c.difference.toFixed(1)}</td>
-        <td>${badge}</td>
-      </tr>
-    `;
+    return `<tr><td>${i+1}</td><td>${c.n}</td><td>${c.u}</td><td>${c.c}</td><td style="color:${c.difference > 0 ? '#4ade80' : '#ff7b7b'}">${c.difference > 0 ? '+' : ''}${c.difference.toFixed(1)}</td><td>${badge}</td></tr>`;
   }).join("");
 }
 
 function filterCourses() { renderAllCourses(allResultsData); }
 
-// ==========================================
-// AI CAREER ADVISOR
-// ==========================================
 function showCareer(field) {
-  const advice = {
-    "Medicine": "Top courses: Medicine, Pharmacy, Nursing. Requires strong sciences.",
-    "Technology": "Top courses: Computer Science, IT, Software Engineering. High demand.",
-    "Engineering": "Top courses: Civil, Electrical, Mechanical. Strong math needed.",
-    "Business": "Top courses: Commerce, Economics, Actuarial Science.",
-    "Education": "Top courses: Education (Arts/Science). Rewarding career.",
-    "Arts": "Top courses: Law, Journalism, Psychology."
-  };
+  const advice = { "Medicine": "Top courses: Medicine, Pharmacy, Nursing.", "Technology": "Top courses: Computer Science, IT.", "Engineering": "Top courses: Civil, Electrical.", "Business": "Top courses: Commerce, Economics.", "Education": "Top courses: Education (Arts/Science).", "Arts": "Top courses: Law, Journalism." };
   document.getElementById("careerResult").innerHTML = `<b>${field}:</b> ${advice[field]}`;
 }
 
-// ==========================================
-// SCHOLARSHIP FINDER
-// ==========================================
 function findScholarships() {
-  const major = document.getElementById("schMajor").value;
-  const gpa = parseFloat(document.getElementById("schGPA").value);
   const resDiv = document.getElementById("scholarshipResults");
-
-  if (!major || isNaN(gpa)) {
-    resDiv.innerHTML = `<p style="color: #ff7b7b;">Please enter both major and GPA.</p>`;
-    return;
-  }
   resDiv.innerHTML = `<p style="color: #4ade80;">Searching...</p>`;
-  
   setTimeout(() => {
     resDiv.innerHTML = `
       <p style="color: #4ade80; font-weight: bold; font-size:14px; margin-bottom:10px;">✅ 6 scholarships found</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Scholarship</th><th>Amount</th><th>Min GPA</th></tr></thead>
-          <tbody>
-            <tr><td>Zawadi Africa</td><td>KES 200,000/yr</td><td>3.5</td></tr>
-            <tr><td>Mastercard Foundation</td><td>Full scholarship</td><td>3.2</td></tr>
-            <tr><td>Equity Bank Wings to Fly</td><td>Full tuition</td><td>3.0</td></tr>
-            <tr><td>DAAD Kenya</td><td>KES 150K–300K</td><td>3.0</td></tr>
-            <tr><td>HELB Undergraduate</td><td>Up to 60K/yr</td><td>2.5</td></tr>
-            <tr><td>KCB Foundation</td><td>KES 100,000</td><td>2.0</td></tr>
-          </tbody>
-        </table>
-      </div>
-    `;
+      <div class="table-wrap"><table><thead><tr><th>Scholarship</th><th>Amount</th><th>Min GPA</th></tr></thead><tbody>
+        <tr><td>Zawadi Africa</td><td>KES 200,000/yr</td><td>3.5</td></tr>
+        <tr><td>Mastercard Foundation</td><td>Full scholarship</td><td>3.2</td></tr>
+        <tr><td>Equity Bank Wings to Fly</td><td>Full tuition</td><td>3.0</td></tr>
+        <tr><td>DAAD Kenya</td><td>KES 150K–300K</td><td>3.0</td></tr>
+        <tr><td>HELB Undergraduate</td><td>Up to 60K/yr</td><td>2.5</td></tr>
+        <tr><td>KCB Foundation</td><td>KES 100,000</td><td>2.0</td></tr>
+      </tbody></table></div>`;
   }, 800);
 }
 
-// ==========================================
-// EDUBOT CHAT
-// ==========================================
 function sendChat(msgText = null) {
   const input = document.getElementById("chatInput");
   const msg = msgText || input.value.trim();
   if (!msg) return;
   input.value = "";
-  
-  // For now, just show an alert simulating the bot response
-  alert(`EduBot: You asked "${msg}". I'm still learning, but check the calculator above for your results!`);
+  alert(`EduBot: You asked "${msg}". I'm still learning, but check the calculator above!`);
 }
 </script>
 </body>
