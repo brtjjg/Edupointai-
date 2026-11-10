@@ -29,21 +29,29 @@
   /* --- LANDING PAGE --- */
   .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
   .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; }
-  .brand-logo img { width: 40px; }
   .hamburger { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 24px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
   
-  .hero-section { position: relative; padding: 120px 20px 60px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-  @media (max-width: 900px) { .hero-section { grid-template-columns: 1fr; text-align: center; padding-top: 100px; } }
+  .hero-section { 
+    position: relative; 
+    padding: 140px 20px 60px; 
+    max-width: 800px; 
+    margin: 0 auto; 
+    text-align: center; 
+  }
   
   .hero-content h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.1; margin-bottom: 20px; }
   .hero-content h1 span { color: var(--cyan); }
   .hero-content h1 .gold { color: var(--gold); }
-  .hero-content p { font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; max-width: 500px; }
-  @media (max-width: 900px) { .hero-content p { margin: 0 auto 40px; } }
+  .hero-content p { font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
 
-  .google-btn-container { background: #fff; border-radius: 50px; padding: 10px; display: inline-flex; align-items: center; justify-content: center; min-width: 300px; cursor: pointer; transition: transform 0.2s; }
-  .google-btn-container:hover { transform: scale(1.02); }
-  
+  /* The Google Button Wrapper */
+  .google-wrapper { 
+    display: flex; 
+    justify-content: center; 
+    margin: 30px 0; 
+    min-height: 50px; 
+  }
+
   .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
   .feature-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: 0.3s; }
   .feature-card:hover { transform: translateY(-5px); border-color: var(--cyan); }
@@ -116,13 +124,10 @@
       <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
       <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
       
-      <!-- Google Auth Button -->
-      <div id="google-btn-landing" class="google-btn-container"></div>
+      <!-- Google Auth Button (Centered, replacing the image) -->
+      <div id="google-btn-landing" class="google-wrapper"></div>
+      
       <p style="margin-top: 15px; font-size: 13px; color: var(--text-muted);">Sign in or create your account easily.</p>
-    </div>
-    <div class="hero-image" style="text-align: center;">
-      <!-- Placeholder for the student image -->
-      <div style="font-size: 150px; line-height: 1;">👨‍🎓</div>
     </div>
   </main>
 
@@ -308,7 +313,10 @@ let pendingCalculation = null;
 // GOOGLE AUTH INITIALIZATION
 // ==========================================
 function initAuth() {
-  if (typeof google === 'undefined') return;
+  if (typeof google === 'undefined') {
+    console.log("Google script not loaded yet.");
+    return;
+  }
   google.accounts.id.initialize({
     client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
     callback: handleGoogleLogin
@@ -316,8 +324,13 @@ function initAuth() {
   
   const container = document.getElementById('google-btn-landing');
   if (container) {
+    container.innerHTML = ''; // Clear previous renders
     google.accounts.id.renderButton(container, {
-      theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill"
+      theme: "outline", 
+      size: "large", 
+      width: "300", 
+      text: "continue_with", 
+      shape: "pill"
     });
   }
 }
