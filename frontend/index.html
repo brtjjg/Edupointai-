@@ -2,8 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EduPoint AI — Your Education. Your Future.</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080916">
+<title>EduPoint AI v10.0</title>
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -14,17 +15,9 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   
   .auth-wrap { display: flex; min-height: calc(100vh - 70px); align-items: center; justify-content: center; padding: 20px; }
-  .auth-card { background: #111326; border: 1px solid #252947; border-radius: 20px; padding: 30px; width: min(460px, 100%); box-shadow: 0 15px 50px rgba(0,0,0,0.3); }
+  .auth-card { background: #111326; border: 1px solid #252947; border-radius: 20px; padding: 40px 30px; width: min(460px, 100%); box-shadow: 0 15px 50px rgba(0,0,0,0.3); text-align: center; }
   .auth-card h1 { margin: 10px 0; font-size: 28px; color: #fff; }
-  .auth-card p { color: #aab1ca; line-height: 1.5; margin-bottom: 20px; }
-
-  /* --- LANDING --- */
-  .landing-container { width: min(1050px, 100%); margin: auto; padding: 40px 20px; }
-  .hero h1 { font-size: clamp(32px, 6vw, 56px); color: #fff; margin: 10px 0; line-height: 1.1; }
-  .hero p { color: #aab1ca; font-size: 16px; max-width: 600px; }
-  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 30px 0; }
-  .feature-item { background: #111326; padding: 20px; border-radius: 12px; border: 1px solid #303451; color: #fff; font-weight: bold; }
-  .feature-item span { color: #4ade80; margin-right: 8px; }
+  .auth-card p { color: #aab1ca; line-height: 1.5; margin-bottom: 30px; }
 
   /* --- DASHBOARD LAYOUT --- */
   .dashboard-layout { display: flex; min-height: 100vh; background: #080916; }
@@ -57,7 +50,8 @@
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
   .modal-content { background: #111326; border: 1px solid #303451; border-radius: 12px; width: min(800px, 100%); max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
   .close-btn { position: absolute; top: 15px; right: 15px; background: #ff7b7b; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; }
-
+  .cv-preview { background: #fff; color: #000; border-radius: 12px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  
   /* Mobile */
   @media (max-width: 768px) {
     .mobile-header { display: flex; }
@@ -74,89 +68,84 @@
 <!-- ========================================== -->
 <div id="view-public" class="view active">
   <header class="topbar">
-    <div class="brand">🎓 EduPoint AI <span>v10</span></div>
-    <nav class="top-actions" id="nav-public">
-      <!-- JavaScript will inject Login/Register buttons here -->
-    </nav>
+    <div class="brand">🎓 EduPoint AI <span>v10.0</span></div>
+    <div class="top-actions" id="nav-public">
+      <!-- Navigation populated by JS -->
+    </div>
   </header>
 
-  <!-- LANDING CONTENT -->
-  <div class="landing-container" id="landing-content">
+  <!-- LANDING PAGE -->
+  <main class="container" id="landing-content">
     <section class="hero">
       <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
-      <h1>Find your course. Unlock your future.</h1>
+      <h1>Find your course. Unlock premium features.</h1>
       <p>Calculate your cluster points, discover university courses, and track scholarships. Pay only 100 KES per calculation via M-PESA, Airtel, or T-Kash.</p>
     </section>
     
-    <section class="card" style="background: #111326; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-      <h2 style="color: #fff; margin-top: 0;">Why EduPoint AI?</h2>
-      <div class="features-grid">
-        <div class="feature-item"><span>✓</span> Accurate Cluster Points</div>
-        <div class="feature-item"><span>✓</span> University Matching</div>
-        <div class="feature-item"><span>✓</span> PDF Reports via Email</div>
-        <div class="feature-item"><span>✓</span> Scholarship Tracker</div>
-        <div class="feature-item"><span>✓</span> AI Academic Advisor</div>
-        <div class="feature-item"><span>✓</span> CV Builder & Careers</div>
+    <section class="card">
+      <h2>Unlock Premium Features</h2>
+      <div class="feature-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <label>✓ Full cluster point calculation</label>
+        <label>✓ Course and university matching</label>
+        <label>✓ Scholarship information</label>
+        <label>✓ Career and admission guidance</label>
+        <label>✓ AI chatbot access</label>
+        <label>✓ PDF Report sent to Email</label>
+      </div>
+
+      <div class="plans" style="margin-bottom: 30px;">
+        <div class="plan active" style="text-align: center; max-width: 300px; margin: auto;">
+          <strong>Single Calculation</strong>
+          <b>KES 100</b>
+          <span>Unlock 1 calculation & PDF report</span>
+        </div>
+      </div>
+      
+      <p style="text-align: center; margin-bottom: 20px;">Create an account or login instantly using your Google account.</p>
+      
+      <div style="text-align: center; padding-top: 10px;">
+        <div id="g_id_onload_landing" data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
+        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="center"></div>
       </div>
     </section>
 
-    <!-- Google Sign In on Landing Page -->
-    <div class="card" style="text-align: center; background: #111326; padding: 20px; border-radius: 12px;">
-      <h3 style="color: #fff; margin-top: 0;">Get Started Instantly</h3>
-      <p style="color: #aab1ca; margin-bottom: 20px;">Log in or create an account with Google</p>
-      <div id="g_id_onload_landing"
-           data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com"
-           data-callback="handleGoogleLogin">
+    <section class="grid">
+      <div class="card">
+        <h2>Secure account access</h2>
+        <p>Your account keeps your payment and EduPoint access connected to you.</p>
       </div>
-      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="left" style="display: flex; justify-content: center;"></div>
-    </div>
-  </div>
+      <div class="card">
+        <h2>Pesapal Payments</h2>
+        <p>Pay securely using M-PESA, Airtel Money, T-Kash, or Card via Pesapal.</p>
+      </div>
+    </section>
+  </main>
 
-  <!-- LOGIN CARD -->
+  <!-- LOGIN VIEW (Google Only) -->
   <div class="auth-wrap" id="login-content" style="display:none;">
     <div class="auth-card">
-      <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+      <div class="brand" style="margin-bottom: 20px;">🎓 EduPoint AI <span>v10</span></div>
       <h1>Welcome back</h1>
-      <p>Login to access your dashboard.</p>
+      <p>Login instantly with your Google account.</p>
       
       <div id="g_id_onload_login" data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
-      <div class="g_id_signin" data-type="standard" data-shape="rectangular" style="margin-bottom: 20px;"></div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="center"></div>
 
-      <div style="text-align: center; color: #aab1ca; margin-bottom: 20px;">─── OR ───</div>
-
-      <form id="loginForm">
-        <div class="field"><label>Email</label><input type="email" id="loginEmail" required></div>
-        <div class="field"><label>Password</label><input type="password" id="loginPassword" required></div>
-        <button type="submit" class="pay">Login</button>
-      </form>
-      <div id="loginMsg" class="message" style="color: #ff7b7b;"></div>
-      <p style="text-align: center; margin-top: 20px;">New? <a href="#" onclick="showAuthView('register')" style="color: #73e8ff;">Create account</a></p>
-      <p style="text-align: center;"><a href="#" onclick="showAuthView('landing')" style="color: #aab1ca;">← Back</a></p>
+      <p style="margin-top: 30px;"><a href="#" onclick="showAuthView('landing')" style="color: #aab1ca; text-decoration: none;">← Back to Home</a></p>
     </div>
   </div>
 
-  <!-- REGISTER CARD -->
+  <!-- REGISTER VIEW (Google Only) -->
   <div class="auth-wrap" id="register-content" style="display:none;">
     <div class="auth-card">
-      <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+      <div class="brand" style="margin-bottom: 20px;">🎓 EduPoint AI <span>v10</span></div>
       <h1>Create account</h1>
-      <p>Pay 100 KES per calculation.</p>
+      <p>Sign up instantly with your Google account to start calculating.</p>
       
       <div id="g_id_onload_register" data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com" data-callback="handleGoogleLogin"></div>
-      <div class="g_id_signin" data-type="standard" data-shape="rectangular" style="margin-bottom: 20px;"></div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="center"></div>
 
-      <div style="text-align: center; color: #aab1ca; margin-bottom: 20px;">─── OR ───</div>
-
-      <form id="registerForm">
-        <div class="field"><label>Full Name</label><input type="text" id="regName" required></div>
-        <div class="field"><label>Email</label><input type="email" id="regEmail" required></div>
-        <div class="field"><label>Phone</label><input type="tel" id="regPhone" required></div>
-        <div class="field"><label>Password</label><input type="password" id="regPassword" required minlength="6"></div>
-        <button type="submit" class="pay">Sign Up</button>
-      </form>
-      <div id="regMsg" class="message" style="color: #ff7b7b;"></div>
-      <p style="text-align: center; margin-top: 20px;">Already have an account? <a href="#" onclick="showAuthView('login')" style="color: #73e8ff;">Login</a></p>
-      <p style="text-align: center;"><a href="#" onclick="showAuthView('landing')" style="color: #aab1ca;">← Back</a></p>
+      <p style="margin-top: 30px;"><a href="#" onclick="showAuthView('landing')" style="color: #aab1ca; text-decoration: none;">← Back to Home</a></p>
     </div>
   </div>
 </div>
@@ -189,7 +178,6 @@
     </div>
 
     <div class="main-content">
-      <!-- DASHBOARD -->
       <div id="page-dashboard" class="page-section active">
         <h1 style="font-size: 28px; margin-bottom: 5px; color:#fff;">Welcome back, <span id="dashName">Student</span> 👋</h1>
         <p style="color: #aab1ca; margin-bottom: 20px;">Here is your academic overview.</p>
@@ -210,7 +198,6 @@
         </div>
       </div>
 
-      <!-- CALCULATOR -->
       <div id="page-calculator" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Calculator</h1>
         <div class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
@@ -227,7 +214,6 @@
         </div>
       </div>
 
-      <!-- HISTORY -->
       <div id="page-history" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">History</h1>
         <div class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
@@ -237,57 +223,53 @@
         </div>
       </div>
 
-      <!-- COMPARISON -->
       <div id="page-comparison" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Comparison</h1>
         <div style="display: flex; gap: 15px; margin-bottom: 25px;">
-          <select id="compSelectA" style="flex:1; padding:10px; background:#111326; color:#fff;"></select>
-          <select id="compSelectB" style="flex:1; padding:10px; background:#111326; color:#fff;"></select>
-          <button class="nav-btn" onclick="runComparison()">Compare</button>
+          <select id="compSelectA" style="flex:1; padding:10px; background:#111326; color:#fff; border:1px solid #303451; border-radius:8px;"></select>
+          <select id="compSelectB" style="flex:1; padding:10px; background:#111326; color:#fff; border:1px solid #303451; border-radius:8px;"></select>
+          <button class="nav-btn" onclick="runComparison()" style="background:#24306d;">Compare</button>
         </div>
         <div id="compResults" style="display:none;">
-          <div class="card" style="background: #111326; padding: 20px;">
+          <div class="card" style="background: #111326; padding: 20px; border-radius:12px;">
             <canvas id="compChart" height="100"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- COURSES -->
       <div id="page-courses" class="page-section">
-        <h1 style="font-size: 28px; color:#fff;">Courses</h1>
+        <h1 style="font-size: 28px; color:#fff;">My Courses</h1>
         <div id="courseGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
       </div>
       
-      <!-- SCHOLARSHIPS -->
       <div id="page-scholarships" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Scholarships</h1>
         <div id="availableScholarships"></div>
       </div>
 
-      <!-- CAREERS -->
       <div id="page-careers" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">CV Builder</h1>
         <div class="grid-2">
-          <div class="card" style="background: #111326; padding: 20px;">
-            <input id="cvName" placeholder="Full Name" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff;">
-            <textarea id="cvEdu" placeholder="Education" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff;"></textarea>
+          <div class="card" style="background: #111326; padding: 20px; border-radius:12px;">
+            <input id="cvName" placeholder="Full Name" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;">
+            <textarea id="cvEdu" placeholder="Education" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff; border-radius:6px;" rows="4"></textarea>
             <button class="pay" onclick="saveCV()">Save & Print</button>
           </div>
-          <div class="cv-preview" id="cvPreview" style="background:#fff; color:#000; padding:20px;">
+          <div class="cv-preview" id="cvPreview">
             <h1 id="pCVName">Name</h1>
             <p id="pCVEdu">Education</p>
           </div>
         </div>
       </div>
 
-      <!-- LEARNING -->
       <div id="page-learning" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Learning</h1>
-        <div class="card" style="background: #111326; padding: 20px;">
-          <div id="quizQuestion"></div>
+        <div class="card" style="background: #111326; padding: 20px; border-radius:12px;">
+          <div id="quizQuestion" style="color:#fff; font-size:18px; margin-bottom:15px;"></div>
           <div id="quizOptions"></div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -298,9 +280,9 @@
 <div id="view-admin" class="view">
   <header class="topbar">
     <div class="brand">🎓 EduPoint AI <span>ADMIN</span></div>
-    <nav class="top-actions">
+    <div class="top-actions">
       <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a>
-    </nav>
+    </div>
   </header>
   
   <main class="container" style="margin-top: 20px;">
@@ -330,13 +312,31 @@
   </main>
 </div>
 
+<!-- MODALS -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="document.getElementById('historyModal').style.display='none'">✕</button>
+    <h2 id="hmRef" style="color: #73e8ff; margin-top: 0;">EPA-XXXX</h2>
+    <p id="hmDate" style="color: #aab1ca; font-size: 14px;"></p>
+    <h3 id="hmCP" style="font-size: 28px; color: #fff; margin: 10px 0 20px;">0.000 Points</h3>
+    <button class="nav-btn" style="background: #15803D; width:100%; margin-bottom: 20px;" onclick="resendHistoryEmail()">📧 Email PDF Report</button>
+    <h3 style="color: #fff;">Subjects</h3>
+    <table class="detail-table" id="hmSubjects" style="width:100%; text-align:left;"></table>
+    <h3 style="color: #4ade80; margin-top: 20px;">Qualified Courses</h3>
+    <table class="detail-table" style="width:100%; text-align:left;"><thead><tr><th>Course</th><th>University</th><th>Cutoff</th></tr></thead><tbody id="hmQualified"></tbody></table>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script>
+let me = null;
+let historyData = [];
+let currentHistoryRef = null;
+let compChartInstance = null;
+
 // ==========================================
 // ROUTING & INIT
 // ==========================================
-let me = null;
-
 async function init() {
   if (getToken()) {
     try {
@@ -371,7 +371,6 @@ function showAuthView(subView) {
   document.getElementById("login-content").style.display = subView === 'login' ? 'flex' : 'none';
   document.getElementById("register-content").style.display = subView === 'register' ? 'flex' : 'none';
   
-  // Dynamically populate navbar
   const nav = document.getElementById("nav-public");
   if (subView === 'landing') {
     nav.innerHTML = `
@@ -379,9 +378,7 @@ function showAuthView(subView) {
       <button class="nav-btn primary" onclick="showAuthView('register')">Create Account</button>
     `;
   } else {
-    nav.innerHTML = `
-      <button class="nav-btn" onclick="showAuthView('landing')">← Back to Home</button>
-    `;
+    nav.innerHTML = `<button class="nav-btn" onclick="showAuthView('landing')">← Back</button>`;
   }
 }
 
@@ -393,6 +390,14 @@ function showStudentPage(pageId) {
   document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
   document.getElementById(`page-${pageId}`).classList.add('active');
   document.getElementById(`nav-${pageId}`).classList.add('active');
+  
+  if(pageId === 'dashboard') loadDashboard();
+  if(pageId === 'history') loadHistory();
+  if(pageId === 'comparison') loadComparisonDropdowns();
+  if(pageId === 'courses') loadCourses();
+  if(pageId === 'scholarships') loadScholarships();
+  if(pageId === 'careers') loadCV();
+  if(pageId === 'learning') initQuiz();
 }
 
 function showAdminTab(tab) {
@@ -403,37 +408,22 @@ function showAdminTab(tab) {
 function logout() { clearToken(); location.reload(); }
 
 // ==========================================
-// AUTH LOGIC
+// GOOGLE AUTH LOGIC
 // ==========================================
 async function handleGoogleLogin(response) {
   try {
     const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
-    setToken(res.token);
+    setToken(res.token); 
     location.reload();
-  } catch (err) { alert(err.message); }
+  } catch (err) { 
+    alert(err.message); 
+  }
 }
 
-document.getElementById("loginForm").onsubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await api("/api/login", { method: "POST", body: JSON.stringify({ email: loginEmail.value, password: loginPassword.value }) });
-    setToken(res.token); location.reload();
-  } catch (err) { document.getElementById("loginMsg").textContent = err.message; }
-};
-
-document.getElementById("registerForm").onsubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await api("/api/register", { method: "POST", body: JSON.stringify({ name: regName.value, email: regEmail.value, phone: regPhone.value, password: regPassword.value }) });
-    setToken(res.token); location.reload();
-  } catch (err) { document.getElementById("regMsg").textContent = err.message; }
-};
-
 // ==========================================
-// STUDENT LOGIC (Calculator, History, etc.)
+// STUDENT LOGIC
 // ==========================================
 function setupStudentDashboard() {
-  // Build Calculator Dropdowns
   const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
   const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
   let html = "";
@@ -448,9 +438,9 @@ function setupStudentDashboard() {
     </div>`;
   }
   document.getElementById("subjectList").innerHTML = html;
+  loadDashboard();
 }
 
-// Calculate Button Logic
 document.getElementById("btnCalculate").onclick = async () => {
   const subjects = {}, grades = {};
   let count = 0;
@@ -484,7 +474,7 @@ document.getElementById("btnCalculate").onclick = async () => {
 
 async function triggerPayment() {
   document.getElementById("calcMessage").innerHTML = `<span style="color:#fbbf24;">Opening Pesapal...</span>`;
-  const j = await api("/api/payment/initiate", { method: "POST", body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: me.phone }) });
+  const j = await api("/api/payment/initiate", { method: "POST", body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: me.phone || "0700000000" }) });
   if (j.redirect_url) {
     window.open(j.redirect_url, 'Pesapal Payment', `width=600,height=700`);
     document.getElementById("calcMessage").innerHTML = `<span style="color:#fbbf24;">Waiting for payment...</span>`;
@@ -501,7 +491,6 @@ async function triggerPayment() {
   }
 }
 
-// Prevent Duplicate Subjects
 function updateSubjectOptions() {
   const selects = document.querySelectorAll('.sub-select');
   const selected = Array.from(selects).map(s => s.value).filter(v => v);
@@ -512,6 +501,198 @@ function updateSubjectOptions() {
       opt.disabled = (opt.value !== cur && selected.includes(opt.value));
     });
   });
+}
+
+async function loadDashboard() {
+  try {
+    const h = await api("/api/history");
+    document.getElementById("statTotalCalcs").textContent = h.history.length;
+    if(h.history.length > 0) document.getElementById("statLatestCP").textContent = h.history[0].cluster_points.toFixed(3);
+    const c = await api("/api/courses/saved");
+    document.getElementById("statSavedCourses").textContent = c.courses.length;
+    const s = await api("/api/scholarships/saved");
+    document.getElementById("statSavedScholarships").textContent = s.saved.length;
+  } catch(e) {}
+}
+
+async function loadHistory() {
+  const res = await api("/api/history");
+  historyData = res.history;
+  document.getElementById("historyBody").innerHTML = historyData.map(h => `
+    <tr>
+      <td style="font-family:monospace;">${h.reference}</td>
+      <td>${new Date(h.created_at).toLocaleDateString()}</td>
+      <td><b>${h.cluster_points.toFixed(3)}</b></td>
+      <td><button class="nav-btn" style="padding:5px 10px; font-size:12px;" onclick="viewHistoryDetails('${h.reference}')">View</button></td>
+    </tr>
+  `).join("") || `<tr><td colspan="4">No records found.</td></tr>`;
+}
+
+async function viewHistoryDetails(ref) {
+  currentHistoryRef = ref;
+  const modal = document.getElementById("historyModal");
+  modal.style.display = "flex";
+  const res = await api(`/api/history/${ref}`);
+  document.getElementById("hmRef").textContent = res.record.reference;
+  document.getElementById("hmDate").textContent = new Date(res.record.created_at).toLocaleString();
+  document.getElementById("hmCP").textContent = `${res.record.cluster_points} Points`;
+  
+  let subHtml = `<tr><th>Subject</th><th>Grade</th></tr>`;
+  for (let i = 0; i < 7; i++) {
+    if (res.subjects[i]) subHtml += `<tr><td>${res.subjects[i]}</td><td><b>${res.grades[i]}</b></td></tr>`;
+  }
+  document.getElementById("hmSubjects").innerHTML = subHtml;
+  
+  const qual = res.courses.filter(c => c.match_type === "qualified");
+  document.getElementById("hmQualified").innerHTML = qual.map(c => `
+    <tr><td>${c.course_name}</td><td>${c.university}</td><td>${c.cutoff}</td></tr>
+  `).join("") || `<tr><td colspan="3">None</td></tr>`;
+}
+
+async function resendHistoryEmail() {
+  await api(`/api/history/${currentHistoryRef}/email`, { method: "POST" });
+  alert("Email sent!");
+}
+
+async function loadComparisonDropdowns() {
+  const res = await api("/api/history");
+  const opts = res.history.map(h => `<option value="${h.reference}">${h.reference} (${h.cluster_points.toFixed(3)} pts)</option>`).join("");
+  document.getElementById("compSelectA").innerHTML = opts;
+  document.getElementById("compSelectB").innerHTML = opts;
+}
+
+async function runComparison() {
+  const r1 = document.getElementById("compSelectA").value;
+  const r2 = document.getElementById("compSelectB").value;
+  if(!r1 || !r2 || r1 === r2) return alert("Select two different assessments.");
+  
+  const res = await api(`/api/history/compare?ref1=${r1}&ref2=${r2}`);
+  document.getElementById("compResults").style.display = "block";
+  
+  const ctx = document.getElementById("compChart").getContext("2d");
+  if(compChartInstance) compChartInstance.destroy();
+  compChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [r1, r2],
+      datasets: [{ label: 'Points', data: [res.assessment1.cp, res.assessment2.cp], backgroundColor: ['#303451', '#73e8ff'] }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { max: 48 } } }
+  });
+}
+
+const ALL_COURSES = [
+  { n: "Medicine", u: "UON", c: 45.5 }, { n: "Computer Science", u: "JKUAT", c: 44.1 },
+  { n: "Nursing", u: "UON", c: 43.6 }, { n: "Law", u: "UON", c: 42.5 },
+  { n: "Engineering", u: "UON", c: 43.4 }, { n: "Economics", u: "UON", c: 26.0 },
+  { n: "Business", u: "Kisii", c: 21.3 }, { n: "Arts", u: "Kenyatta", c: 24.0 }
+];
+let savedCourses = [];
+
+async function loadCourses() {
+  const res = await api("/api/courses/saved");
+  savedCourses = res.courses;
+  renderCourses();
+}
+function renderCourses() {
+  document.getElementById("courseGrid").innerHTML = ALL_COURSES.map(c => {
+    const isSaved = savedCourses.some(s => s.course_name === c.n);
+    return `<div class="card" style="background:#111326; border:1px solid #303451; padding:20px; border-radius:12px;">
+      <h3 style="color:#73e8ff; margin:0 0 10px;">${c.n}</h3>
+      <p style="margin:0; color:#aab1ca; font-size:13px;">${c.u}</p>
+      <p style="margin:5px 0 15px; color:#fff; font-weight:bold;">Cutoff: ${c.c}</p>
+      ${isSaved 
+        ? `<button class="nav-btn" style="background:#303451; width:100%;" onclick="removeCourse('${c.n}', '${c.u}')">Remove</button>`
+        : `<button class="nav-btn" style="background:#15803D; width:100%;" onclick="saveCourse('${c.n}', '${c.u}', ${c.c})">Save Course</button>`}
+    </div>`;
+  }).join("");
+}
+async function saveCourse(n, u, c) {
+  await api("/api/courses/save", { method: "POST", body: JSON.stringify({ course_name: n, university: u, cutoff: c }) });
+  await loadCourses();
+}
+async function removeCourse(n, u) {
+  const match = savedCourses.find(x => x.course_name === n && x.university === u);
+  if(match) {
+    await api(`/api/courses/${match.id}`, { method: "DELETE" });
+    await loadCourses();
+  }
+}
+
+async function loadScholarships() {
+  const avail = await api("/api/scholarships");
+  const saved = await api("/api/scholarships/saved");
+  const savedNames = saved.saved.map(s => s.scholarship_name);
+  
+  document.getElementById("availableScholarships").innerHTML = avail.map(s => `
+    <div class="card" style="background:#111326; padding:15px; margin-bottom:10px; border-radius:8px;">
+      <h4 style="margin:0 0 5px; color:#fff;">${s.name}</h4>
+      <p style="margin:0; font-size:12px; color:#aab1ca;">${s.amount} | ${s.deadline}</p>
+      ${savedNames.includes(s.name) 
+        ? `<button class="nav-btn" style="background:#303451; width:100%; margin-top:10px;" disabled>Already Saved</button>`
+        : `<button class="nav-btn" style="background:#15803D; width:100%; margin-top:10px;" onclick="saveScholarship('${s.name}')">Save</button>`}
+    </div>
+  `).join("");
+}
+async function saveScholarship(name) {
+  await api("/api/scholarships/save", { method: "POST", body: JSON.stringify({ name }) });
+  await loadScholarships();
+}
+
+async function loadCV() {
+  const res = await api("/api/careers/cv");
+  const cv = res.cv;
+  document.getElementById("cvName").value = cv.full_name || me.name;
+  document.getElementById("cvEdu").value = cv.education || "";
+  updateCVPreview();
+  ["cvName", "cvEdu"].forEach(id => {
+    document.getElementById(id).oninput = updateCVPreview;
+  });
+}
+function updateCVPreview() {
+  document.getElementById("pCVName").textContent = document.getElementById("cvName").value;
+  document.getElementById("pCVEdu").textContent = document.getElementById("cvEdu").value || "Education details...";
+}
+async function saveCV() {
+  const payload = {
+    full_name: document.getElementById("cvName").value,
+    education: document.getElementById("cvEdu").value
+  };
+  await api("/api/careers/cv", { method: "POST", body: JSON.stringify(payload) });
+  window.print();
+}
+
+const QUIZ_DATA = [
+  { q: "Derivative of x²?", o: ["2x", "x", "x³"], a: 0 },
+  { q: "2x + 5 = 15. x = ?", o: ["5", "10", "7.5"], a: 0 },
+  { q: "Symbol for Gold?", o: ["Ag", "Au", "Gd"], a: 1 }
+];
+let qIndex = 0, qScore = 0, qAnswered = false;
+function initQuiz() {
+  qIndex = 0; qScore = 0;
+  loadQuizQuestion();
+}
+function loadQuizQuestion() {
+  if(qIndex >= QUIZ_DATA.length) {
+    document.getElementById("quizQuestion").textContent = `Quiz Complete! You scored ${qScore}/${QUIZ_DATA.length}`;
+    document.getElementById("quizOptions").innerHTML = "";
+    return;
+  }
+  qAnswered = false;
+  const q = QUIZ_DATA[qIndex];
+  document.getElementById("quizQuestion").textContent = `Q${qIndex+1}: ${q.q}`;
+  document.getElementById("quizOptions").innerHTML = q.o.map((opt, i) => 
+    `<div class="option" id="qo-${i}" onclick="checkQuizAnswer(${i})" style="background:#080a18; border:1px solid #303451; padding:15px; border-radius:8px; color:#fff; cursor:pointer; margin-bottom:10px;">${opt}</div>`
+  ).join("");
+}
+function checkQuizAnswer(sel) {
+  if(qAnswered) return;
+  qAnswered = true;
+  const correct = QUIZ_DATA[qIndex].a;
+  document.getElementById(`qo-${correct}`).style.borderColor = "#4ade80";
+  if(sel !== correct) document.getElementById(`qo-${sel}`).style.borderColor = "#ff7b7b";
+  else qScore++;
+  setTimeout(() => { qIndex++; loadQuizQuestion(); }, 1000);
 }
 
 // ==========================================
