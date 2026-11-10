@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-import os, uuid, logging, base64, threading, random, string, io, json
+import os
+import uuid
+import logging
+import base64
+import threading
+import random
+import string
+import io
+import json
+import traceback
 from datetime import datetime
 
 import psycopg
@@ -10,9 +19,11 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 # Google Auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+
 # Brevo Email SDK
 from brevo import Brevo
 from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
+
 # ReportLab PDF Libraries
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -23,6 +34,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.colors import HexColor
 import qrcode
 
+# Local imports
 from data import W, BEST, MAX, P, SCHOLARSHIPS, PAYMENT_PLANS
 from db import connect, init_db
 from auth import (
@@ -44,7 +56,9 @@ logger = logging.getLogger(__name__)
 init_db()
 payments = PaymentService()
 
-# --- HELPERS ---
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
 
 def add_credit(user_id):
     with connect() as conn:
@@ -66,8 +80,12 @@ def ensure_admin():
             )
 ensure_admin()
 
-# --- CALCULATION LOGIC ---
+# ==========================================
+# CALCULATION & REPORTING LOGIC
+# ==========================================
+
 def process_calculation(u, subjects, grades, is_paid=False):
+    """Processes the calculation, saves to history, and returns the results."""
     vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
     vals = sorted(vals, reverse=True)[:7]
     if len(vals) < 7: raise ValueError("Enter at least 7 valid grades.")
@@ -105,14 +123,25 @@ def process_calculation(u, subjects, grades, is_paid=False):
                     (history_id, c["n"], c["u"], c["c"], c["difference"], c["match"])
                 )
                 
-    threading.Thread(target=send_pdf_email, args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)).start()
+    # Send email in background
+    threading.Thread(
+        target=send_pdf_email, 
+        args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
+    ).start()
+    
     return {"reference": ref_code, "cluster_points": round(cp, 3), "results": out}
 
-# --- PDF ---
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
     buffer = io.BytesIO()
-    NAVY = HexColor("#172554"); PALE = HexColor("#F4F6FC"); LIGHT_BLUE = HexColor("#EAF3FF")
-    LIGHT_PURPLE = HexColor("#F1ECFB"); INK = HexColor("#1F2937"); MUTED = HexColor("#64748B"); BORDER = HexColor("#DCE3EF")
+    
+    NAVY = HexColor("#172554")
+    PALE = HexColor("#F4F6FC")
+    LIGHT_BLUE = HexColor("#EAF3FF")
+    LIGHT_PURPLE = HexColor("#F1ECFB")
+    INK = HexColor("#1F2937")
+    MUTED = HexColor("#64748B")
+    BORDER = HexColor("#DCE3EF")
+
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="Brand", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=17, leading=20, textColor=colors.white))
     styles.add(ParagraphStyle(name="HeroTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=22, leading=27, alignment=TA_LEFT, textColor=NAVY))
@@ -137,7 +166,8 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
 
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=17*mm, bottomMargin=23*mm)
     story = []
-    brand = Table([[P("EduPointAI", "Brand"), P("ADVANCED RESULTS REPORT", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
+    
+    brand = Table([[P("EduPointAI", "Brand"), P("ADVANCED RESULTS REPORT<br/>COURSE & SCHOLARSHIP MATCHING", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
     brand.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), NAVY), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 12), ("ALIGN", (1,0), (1,0), "RIGHT")]))
     story += [brand, Spacer(1, 8*mm)]
 
@@ -158,7 +188,11 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     story += [P("01  Academic profile", "Section")]
     grades_data = [[P("SUBJECT", "Tiny"), P("GRADE", "Tiny"), P("POINTS", "Tiny")]]
     for i in range(7):
-        grades_data.append([P(subjects.get(str(i), f"Subject {i+1}"), "BodySmall"), P(grades.get(str(i), "-"), "BodySmall"), P(str(W.get(grades.get(str(i), "-").upper(), 0)), "BodySmall")])
+        subj = subjects.get(str(i), f"Subject {i+1}")
+        grade = grades.get(str(i), "-")
+        pts = W.get(grade.upper(), 0) if grade else 0
+        grades_data.append([P(subj, "BodySmall"), P(grade, "BodySmall"), P(str(pts), "BodySmall")])
+    
     gt = Table(grades_data, colWidths=[100*mm, 37*mm, 37*mm])
     gt.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), PALE), ("GRID", (0,0), (-1,-1), 0.45, BORDER), ("LEFTPADDING", (0,0), (-1,-1), 7), ("TOPPADDING", (0,0), (-1,-1), 5), ("BOTTOMPADDING", (0,0), (-1,-1), 5)]))
     story += [gt, Spacer(1, 5*mm)]
@@ -213,13 +247,15 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
             subject="Your EduPointAI Results Report",
             html_content=html,
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
-            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
+            to=[SendTransacEmailRequestItem(email=user_email, name=user_name)],
             attachment=[{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
         )
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
 
-# --- ROUTES ---
+# ==========================================
+# ROUTES
+# ==========================================
 
 @app.get("/health")
 def health(): return jsonify(ok=True, service="edupoint-api")
@@ -228,18 +264,34 @@ def health(): return jsonify(ok=True, service="edupoint-api")
 def google_login():
     d = request.get_json(silent=True) or {}
     token = d.get("credential")
-    if not token: return jsonify(ok=False, error="No Google credential provided."), 400
+    if not token:
+        return jsonify(ok=False, error="No Google credential provided."), 400
+        
     try:
-        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
-        email = idinfo["email"].strip().lower(); name = idinfo.get("name", "Google User")
+        client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not client_id:
+            raise ValueError("GOOGLE_CLIENT_ID environment variable is missing.")
+
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
+        email = idinfo["email"].strip().lower()
+        name = idinfo.get("name", "Google User")
+        
         with connect() as conn:
             u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
             if not u:
-                u = conn.execute("INSERT INTO users(name, email, phone, password_hash, role, credits) VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *", (name, email, "0700000000", "GOOGLE_AUTH")).fetchone()
+                u = conn.execute(
+                    """INSERT INTO users(name, email, phone, password_hash, role, credits) 
+                       VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *""", 
+                    (name, email, "0700000000", "GOOGLE_AUTH")
+                ).fetchone()
+                
         session_token = create_session(u["id"])
         return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/")
-    except ValueError:
-        return jsonify(ok=False, error="Invalid Google token."), 401
+        
+    except Exception as e:
+        error_msg = traceback.format_exc()
+        logger.error(f"Google login failed: {error_msg}")
+        return jsonify(ok=False, error=f"Login failed: {str(e)}"), 500
 
 @app.post("/api/logout")
 @login_required
@@ -273,13 +325,18 @@ def initiate_payment():
     tx = "EDU-" + uuid.uuid4().hex[:16].upper()
     callback_url = f"{os.getenv('FRONTEND_URL', '').rstrip('/')}/"
     
-    payments.create_pending(transaction_id=tx, user_id=u["id"], phone=phone, network=provider, amount=amount, plan=plan, calculation_data=calc_data)
+    payments.create_pending(
+        transaction_id=tx, user_id=u["id"], phone=phone, 
+        network=provider, amount=amount, plan=plan, 
+        calculation_data=calc_data
+    )
     
     try:
         r = payments.initiate(provider=provider, phone=phone, amount=amount, transaction_id=tx, plan=plan, user=u, callback_url=callback_url)
         payments.update(tx, status=r.get("status"), provider_reference=r.get("provider_reference"), message=r.get("message"), redirect_url=r.get("redirect_url"))
         return jsonify(ok=True, transaction_id=tx, redirect_url=r.get("redirect_url"))
     except Exception:
+        logger.exception("Payment initiation failed")
         payments.update(tx, status="failed", message="Payment could not be started.")
         return jsonify(ok=False, error="Payment could not be started."), 502
 
@@ -288,22 +345,27 @@ def initiate_payment():
 def payment_status(transaction_id):
     u = current_user()
     row = payments.get(transaction_id)
-    if not row or row["user_id"] != u["id"]: return jsonify(ok=False, error="Not found"), 404
+    if not row or (row.get("user_id") and row["user_id"] != u["id"] and u["role"] != "admin"): 
+        return jsonify(ok=False, error="Transaction not found."), 404
 
     if row["status"] == "pending":
-        rr = payments.check_status(row)
-        if rr:
-            payments.update(transaction_id, status=rr["status"], message=rr.get("message"))
-            row = payments.get(transaction_id)
+        try:
+            rr = payments.check_status(row)
+            if rr:
+                payments.update(transaction_id, status=rr["status"], message=rr.get("message"))
+                row = payments.get(transaction_id)
+        except Exception: 
+            logger.exception("Status check failed")
 
     calc_results = None
     if row["status"] == "paid" and row.get("calculation_data"):
         add_credit(row["user_id"])
         payments.update(transaction_id, status="completed")
         row["status"] = "completed"
+        
         try:
             calc_results = process_calculation(u, row["calculation_data"]["subjects"], row["calculation_data"]["grades"], is_paid=True)
-            payments.update(transaction_id, calculation_data=None) # Clear to prevent duplicate processing
+            payments.update(transaction_id, calculation_data=None) # Clear data to prevent duplicate processing
         except Exception as e:
             logger.error(f"Calculation failed post-payment: {e}")
 
@@ -323,6 +385,32 @@ def get_history():
 @app.get("/api/scholarships")
 @login_required
 def scholarships(): return jsonify(SCHOLARSHIPS)
+
+# --- ADMIN ROUTES ---
+
+@app.get("/api/admin/users")
+@admin_required
+def admin_users():
+    with connect() as conn:
+        rows = conn.execute("SELECT id,name,email,phone,role,active,credits FROM users ORDER BY id DESC").fetchall()
+    return jsonify(ok=True, users=[dict(r) for r in rows])
+
+@app.get("/api/admin/payments")
+@admin_required
+def admin_payments():
+    with connect() as conn:
+        rows = conn.execute("SELECT id,transaction_id,user_id,amount,status FROM payments ORDER BY id DESC LIMIT 100").fetchall()
+    return jsonify(ok=True, payments=[dict(r) for r in rows])
+
+@app.post("/api/admin/access/<int:user_id>")
+@admin_required
+def admin_access(user_id):
+    d = request.get_json(silent=True) or {}
+    credits_to_add = int(d.get("credits", 1))
+    if credits_to_add > 0:
+        with connect() as conn:
+            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
+    return jsonify(ok=True, added=credits_to_add)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
