@@ -334,9 +334,17 @@ async function initiatePayment() {
   const btn = document.getElementById("payBtn");
   const msg = document.getElementById("payMessage");
   const phone = document.getElementById("phoneInput").value;
-  
+
+  if (phone.length < 10) return alert("Please enter a valid M-PESA number.");
+
+  // 1. IMMEDIATELY open a blank window to bypass mobile popup blockers
+  const payWindow = window.open('about:blank', '_blank');
+  if (payWindow) {
+    payWindow.document.write('<h2 style="text-align:center;font-family:sans-serif;margin-top:50px;">Connecting to Pesapal...</h2>');
+  }
+
   btn.disabled = true; 
-  btn.textContent = "Connecting to Pesapal...";
+  btn.textContent = "Opening Pesapal...";
   msg.textContent = "";
 
   try {
@@ -349,10 +357,14 @@ async function initiatePayment() {
     });
 
     if (j.redirect_url) {
-      // Opens Pesapal in a new tab on mobile, popup on desktop
-      window.open(j.redirect_url, '_blank');
+      // 2. Instantly redirect the blank window to the Pesapal URL
+      if (payWindow) {
+        payWindow.location.href = j.redirect_url;
+      } else {
+        window.location.href = j.redirect_url; 
+      }
       
-      msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal tab. Waiting for confirmation...</span>';
+      msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal window. Waiting for confirmation...</span>';
       btn.textContent = "Waiting for Payment...";
       
       let n = 0;
@@ -360,15 +372,22 @@ async function initiatePayment() {
         n++;
         const x = await api("/api/payment/status/" + j.transaction_id);
         if (x.payment.status === "paid" || x.payment.status === "completed") {
-          clearInterval(t); closeModal(); renderResults(x.calculation_results); alert("Payment Confirmed! Results unlocked and emailed.");
+          clearInterval(t); 
+          if (payWindow) payWindow.close(); // Close the Pesapal window
+          closeModal(); 
+          renderResults(x.calculation_results); 
+          alert("Payment Confirmed! Results unlocked and emailed.");
         }
         if (x.payment.status === "failed" || n >= 60) { 
-          clearInterval(t); msg.textContent = "Payment failed or timed out."; 
-          btn.disabled = false; btn.textContent = "📱 Pay with Pesapal"; 
+          clearInterval(t); 
+          msg.textContent = "Payment failed or timed out."; 
+          btn.disabled = false; 
+          btn.textContent = "📱 Pay with Pesapal"; 
         }
       }, 3000);
     }
   } catch (err) {
+    if (payWindow) payWindow.close(); // Close the blank window if there is an error
     msg.textContent = err.message; 
     btn.disabled = false; 
     btn.textContent = "📱 Pay with Pesapal";
