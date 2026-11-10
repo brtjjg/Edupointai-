@@ -74,8 +74,6 @@
   .founder-card { border: 1px solid #8a2be2; text-align: center; }
   .btn-founder { background: transparent; border: 1px solid var(--text-muted); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
   .floating-chat { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 999; }
-  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-  .modal-content { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; width: min(450px, 100%); padding: 25px; text-align: center; }
 </style>
 </head>
 <body>
@@ -218,25 +216,9 @@
 
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
-<div class="modal-overlay" id="paymentModal">
-  <div class="modal-content">
-    <h2 style="color: #fff; margin-top: 0;">Unlock Results</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Pay securely via Pesapal to view your results and receive a PDF copy.</p>
-    <div style="border: 1px solid #4ade80; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <p><b>M-PESA, Airtel, T-Kash, Card</b></p>
-      <p style="font-size: 24px; color: #4ade80; font-weight: bold; margin-top: 10px;">KES 100</p>
-    </div>
-    <input type="tel" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678" style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #2a324b; background:#080a18; color:#fff;">
-    <button class="btn-primary" id="payBtn" onclick="initiatePayment()">📱 Pay with Pesapal</button>
-    <div id="payMessage" style="color: #fbbf24; font-size: 13px; margin-top: 15px;"></div>
-    <button style="background: transparent; border: none; color: var(--text-muted); margin-top: 15px; cursor: pointer;" onclick="closeModal()">Cancel</button>
-  </div>
-</div>
-
 <script src="/js/api.js"></script>
 <script>
 let me = null;
-let pendingCalculation = null;
 let allResultsData = [];
 
 function initAuth() {
@@ -312,7 +294,8 @@ function preventDuplicates() {
   });
 }
 
-document.getElementById("btnCalculate").onclick = () => {
+// THIS IS THE UPDATED CALCULATE BUTTON
+document.getElementById("btnCalculate").onclick = async () => {
   const subjects = {}, grades = {};
   let count = 0;
   document.querySelectorAll('.sub-select').forEach((s, i) => {
@@ -320,41 +303,37 @@ document.getElementById("btnCalculate").onclick = () => {
       subjects[i] = s.value; grades[i] = document.querySelectorAll('.grade-select')[i].value; count++;
     }
   });
+  
   if(count < 7) return alert("Please select all 7 subjects and grades.");
-  pendingCalculation = { subjects, grades };
-  document.getElementById("paymentModal").style.display = "flex";
-};
-
-async function initiatePayment() {
-  if (!pendingCalculation) return;
-  const btn = document.getElementById("payBtn");
-  const msg = document.getElementById("payMessage");
-  const phone = document.getElementById("phoneInput").value;
-
-  if (phone.length < 10) return alert("Please enter a valid M-PESA number.");
-
-  // 1. Instantly open a blank window to bypass mobile popup blockers
+  
+  const btn = document.getElementById("btnCalculate");
+  const msg = document.getElementById("calcMessage");
+  
+  // 1. Instantly open a blank tab
   const payWindow = window.open('', '_blank');
-
-  btn.disabled = true; 
-  btn.textContent = "Opening Pesapal...";
-  msg.textContent = "";
+  
+  btn.disabled = true;
+  btn.textContent = "Connecting to Pesapal...";
+  msg.innerHTML = '<span style="color:#fbbf24;">Opening secure payment window...</span>';
 
   try {
+    // Use the phone number from the user's profile (me.phone), fallback to a default
+    const phone = me.phone || "0700000000";
+    
     const j = await api("/api/payment/initiate", { 
       method: "POST", 
       body: JSON.stringify({ 
         plan: "standard", provider: "pesapal", phone: phone, 
-        subjects: pendingCalculation.subjects, grades: pendingCalculation.grades 
+        subjects: subjects, grades: grades 
       }) 
     });
 
     if (j.redirect_url) {
-      // 2. Redirect the blank window to the Pesapal URL
+      // 2. Redirect the blank window to Pesapal
       if (payWindow) {
         payWindow.location.href = j.redirect_url;
       } else {
-        window.location.href = j.redirect_url; 
+        window.location.href = j.redirect_url; // Fallback if popup blocked
       }
       
       msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal window. Waiting for confirmation...</span>';
@@ -364,10 +343,10 @@ async function initiatePayment() {
       const t = setInterval(async () => {
         n++;
         const x = await api("/api/payment/status/" + j.transaction_id);
+        
         if (x.payment.status === "paid" || x.payment.status === "completed") {
           clearInterval(t); 
-          if (payWindow) payWindow.close(); // Close the Pesapal window
-          closeModal(); 
+          if (payWindow) payWindow.close(); 
           renderResults(x.calculation_results); 
           alert("Payment Confirmed! Results unlocked and emailed.");
         }
@@ -375,23 +354,22 @@ async function initiatePayment() {
           clearInterval(t); 
           msg.textContent = "Payment failed or timed out."; 
           btn.disabled = false; 
-          btn.textContent = "📱 Pay with Pesapal"; 
+          btn.textContent = "⚡ Calculate My Cluster Points"; 
         }
       }, 3000);
     }
   } catch (err) {
-    if (payWindow) payWindow.close(); // Close the blank window if there is an error
-    msg.textContent = err.message; 
+    if (payWindow) payWindow.close();
+    msg.innerHTML = `<span style="color:#ff7b7b;">${err.message}</span>`; 
     btn.disabled = false; 
-    btn.textContent = "📱 Pay with Pesapal";
+    btn.textContent = "⚡ Calculate My Cluster Points";
   }
-}
-
-function closeModal() { document.getElementById("paymentModal").style.display = "none"; }
+};
 
 function renderResults(data) {
   allResultsData = data.results;
   document.getElementById("resultsSection").style.display = "block";
+  document.getElementById("calcMessage").textContent = "";
   const qualified = data.results.filter(r => r.match === "qualified");
   const close = data.results.filter(r => r.match === "close");
   const not = data.results.filter(r => r.match === "not_qualified");
