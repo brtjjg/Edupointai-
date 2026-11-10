@@ -3,7 +3,7 @@ import os, uuid, logging, base64, threading, random, string, io, json, traceback
 from datetime import datetime
 
 import psycopg
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -27,7 +27,8 @@ from auth import (
     hash_password, verify_password, create_session, destroy_session, bearer_token,
 )
 from services.payments import PaymentService, normalize_phone, validate_provider
-from services.reports import generate_and_send_reports # NEW: Import the reports script
+from services.reports import generate_and_send_reports 
+from services.invoices import generate_invoice_pdf # NEW: Import the invoice generator
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -67,7 +68,7 @@ def ensure_admin():
 ensure_admin()
 
 # ==========================================
-# CALCULATION & REPORTING LOGIC
+# CALCULATION LOGIC (No emailing here anymore)
 # ==========================================
 
 def process_calculation(u, subjects, grades):
@@ -105,12 +106,11 @@ def process_calculation(u, subjects, grades):
                     (history_id, c["n"], c["u"], c["c"], c["difference"], c["match"])
                 )
                 
-    threading.Thread(
-        target=send_pdf_email, 
-        args=(u["email"], u["name"], round(cp, 3), out, subjects, grades, SCHOLARSHIPS)
-    ).start()
-    
     return {"reference": ref_code, "cluster_points": round(cp, 3), "results": out}
+
+# ==========================================
+# PDF GENERATION (Results + Invoice)
+# ==========================================
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
     buffer = io.BytesIO()
@@ -196,23 +196,45 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     buffer.seek(0)
     return buffer
 
-def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships):
+def send_pdf_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships, payment=None):
     try:
+        # 1. Generate Results PDF
         pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
         pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
+        
+        attachments = [{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
+
+        # 2. Generate Invoice PDF (if payment is provided)
+        if payment:
+            inv_buffer = generate_invoice_pdf({"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment)
+            inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode('utf-8')
+            attachments.append({"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"})
+
         api_key = os.getenv("BREVO_API_KEY"); sender_email = os.getenv("SENDER_EMAIL")
         if not api_key or not sender_email: return
+        
         client = Brevo(api_key=api_key)
-        html = f"<div style='font-family: Arial;'><h2>Dear {user_name},</h2><p>Your report is attached. Cluster Points: <b>{cluster_points}</b></p><p>EduPointAI Team</p></div>"
+        
+        html = f"""
+        <div style='font-family: Arial;'>
+            <h2>Dear {user_name},</h2>
+            <p>Your payment is confirmed and your assessment is complete.</p>
+            <p>Cluster Points: <b>{cluster_points}</b></p>
+            <p>Please find attached your official Results Report and your Payment Invoice/Receipt.</p>
+            <p>EduPointAI Team</p>
+        </div>
+        """
+        
         client.transactional_emails.send_transac_email(
-            subject="Your EduPointAI Results Report",
+            subject="Your EduPointAI Results & Invoice",
             html_content=html,
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=[{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
+            attachment=attachments
         )
+        logger.info(f"Successfully sent results and invoice to {user_email}")
     except Exception as e:
-        logger.error(f"Failed to send email: {e}")
+        logger.error(f"Failed to send email: {traceback.format_exc()}")
 
 # ==========================================
 # ROUTES
@@ -314,12 +336,33 @@ def payment_status(transaction_id):
         payments.update(transaction_id, status="completed")
         row["status"] = "completed"
         try:
+            # 1. Process calculation
             calc_results = process_calculation(u, row["calculation_data"]["subjects"], row["calculation_data"]["grades"])
+            
+            # 2. Send Email with Results + Invoice
+            threading.Thread(
+                target=send_pdf_email, 
+                args=(u["email"], u["name"], calc_results["cluster_points"], calc_results["results"], 
+                      row["calculation_data"]["subjects"], row["calculation_data"]["grades"], SCHOLARSHIPS, row)
+            ).start()
+
+            # 3. Clear calculation data to prevent duplicates
             payments.update(transaction_id, calculation_data=None)
         except Exception as e:
             logger.error(f"Calculation failed post-payment: {e}")
 
     return jsonify(ok=True, payment=row, calculation_results=calc_results)
+
+@app.get("/api/invoice/<transaction_id>")
+@login_required
+def download_invoice(transaction_id):
+    u = current_user()
+    row = payments.get(transaction_id)
+    if not row or row["user_id"] != u["id"]:
+        return jsonify(ok=False, error="Invoice not found"), 404
+        
+    pdf_buffer = generate_invoice_pdf(u, row)
+    return send_file(pdf_buffer, mimetype='application/pdf', as_attachment=True, download_name=f"Invoice_{transaction_id}.pdf")
 
 @app.get("/api/history")
 @login_required
@@ -362,7 +405,7 @@ def admin_access(user_id):
 
 
 # ==========================================
-# CRON JOB ROUTE (Place at the bottom!)
+# CRON JOB ROUTE (Keep at the bottom!)
 # ==========================================
 @app.get("/api/cron/daily-reports")
 def trigger_daily_reports():
