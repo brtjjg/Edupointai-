@@ -58,16 +58,17 @@ class PesapalClient:
             "Accept": "application/json",
         }
 
-    def register_ipn(self, url, notification_type="GET"):
-        data = self._request(
-            "POST", "/api/URLSetup/RegisterIPN",
-            json={"url": url, "ipn_notification_type": notification_type},
-            headers=self._headers(),
-        )
-        ipn_id = data.get("ipn_id")
-        if not ipn_id:
-            raise PesapalError(f"Pesapal RegisterIPN failed: {data}")
-        return ipn_id
+    # Find your PesapalClient class and ensure this method is inside it:
+def register_ipn(self, url, notification_type="GET"):
+    data = self._request(
+        "POST", "/api/URLSetup/RegisterIPN",
+        json={"url": url, "ipn_notification_type": notification_type},
+        headers=self._headers(),
+    )
+    ipn_id = data.get("ipn_id")
+    if not ipn_id:
+        raise PesapalError(f"Pesapal RegisterIPN failed: {data}")
+    return ipn_id
 
     def submit_order(self, *, merchant_reference, amount, currency, description,
                      callback_url, ipn_id, email, phone, first_name, last_name,
