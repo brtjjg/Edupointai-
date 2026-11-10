@@ -1,7 +1,7 @@
 import os
 import io
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 nairobi_tz = pytz.timezone('Africa/Nairobi')
 now_nairobi = datetime.now(nairobi_tz)
 today_str = now_nairobi.strftime("%Y-%m-%d")
+
+def safe_local_time(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(nairobi_tz).strftime("%Y-%m-%d %H:%M")
 
 def create_excel(data, headers, title):
     wb = Workbook()
@@ -63,13 +68,14 @@ def create_pdf(title, headers, data, summary_text):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
     story = []
     
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name="Title", fontName="Helvetica-Bold", fontSize=18, textColor=HexColor("#172554"), spaceAfter=15))
-    styles.add(ParagraphStyle(name="Sub", fontName="Helvetica", fontSize=10, textColor=HexColor("#64748B"), spaceAfter=20))
+    # FIX: Create local styles instead of adding to global stylesheet
+    title_style = ParagraphStyle(name="CustomTitle", fontName="Helvetica-Bold", fontSize=18, textColor=HexColor("#172554"), spaceAfter=15)
+    sub_style = ParagraphStyle(name="CustomSub", fontName="Helvetica", fontSize=10, textColor=HexColor("#64748B"), spaceAfter=20)
+    normal_style = getSampleStyleSheet()["Normal"]
     
-    story.append(Paragraph(title, styles["Title"]))
-    story.append(Paragraph(f"Generated on {now_nairobi.strftime('%d %b %Y at %H:%M')} (Nairobi Time)", styles["Sub"]))
-    story.append(Paragraph(summary_text, styles["Normal"]))
+    story.append(Paragraph(title, title_style))
+    story.append(Paragraph(f"Generated on {now_nairobi.strftime('%d %b %Y at %H:%M')} (Nairobi Time)", sub_style))
+    story.append(Paragraph(summary_text, normal_style))
     story.append(Spacer(1, 10*mm))
     
     table_data = [headers] + data
@@ -97,12 +103,12 @@ def create_pdf(title, headers, data, summary_text):
 def generate_and_send_reports():
     try:
         with connect() as conn:
-            users = conn.execute("SELECT id, name, email, phone, credits, created_at FROM users WHERE role = 'student' ORDER BY id DESC").fetchall()
-            payments = conn.execute("SELECT transaction_id, user_id, amount, plan, status, created_at FROM payments ORDER BY created_at DESC").fetchall()
+            users = conn.execute("SELECT id, name, email, phone, credits, created_at FROM users WHERE role = 'student' ORDER BY id DESC LIMIT 100").fetchall()
+            payments = conn.execute("SELECT transaction_id, user_id, amount, plan, status, created_at FROM payments ORDER BY created_at DESC LIMIT 100").fetchall()
 
         enrollment_data = []
         for u in users:
-            local_time = u["created_at"].astimezone(nairobi_tz).strftime("%Y-%m-%d %H:%M")
+            local_time = safe_local_time(u["created_at"])
             status = "Active" if u["credits"] >= 0 else "Inactive"
             enrollment_data.append([u["id"], u["name"], u["email"], u["phone"], u["credits"], local_time, status])
 
@@ -110,7 +116,7 @@ def generate_and_send_reports():
         total_revenue = 0
         successful_payments = 0
         for p in payments:
-            local_time = p["created_at"].astimezone(nairobi_tz).strftime("%Y-%m-%d %H:%M")
+            local_time = safe_local_time(p["created_at"])
             amount = float(p["amount"])
             if p["status"] in ["paid", "completed"]:
                 total_revenue += amount
@@ -119,9 +125,9 @@ def generate_and_send_reports():
 
         summary_data = [
             ["Report Date", today_str],
-            ["Total Registered Students", len(users)],
-            ["Total Successful Payments", successful_payments],
-            ["Total Lifetime Revenue", f"KES {total_revenue:,.2f}"],
+            ["Total Registered Students (Recent)", len(users)],
+            ["Total Successful Payments (Recent)", successful_payments],
+            ["Total Lifetime Revenue (Recent)", f"KES {total_revenue:,.2f}"],
             ["Net Revenue", f"KES {total_revenue:,.2f}"]
         ]
 
@@ -129,8 +135,8 @@ def generate_and_send_reports():
         ex2 = create_excel(revenue_data, ["TxID", "User ID", "Plan", "Amount", "Currency", "Method", "Status", "Date"], "Revenue")
         ex3 = create_excel(summary_data, ["Metric", "Value"], "Summary")
 
-        pdf1 = create_pdf("Student Enrollments Report", ["ID", "Name", "Email", "Enrolled On"], [r[:4] for r in enrollment_data[:50]], f"Total Students: {len(users)}")
-        pdf2 = create_pdf("Revenue & Payments Report", ["TxID", "User", "Amount", "Status"], [r[:4] for r in revenue_data[:50]], f"Total Revenue: KES {total_revenue:,.2f}")
+        pdf1 = create_pdf("Student Enrollments Report", ["ID", "Name", "Email", "Enrolled On"], [r[:4] for r in enrollment_data[:50]], f"Recent Students: {len(users)}")
+        pdf2 = create_pdf("Revenue & Payments Report", ["TxID", "User", "Amount", "Status"], [r[:4] for r in revenue_data[:50]], f"Recent Revenue: KES {total_revenue:,.2f}")
 
         api_key = os.getenv("BREVO_API_KEY")
         sender_email = os.getenv("SENDER_EMAIL")
@@ -154,9 +160,9 @@ def generate_and_send_reports():
         <h2>Daily Business Report - {today_str}</h2>
         <p>Here is your automated 24-hour report for EduPoint AI.</p>
         <ul>
-            <li><b>Total Students:</b> {len(users)}</li>
-            <li><b>Successful Payments:</b> {successful_payments}</li>
-            <li><b>Total Revenue:</b> KES {total_revenue:,.2f}</li>
+            <li><b>Recent Students:</b> {len(users)}</li>
+            <li><b>Recent Successful Payments:</b> {successful_payments}</li>
+            <li><b>Recent Revenue:</b> KES {total_revenue:,.2f}</li>
         </ul>
         <p>Please find the attached Excel and PDF reports for full details.</p>
         """
@@ -173,5 +179,6 @@ def generate_and_send_reports():
         return True
 
     except Exception as e:
-        logger.error(f"Failed to generate/send reports: {e}")
+        import traceback
+        logger.error(f"Failed to generate/send reports: {traceback.format_exc()}")
         return False
