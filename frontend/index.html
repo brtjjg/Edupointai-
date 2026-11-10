@@ -13,7 +13,7 @@
   .view.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   
-  .auth-wrap { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
+  .auth-wrap { display: flex; min-height: calc(100vh - 70px); align-items: center; justify-content: center; padding: 20px; }
   .auth-card { background: #111326; border: 1px solid #252947; border-radius: 20px; padding: 30px; width: min(460px, 100%); box-shadow: 0 15px 50px rgba(0,0,0,0.3); }
   .auth-card h1 { margin: 10px 0; font-size: 28px; color: #fff; }
   .auth-card p { color: #aab1ca; line-height: 1.5; margin-bottom: 20px; }
@@ -64,7 +64,6 @@
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0; padding: 20px; }
-    .landing-nav { display: none; }
   }
 </style>
 </head>
@@ -76,11 +75,12 @@
 <div id="view-public" class="view active">
   <header class="topbar">
     <div class="brand">🎓 EduPoint AI <span>v10</span></div>
-    <nav class="top-actions landing-nav" id="nav-public">
-      <!-- Auth links injected here -->
+    <nav class="top-actions" id="nav-public">
+      <!-- JavaScript will inject Login/Register buttons here -->
     </nav>
   </header>
 
+  <!-- LANDING CONTENT -->
   <div class="landing-container" id="landing-content">
     <section class="hero">
       <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
@@ -88,7 +88,7 @@
       <p>Calculate your cluster points, discover university courses, and track scholarships. Pay only 100 KES per calculation via M-PESA, Airtel, or T-Kash.</p>
     </section>
     
-    <section class="card" style="background: #111326; padding: 20px; border-radius: 12px;">
+    <section class="card" style="background: #111326; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
       <h2 style="color: #fff; margin-top: 0;">Why EduPoint AI?</h2>
       <div class="features-grid">
         <div class="feature-item"><span>✓</span> Accurate Cluster Points</div>
@@ -99,6 +99,17 @@
         <div class="feature-item"><span>✓</span> CV Builder & Careers</div>
       </div>
     </section>
+
+    <!-- Google Sign In on Landing Page -->
+    <div class="card" style="text-align: center; background: #111326; padding: 20px; border-radius: 12px;">
+      <h3 style="color: #fff; margin-top: 0;">Get Started Instantly</h3>
+      <p style="color: #aab1ca; margin-bottom: 20px;">Log in or create an account with Google</p>
+      <div id="g_id_onload_landing"
+           data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com"
+           data-callback="handleGoogleLogin">
+      </div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="left" style="display: flex; justify-content: center;"></div>
+    </div>
   </div>
 
   <!-- LOGIN CARD -->
@@ -241,23 +252,25 @@
         </div>
       </div>
 
-      <!-- COURSES, SCHOLARSHIPS, CAREERS, LEARNING -->
+      <!-- COURSES -->
       <div id="page-courses" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Courses</h1>
         <div id="courseGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
       </div>
       
+      <!-- SCHOLARSHIPS -->
       <div id="page-scholarships" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Scholarships</h1>
         <div id="availableScholarships"></div>
       </div>
 
+      <!-- CAREERS -->
       <div id="page-careers" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">CV Builder</h1>
         <div class="grid-2">
           <div class="card" style="background: #111326; padding: 20px;">
-            <input id="cvName" placeholder="Full Name" style="width:100%; padding:10px; margin-bottom:10px;">
-            <textarea id="cvEdu" placeholder="Education" style="width:100%; padding:10px; margin-bottom:10px;"></textarea>
+            <input id="cvName" placeholder="Full Name" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff;">
+            <textarea id="cvEdu" placeholder="Education" style="width:100%; padding:10px; margin-bottom:10px; background:#080a18; border:1px solid #303451; color:#fff;"></textarea>
             <button class="pay" onclick="saveCV()">Save & Print</button>
           </div>
           <div class="cv-preview" id="cvPreview" style="background:#fff; color:#000; padding:20px;">
@@ -267,6 +280,7 @@
         </div>
       </div>
 
+      <!-- LEARNING -->
       <div id="page-learning" class="page-section">
         <h1 style="font-size: 28px; color:#fff;">Learning</h1>
         <div class="card" style="background: #111326; padding: 20px;">
@@ -294,7 +308,6 @@
       <button class="nav-btn" onclick="showAdminTab('users')">Users</button>
       <button class="nav-btn" onclick="showAdminTab('payments')">Payments</button>
       <button class="nav-btn" onclick="showAdminTab('history')">History</button>
-      <button class="nav-btn" onclick="showAdminTab('offers')">Offers</button>
     </div>
 
     <div id="admin-users" class="admin-tab">
@@ -313,10 +326,6 @@
       <div class="table-wrap">
         <table><thead><tr><th>Ref</th><th>Student</th><th>Points</th></tr></thead><tbody id="adminHistoryBody"></tbody></table>
       </div>
-    </div>
-
-    <div id="admin-offers" class="admin-tab" style="display:none;">
-      <p style="color:#fff;">Offer management goes here.</p>
     </div>
   </main>
 </div>
@@ -361,6 +370,19 @@ function showAuthView(subView) {
   document.getElementById("landing-content").style.display = subView === 'landing' ? 'block' : 'none';
   document.getElementById("login-content").style.display = subView === 'login' ? 'flex' : 'none';
   document.getElementById("register-content").style.display = subView === 'register' ? 'flex' : 'none';
+  
+  // Dynamically populate navbar
+  const nav = document.getElementById("nav-public");
+  if (subView === 'landing') {
+    nav.innerHTML = `
+      <button class="nav-btn" onclick="showAuthView('login')">Login</button>
+      <button class="nav-btn primary" onclick="showAuthView('register')">Create Account</button>
+    `;
+  } else {
+    nav.innerHTML = `
+      <button class="nav-btn" onclick="showAuthView('landing')">← Back to Home</button>
+    `;
+  }
 }
 
 function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
@@ -498,7 +520,7 @@ function updateSubjectOptions() {
 async function loadAdminData() {
   const users = await api("/api/admin/users");
   document.getElementById("adminUsersBody").innerHTML = users.users.map(u => `
-    <tr><td>${u.name}</td><td>${u.email}</td><td>${u.credits}</td><td><button onclick="grantCredits(${u.id})">+1 Credit</button></td></tr>
+    <tr><td>${u.name}</td><td>${u.email}</td><td>${u.credits}</td><td><button class="nav-btn" onclick="grantCredits(${u.id})" style="padding:5px 10px; font-size:12px;">+1 Credit</button></td></tr>
   `).join("");
 
   const pays = await api("/api/admin/payments");
