@@ -3,72 +3,267 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EduPoint AI — KUCCPS, Cluster Points, Scholarships</title>
+<title>EduPoint AI — Your Education. Your Future.</title>
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  /* Custom styles for the Auth views */
+  .auth-view { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
+  .auth-view.active { display: flex; }
+  
+  .auth-card { background: #111326; border: 1px solid #252947; border-radius: 20px; padding: clamp(20px, 5vw, 40px); width: min(460px, 100%); box-shadow: 0 15px 50px rgba(0,0,0,0.3); }
+  .auth-card h1 { margin: 10px 0; font-size: 28px; color: #fff; }
+  .auth-card p { color: #aab1ca; line-height: 1.5; margin-bottom: 20px; }
+  
+  /* Landing Page Styles */
+  .landing-view { display: none; }
+  .landing-view.active { display: block; }
+  .hero { padding: 40px 0; text-align: left; }
+  .hero h1 { font-size: clamp(32px, 6vw, 56px); color: #fff; margin: 10px 0; line-height: 1.1; }
+  .hero p { color: #aab1ca; font-size: 16px; max-width: 600px; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 30px 0; }
+  .feature-item { background: #111326; padding: 20px; border-radius: 12px; border: 1px solid #303451; color: #fff; font-weight: bold; }
+  .feature-item span { color: #4ade80; margin-right: 8px; }
+</style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">🎓 EduPoint AI <span>v10</span></div>
-  <nav class="top-actions" id="nav"></nav>
-</header>
+<!-- ========================================== -->
+<!-- 1. LANDING PAGE VIEW                       -->
+<!-- ========================================== -->
+<div id="view-landing" class="landing-view">
+  <header class="topbar">
+    <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+    <nav class="top-actions" id="nav-landing">
+      <!-- Populated by JS if logged in -->
+      <button class="nav-btn" onclick="showView('login')">Login</button>
+      <button class="nav-btn primary" onclick="showView('register')">Create Account</button>
+    </nav>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
+      <h1>Find your course. Unlock your future.</h1>
+      <p>Calculate your cluster points, discover university courses, and track scholarships. Pay only 100 KES per calculation via M-PESA, Airtel, or T-Kash.</p>
+    </section>
+    
+    <section class="card">
+      <h2 style="color: #fff; margin-top: 0;">Why EduPoint AI?</h2>
+      <div class="features-grid">
+        <div class="feature-item"><span>✓</span> Accurate Cluster Points</div>
+        <div class="feature-item"><span>✓</span> University Matching</div>
+        <div class="feature-item"><span>✓</span> PDF Reports via Email</div>
+        <div class="feature-item"><span>✓</span> Scholarship Tracker</div>
+        <div class="feature-item"><span>✓</span> AI Academic Advisor</div>
+        <div class="feature-item"><span>✓</span> CV Builder & Careers</div>
+      </div>
+    </section>
 
-<main class="container">
-  <section class="hero">
-    <p class="eyebrow">KUCCPS • Cluster Points • Scholarships</p>
-    <h1>Find your course. Unlock premium features.</h1>
-    <p>Pay via Pesapal (M-PESA, Airtel, T-Kash, Card) to unlock calculations for just 100 KES.</p>
-  </section>
-  
-  <section class="card">
-    <h2>Unlock Premium Features</h2>
-    <div class="feature-list">
-      <label>✓ Full cluster point calculation</label>
-      <label>✓ Course and university matching</label>
-      <label>✓ PDF Report via Email</label>
-      <label>✓ AI chatbot access</label>
+    <!-- Google Sign In Button -->
+    <div class="card" style="text-align: center;">
+      <h3 style="color: #fff; margin-top: 0;">Get Started Instantly</h3>
+      <p style="color: #aab1ca; margin-bottom: 20px;">Log in or create an account with Google</p>
+      <div id="g_id_onload"
+           data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com"
+           data-callback="handleGoogleLogin">
+      </div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="left" style="display: flex; justify-content: center;"></div>
     </div>
+  </main>
+</div>
+
+<!-- ========================================== -->
+<!-- 2. LOGIN VIEW                              -->
+<!-- ========================================== -->
+<div id="view-login" class="auth-view">
+  <div class="auth-card">
+    <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+    <h1>Welcome back</h1>
+    <p>Login to access your academic dashboard.</p>
     
     <!-- Google Sign In Button -->
-    <div id="g_id_onload"
+    <div id="g_id_onload_login"
          data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com"
-         data-callback="handleCredentialResponse">
+         data-callback="handleGoogleLogin">
     </div>
-    <div class="g_id_signin" data-type="standard" style="margin-top: 20px;"></div>
+    <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="left" style="margin-bottom: 20px;"></div>
 
-    <div class="grid" id="cta" style="margin-top: 20px;"></div>
-  </section>
-</main>
+    <div style="text-align: center; color: #aab1ca; margin-bottom: 20px;">─── OR ───</div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" required>
+      </div>
+      <button type="submit" class="pay">Login with Email</button>
+    </form>
+    <div id="loginMsg" class="message" style="color: #ff7b7b; margin-top: 10px;"></div>
+    
+    <p style="text-align: center; margin-top: 20px;">
+      New here? <a href="#" onclick="showView('register')" style="color: #73e8ff;">Create account</a>
+    </p>
+    <p style="text-align: center;">
+      <a href="#" onclick="showView('landing')" style="color: #aab1ca;">← Back to Home</a>
+    </p>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 3. REGISTER VIEW                           -->
+<!-- ========================================== -->
+<div id="view-register" class="auth-view">
+  <div class="auth-card">
+    <div class="brand">🎓 EduPoint AI <span>v10</span></div>
+    <h1>Create your account</h1>
+    <p>You will need to purchase a calculation credit (100 KES) to use the tools.</p>
+    
+    <!-- Google Sign In Button -->
+    <div id="g_id_onload_register"
+         data-client_id="243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com"
+         data-callback="handleGoogleLogin">
+    </div>
+    <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-logo_alignment="left" style="margin-bottom: 20px;"></div>
+
+    <div style="text-align: center; color: #aab1ca; margin-bottom: 20px;">─── OR ───</div>
+
+    <form id="registerForm">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="regName" required>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" required>
+      </div>
+      <div class="field">
+        <label>Phone (07XXXXXXXX)</label>
+        <input type="tel" id="regPhone" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="regPassword" required minlength="6">
+      </div>
+      <button type="submit" class="pay">Sign Up with Email</button>
+    </form>
+    <div id="regMsg" class="message" style="color: #ff7b7b; margin-top: 10px;"></div>
+    
+    <p style="text-align: center; margin-top: 20px;">
+      Already have an account? <a href="#" onclick="showView('login')" style="color: #73e8ff;">Login</a>
+    </p>
+    <p style="text-align: center;">
+      <a href="#" onclick="showView('landing')" style="color: #aab1ca;">← Back to Home</a>
+    </p>
+  </div>
+</div>
 
 <script src="/js/api.js"></script>
 <script>
-function handleCredentialResponse(response) {
-  api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) })
-    .then(j => { setToken(j.token); location.href = j.redirect; })
-    .catch(err => alert(err.message));
+// ==========================================
+// VIEW ROUTING (Single Page App)
+// ==========================================
+function showView(viewId) {
+  document.querySelectorAll('.landing-view, .auth-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${viewId}`).classList.add('active');
+  window.scrollTo(0, 0);
 }
 
-(async function () {
-  const nav = document.getElementById("nav");
-  const cta = document.getElementById("cta");
-  
+// Check if user is already logged in
+(async function checkAuth() {
   if (getToken()) {
     try {
       const me = await api("/api/me");
-      nav.innerHTML = `<span>${me.user.name}</span>
-        <a class="nav-btn" href="/dashboard.html">Dashboard</a>
-        <a class="nav-btn" href="#" onclick="logout();return false;">Logout</a>`;
-      cta.innerHTML = `<a class="pay nav-btn" href="/dashboard.html">Continue to Dashboard</a>`;
-    } catch (_) { clearToken(); }
+      if (me.user.role === "admin") {
+        location.href = "/admin.html";
+      } else {
+        location.href = "/app.html";
+      }
+      return;
+    } catch (e) {
+      clearToken(); // Invalid token
+    }
   }
-  
-  if (!nav.innerHTML) {
-    nav.innerHTML = `<a class="nav-btn" href="/login.html">Login</a>
-                     <a class="nav-btn primary" href="/register.html">Create Account</a>`;
-    cta.innerHTML = `<a class="nav-btn" href="/login.html">Or Login with Email</a>`;
-  }
+  showView('landing'); // Default view
 })();
+
+// ==========================================
+// GOOGLE AUTH
+// ==========================================
+async function handleGoogleLogin(response) {
+  try {
+    const res = await api("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential: response.credential })
+    });
+    setToken(res.token);
+    location.href = res.redirect; // Backend sends /app.html or /admin.html
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// ==========================================
+// EMAIL LOGIN
+// ==========================================
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector("button");
+  const msg = document.getElementById("loginMsg");
+  
+  btn.textContent = "Logging in...";
+  btn.disabled = true;
+  msg.textContent = "";
+
+  try {
+    const res = await api("/api/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: document.getElementById("loginEmail").value,
+        password: document.getElementById("loginPassword").value
+      })
+    });
+    setToken(res.token);
+    location.href = res.redirect;
+  } catch (err) {
+    msg.textContent = err.message;
+    btn.textContent = "Login with Email";
+    btn.disabled = false;
+  }
+});
+
+// ==========================================
+// EMAIL REGISTER
+// ==========================================
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector("button");
+  const msg = document.getElementById("regMsg");
+  
+  btn.textContent = "Creating account...";
+  btn.disabled = true;
+  msg.textContent = "";
+
+  try {
+    const res = await api("/api/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: document.getElementById("regName").value,
+        email: document.getElementById("regEmail").value,
+        phone: document.getElementById("regPhone").value,
+        password: document.getElementById("regPassword").value
+      })
+    });
+    setToken(res.token);
+    location.href = res.redirect;
+  } catch (err) {
+    msg.textContent = err.message;
+    btn.textContent = "Sign Up with Email";
+    btn.disabled = false;
+  }
+});
 </script>
 </body>
 </html>
