@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-import os
-import uuid
-import logging
-import base64
-import threading
-import random
-import string
-import io
-import json
-import traceback
+import os, uuid, logging, base64, threading, random, string, io, json, traceback
 from datetime import datetime
 
 import psycopg
@@ -16,15 +7,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Google Auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-
-# Brevo Email SDK
 from brevo import Brevo
 from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
-
-# ReportLab PDF Libraries
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -34,7 +20,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.colors import HexColor
 import qrcode
 
-# Local imports
 from data import W, BEST, MAX, P, SCHOLARSHIPS, PAYMENT_PLANS
 from db import connect, init_db
 from auth import (
@@ -56,10 +41,7 @@ logger = logging.getLogger(__name__)
 init_db()
 payments = PaymentService()
 
-# ==========================================
-# HELPER FUNCTIONS
-# ==========================================
-
+# --- HELPERS ---
 def add_credit(user_id):
     with connect() as conn:
         conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (user_id,))
@@ -80,11 +62,8 @@ def ensure_admin():
             )
 ensure_admin()
 
-# ==========================================
-# CALCULATION & REPORTING LOGIC
-# ==========================================
-
-def process_calculation(u, subjects, grades, is_paid=False):
+# --- CALCULATION & REPORTING LOGIC ---
+def process_calculation(u, subjects, grades):
     vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
     vals = sorted(vals, reverse=True)[:7]
     if len(vals) < 7: raise ValueError("Enter at least 7 valid grades.")
@@ -101,9 +80,6 @@ def process_calculation(u, subjects, grades, is_paid=False):
     ref_code = "EP-2026-" + ''.join(random.choices(string.digits, k=6))
     
     with connect() as conn:
-        if not is_paid:
-            conn.execute("UPDATE users SET credits = credits - 1 WHERE id=%s", (u["id"],))
-            
         history_row = conn.execute(
             "INSERT INTO calculation_history (user_id, reference, cluster_points) VALUES (%s, %s, %s) RETURNING id",
             (u["id"], ref_code, round(cp, 3))
@@ -131,9 +107,7 @@ def process_calculation(u, subjects, grades, is_paid=False):
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
     buffer = io.BytesIO()
-    NAVY = HexColor("#172554"); PALE = HexColor("#F4F6FC"); LIGHT_BLUE = HexColor("#EAF3FF")
-    LIGHT_PURPLE = HexColor("#F1ECFB"); INK = HexColor("#1F2937"); MUTED = HexColor("#64748B"); BORDER = HexColor("#DCE3EF")
-
+    NAVY = HexColor("#172554"); PALE = HexColor("#F4F6FC"); LIGHT_BLUE = HexColor("#EAF3FF"); LIGHT_PURPLE = HexColor("#F1ECFB"); INK = HexColor("#1F2937"); MUTED = HexColor("#64748B"); BORDER = HexColor("#DCE3EF")
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name="Brand", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=17, leading=20, textColor=colors.white))
     styles.add(ParagraphStyle(name="HeroTitle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=22, leading=27, alignment=TA_LEFT, textColor=NAVY))
@@ -158,12 +132,11 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
 
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=18*mm, leftMargin=18*mm, topMargin=17*mm, bottomMargin=23*mm)
     story = []
-    brand = Table([[P("EduPointAI", "Brand"), P("ADVANCED RESULTS REPORT<br/>COURSE & SCHOLARSHIP MATCHING", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
+    brand = Table([[P("EduPointAI", "Brand"), P("ADVANCED RESULTS REPORT", "WhiteSmall")]], colWidths=[75*mm, 99*mm], rowHeights=[22*mm])
     brand.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,-1), NAVY), ("VALIGN", (0,0), (-1,-1), "MIDDLE"), ("LEFTPADDING", (0,0), (-1,-1), 12), ("ALIGN", (1,0), (1,0), "RIGHT")]))
     story += [brand, Spacer(1, 8*mm)]
 
     story += [P("Your academic assessment is ready", "HeroTitle"), P("Personalized overview of your performance and opportunities.", "Sub"), Spacer(1, 5*mm)]
-    
     today = datetime.now().strftime("%d %b %Y")
     ref = "EP-2026-" + ''.join(random.choices(string.digits, k=6))
     student = Table([[P("STUDENT", "Tiny"), P("REPORT REFERENCE", "Tiny")], [P(user_name, "BodySmall"), P(ref, "BodySmall")]], colWidths=[87*mm, 87*mm])
@@ -234,10 +207,7 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
 
-# ==========================================
-# ROUTES
-# ==========================================
-
+# --- ROUTES ---
 @app.get("/health")
 def health(): return jsonify(ok=True, service="edupoint-api")
 
@@ -335,7 +305,7 @@ def payment_status(transaction_id):
         payments.update(transaction_id, status="completed")
         row["status"] = "completed"
         try:
-            calc_results = process_calculation(u, row["calculation_data"]["subjects"], row["calculation_data"]["grades"], is_paid=True)
+            calc_results = process_calculation(u, row["calculation_data"]["subjects"], row["calculation_data"]["grades"])
             payments.update(transaction_id, calculation_data=None)
         except Exception as e:
             logger.error(f"Calculation failed post-payment: {e}")
