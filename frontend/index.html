@@ -349,8 +349,10 @@ async function initiatePayment() {
     });
 
     if (j.redirect_url) {
-      window.open(j.redirect_url, 'Pesapal Payment', `width=600,height=700`);
-      msg.innerHTML = '<span style="color:#fbbf24;">Waiting for payment confirmation...</span>';
+      // Opens Pesapal in a new tab on mobile, popup on desktop
+      window.open(j.redirect_url, '_blank');
+      
+      msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal tab. Waiting for confirmation...</span>';
       btn.textContent = "Waiting for Payment...";
       
       let n = 0;
@@ -360,7 +362,10 @@ async function initiatePayment() {
         if (x.payment.status === "paid" || x.payment.status === "completed") {
           clearInterval(t); closeModal(); renderResults(x.calculation_results); alert("Payment Confirmed! Results unlocked and emailed.");
         }
-        if (x.payment.status === "failed" || n >= 60) { clearInterval(t); msg.textContent = "Payment failed."; btn.disabled = false; btn.textContent = "📱 Pay with Pesapal"; }
+        if (x.payment.status === "failed" || n >= 60) { 
+          clearInterval(t); msg.textContent = "Payment failed or timed out."; 
+          btn.disabled = false; btn.textContent = "📱 Pay with Pesapal"; 
+        }
       }, 3000);
     }
   } catch (err) {
