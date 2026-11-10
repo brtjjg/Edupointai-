@@ -83,12 +83,16 @@ def _configure_connection(conn):
     conn.commit()
 
 if DATABASE_URL:
+    # Added check=ConnectionPool.check_connection to verify connections before use
+    # Reduced max_size to 5 to prevent Render DB exhaustion
     pool = ConnectionPool(
         DATABASE_URL,
         min_size=1,
-        max_size=10,
-        kwargs={"row_factory": dict_row},
-        configure=_configure_connection
+        max_size=5,
+        timeout=10,
+        kwargs={"row_factory": dict_row, "connect_timeout": 5},
+        configure=_configure_connection,
+        check=ConnectionPool.check_connection 
     )
     pool.wait()
 else:
