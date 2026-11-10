@@ -15,6 +15,7 @@
   .view.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+  /* LANDING */
   .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
   .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; }
   .hero-section { position: relative; padding: 140px 20px 60px; max-width: 800px; margin: 0 auto; text-align: center; }
@@ -29,6 +30,7 @@
   .feature-card h3 { color: #fff; margin: 0 0 10px; font-size: 20px; }
   .feature-card p { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
 
+  /* DASHBOARD */
   .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
   .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
   .app-header h1 { font-size: 22px; margin: 0; }
@@ -39,6 +41,7 @@
   .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
   .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
   
+  /* RESULTS */
   .summary-banner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
   .summary-banner h2 { font-size: 42px; color: var(--cyan); margin: 0 0 5px 0; }
   .summary-banner p { color: var(--text-muted); margin: 0; font-size: 14px; }
@@ -57,6 +60,7 @@
   .badge-red { background: rgba(255,123,123,0.1); color: #ff7b7b; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
 
+  /* OTHER TOOLS */
   .chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .chip { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
   .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -216,8 +220,42 @@
 
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
-<script src="/js/api.js"></script>
 <script>
+// ==========================================
+// ROBUST API WRAPPER (Prevents Raw Code Errors)
+// ==========================================
+window.EDUPOINT_API = window.EDUPOINT_API || (location.hostname === "localhost" ? "http://localhost:5000" : "https://edupoint-api.onrender.com");
+const TOKEN_KEY = "edupoint_token";
+const getToken = () => localStorage.getItem(TOKEN_KEY);
+const setToken = t => localStorage.setItem(TOKEN_KEY, t);
+const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+
+async function api(path, opts = {}) {
+  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+  const t = getToken();
+  if (t) headers["Authorization"] = "Bearer " + t;
+  
+  try {
+    const r = await fetch(window.EDUPOINT_API + path, { ...opts, headers });
+    
+    const contentType = r.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("System error. The server returned an invalid response. Please try again.");
+    }
+
+    let data = await r.json();
+    if (r.status === 401) { clearToken(); }
+    if (!r.ok) throw Object.assign(new Error(data.error || ("HTTP " + r.status)), { status: r.status, data });
+    return data;
+    
+  } catch (err) {
+    if (err.message === "Failed to fetch" || err.message.includes("NetworkError")) {
+        throw new Error("Failed to connect to server. Please check your internet or wait 50 seconds for the server to wake up.");
+    }
+    throw err;
+  }
+}
+
 let me = null;
 let allResultsData = [];
 
@@ -294,7 +332,9 @@ function preventDuplicates() {
   });
 }
 
-// THIS IS THE UPDATED CALCULATE BUTTON
+// ==========================================
+// CALCULATE LOGIC (Robust Error Handling)
+// ==========================================
 document.getElementById("btnCalculate").onclick = async () => {
   const subjects = {}, grades = {};
   let count = 0;
@@ -309,7 +349,6 @@ document.getElementById("btnCalculate").onclick = async () => {
   const btn = document.getElementById("btnCalculate");
   const msg = document.getElementById("calcMessage");
   
-  // 1. Instantly open a blank tab
   const payWindow = window.open('', '_blank');
   
   btn.disabled = true;
@@ -317,7 +356,6 @@ document.getElementById("btnCalculate").onclick = async () => {
   msg.innerHTML = '<span style="color:#fbbf24;">Opening secure payment window...</span>';
 
   try {
-    // Use the phone number from the user's profile (me.phone), fallback to a default
     const phone = me.phone || "0700000000";
     
     const j = await api("/api/payment/initiate", { 
@@ -329,11 +367,10 @@ document.getElementById("btnCalculate").onclick = async () => {
     });
 
     if (j.redirect_url) {
-      // 2. Redirect the blank window to Pesapal
       if (payWindow) {
         payWindow.location.href = j.redirect_url;
       } else {
-        window.location.href = j.redirect_url; // Fallback if popup blocked
+        window.location.href = j.redirect_url; 
       }
       
       msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal window. Waiting for confirmation...</span>';
@@ -341,25 +378,30 @@ document.getElementById("btnCalculate").onclick = async () => {
       
       let n = 0;
       const t = setInterval(async () => {
+        try {
+            const x = await api("/api/payment/status/" + j.transaction_id);
+            if (x.payment.status === "paid" || x.payment.status === "completed") {
+              clearInterval(t); 
+              if (payWindow) payWindow.close(); 
+              renderResults(x.calculation_results); 
+              alert("Payment Confirmed! Results unlocked and emailed.");
+            }
+            if (x.payment.status === "failed" || n >= 60) { 
+              clearInterval(t); 
+              msg.textContent = "Payment failed or timed out."; 
+              btn.disabled = false; 
+              btn.textContent = "⚡ Calculate My Cluster Points"; 
+            }
+        } catch(e) {
+            // Ignore polling errors, just try again next time
+            console.log("Polling error, retrying...", e.message);
+        }
         n++;
-        const x = await api("/api/payment/status/" + j.transaction_id);
-        
-        if (x.payment.status === "paid" || x.payment.status === "completed") {
-          clearInterval(t); 
-          if (payWindow) payWindow.close(); 
-          renderResults(x.calculation_results); 
-          alert("Payment Confirmed! Results unlocked and emailed.");
-        }
-        if (x.payment.status === "failed" || n >= 60) { 
-          clearInterval(t); 
-          msg.textContent = "Payment failed or timed out."; 
-          btn.disabled = false; 
-          btn.textContent = "⚡ Calculate My Cluster Points"; 
-        }
       }, 3000);
     }
   } catch (err) {
     if (payWindow) payWindow.close();
+    // Display the clean, friendly error message
     msg.innerHTML = `<span style="color:#ff7b7b;">${err.message}</span>`; 
     btn.disabled = false; 
     btn.textContent = "⚡ Calculate My Cluster Points";
