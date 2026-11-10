@@ -333,11 +333,8 @@ async function initiatePayment() {
 
   if (phone.length < 10) return alert("Please enter a valid M-PESA number.");
 
-  // 1. IMMEDIATELY open a blank window to bypass mobile popup blockers
-  const payWindow = window.open('about:blank', '_blank');
-  if (payWindow) {
-    payWindow.document.write('<h2 style="text-align:center;font-family:sans-serif;margin-top:50px;">Connecting to Pesapal...</h2>');
-  }
+  // 1. Instantly open a blank window to bypass mobile popup blockers
+  const payWindow = window.open('', '_blank');
 
   btn.disabled = true; 
   btn.textContent = "Opening Pesapal...";
@@ -353,7 +350,7 @@ async function initiatePayment() {
     });
 
     if (j.redirect_url) {
-      // 2. Instantly redirect the blank window to the Pesapal URL
+      // 2. Redirect the blank window to the Pesapal URL
       if (payWindow) {
         payWindow.location.href = j.redirect_url;
       } else {
