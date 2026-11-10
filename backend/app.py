@@ -6,6 +6,7 @@ import psycopg
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import HTTPException
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
