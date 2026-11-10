@@ -2,17 +2,14 @@ import os, time, logging, requests
 
 logger = logging.getLogger(__name__)
 
-
 class PesapalError(RuntimeError):
     pass
-
 
 class PesapalClient:
     SANDBOX = "https://cybqa.pesapal.com/pesapalv3"
     PRODUCTION = "https://pay.pesapal.com/v3"
 
-    def __init__(self, consumer_key=None, consumer_secret=None,
-                 base_url=None, env=None, timeout=30):
+    def __init__(self, consumer_key=None, consumer_secret=None, base_url=None, env=None, timeout=30):
         self.consumer_key = (consumer_key or os.getenv("PESAPAL_CONSUMER_KEY", "")).strip()
         self.consumer_secret = (consumer_secret or os.getenv("PESAPAL_CONSUMER_SECRET", "")).strip()
         env = (env or os.getenv("PESAPAL_ENV", "sandbox")).strip().lower()
@@ -58,21 +55,18 @@ class PesapalClient:
             "Accept": "application/json",
         }
 
-    # Find your PesapalClient class and ensure this method is inside it:
-def register_ipn(self, url, notification_type="GET"):
-    data = self._request(
-        "POST", "/api/URLSetup/RegisterIPN",
-        json={"url": url, "ipn_notification_type": notification_type},
-        headers=self._headers(),
-    )
-    ipn_id = data.get("ipn_id")
-    if not ipn_id:
-        raise PesapalError(f"Pesapal RegisterIPN failed: {data}")
-    return ipn_id
+    def register_ipn(self, url, notification_type="GET"):
+        data = self._request(
+            "POST", "/api/URLSetup/RegisterIPN",
+            json={"url": url, "ipn_notification_type": notification_type},
+            headers=self._headers(),
+        )
+        ipn_id = data.get("ipn_id")
+        if not ipn_id:
+            raise PesapalError(f"Pesapal RegisterIPN failed: {data}")
+        return ipn_id
 
-    def submit_order(self, *, merchant_reference, amount, currency, description,
-                     callback_url, ipn_id, email, phone, first_name, last_name,
-                     country_code="KE"):
+    def submit_order(self, *, merchant_reference, amount, currency, description, callback_url, ipn_id, email, phone, first_name, last_name, country_code="KE"):
         payload = {
             "id": merchant_reference,
             "currency": currency,
@@ -88,15 +82,16 @@ def register_ipn(self, url, notification_type="GET"):
                 "last_name": last_name,
             },
         }
-        data = self._request("POST", "/api/Transactions/SubmitOrderRequest",
-                             json=payload, headers=self._headers())
+        data = self._request("POST", "/api/Transactions/SubmitOrderRequest", json=payload, headers=self._headers())
         tracking = data.get("order_tracking_id")
         redirect = data.get("redirect_url")
         if not tracking or not redirect:
             raise PesapalError(f"Pesapal order rejected: {data}")
-        return {"order_tracking_id": tracking,
-                "redirect_url": redirect,
-                "merchant_reference": data.get("merchant_reference", merchant_reference)}
+        return {
+            "order_tracking_id": tracking,
+            "redirect_url": redirect,
+            "merchant_reference": data.get("merchant_reference", merchant_reference)
+        }
 
     def transaction_status(self, order_tracking_id):
         data = self._request(
