@@ -27,6 +27,7 @@ from auth import (
     hash_password, verify_password, create_session, destroy_session, bearer_token,
 )
 from services.payments import PaymentService, normalize_phone, validate_provider
+from services.reports import generate_and_send_reports # NEW: Import the reports script
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -41,7 +42,10 @@ logger = logging.getLogger(__name__)
 init_db()
 payments = PaymentService()
 
-# --- HELPERS ---
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
+
 def add_credit(user_id):
     with connect() as conn:
         conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (user_id,))
@@ -62,7 +66,10 @@ def ensure_admin():
             )
 ensure_admin()
 
-# --- CALCULATION & REPORTING LOGIC ---
+# ==========================================
+# CALCULATION & REPORTING LOGIC
+# ==========================================
+
 def process_calculation(u, subjects, grades):
     vals = [W[str(v).strip().upper()] for v in grades.values() if str(v).strip().upper() in W]
     vals = sorted(vals, reverse=True)[:7]
@@ -207,7 +214,10 @@ def send_pdf_email(user_email, user_name, cluster_points, results, subjects, gra
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
 
-# --- ROUTES ---
+# ==========================================
+# ROUTES
+# ==========================================
+
 @app.get("/health")
 def health(): return jsonify(ok=True, service="edupoint-api")
 
@@ -277,10 +287,9 @@ def initiate_payment():
         return jsonify(ok=True, transaction_id=tx, redirect_url=r.get("redirect_url"))
         
     except Exception as e:
-        error_msg = traceback.format_exc()
-        logger.error(f"Pesapal Initiation Failed: {error_msg}")
+        logger.error(f"Pesapal Error: {traceback.format_exc()}")
         payments.update(tx, status="failed", message=str(e))
-        return jsonify(ok=False, error=f"Pesapal Error: {str(e)}"), 502
+        return jsonify(ok=False, error=f"Error: {str(e)}"), 502
 
 @app.get("/api/payment/status/<transaction_id>")
 @login_required
@@ -350,6 +359,25 @@ def admin_access(user_id):
         with connect() as conn:
             conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
     return jsonify(ok=True, added=credits_to_add)
+
+
+# ==========================================
+# CRON JOB ROUTE (Place at the bottom!)
+# ==========================================
+@app.get("/api/cron/daily-reports")
+def trigger_daily_reports():
+    secret = request.args.get("secret")
+    expected_secret = os.getenv("CRON_SECRET", "edupoint_secret_123")
+    
+    if secret != expected_secret:
+        return jsonify(ok=False, error="Unauthorized"), 401
+        
+    success = generate_and_send_reports()
+    if success:
+        return jsonify(ok=True, message="Reports generated and emailed successfully.")
+    else:
+        return jsonify(ok=False, error="Failed to generate reports."), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
