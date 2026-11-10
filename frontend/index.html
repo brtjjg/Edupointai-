@@ -7,7 +7,8 @@
 <title>EduPoint AI - Your Education. Your Future.</title>
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- FIX: Added onload="initAuth()" to trigger the button render exactly when the script is ready -->
+<script src="https://accounts.google.com/gsi/client" onload="initAuth()" async defer></script>
 <style>
   /* --- GLOBAL THEME --- */
   :root {
@@ -50,7 +51,7 @@
   .app-header h1 { font-size: 22px; margin: 0; }
   .app-header .logout { color: var(--text-muted); text-decoration: none; font-size: 14px; }
 
-  .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+  .card { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
   .card-title { color: var(--cyan); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
 
   /* Inputs */
@@ -119,14 +120,16 @@
 <div id="view-public" class="view active">
   <header class="header">
     <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
-    <!-- REMOVED HAMBURGER MENU HERE -->
   </header>
 
   <main class="hero-section">
     <div class="hero-content">
       <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
       <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
+      
+      <!-- The Google Button -->
       <div id="google-btn-landing" class="google-wrapper"></div>
+      
       <p style="margin-top: 15px; font-size: 13px; color: var(--text-muted);">Sign in or create your account easily.</p>
     </div>
   </main>
@@ -146,7 +149,6 @@
     
     <div class="app-header">
       <h1>🎓 EduPoint AI</h1>
-      <!-- REMOVED HAMBURGER MENU HERE -->
       <a href="#" class="logout" onclick="logout()">Logout</a>
     </div>
 
@@ -297,16 +299,30 @@ let me = null;
 let pendingCalculation = null;
 let allResultsData = [];
 
+// ==========================================
+// GOOGLE AUTH INITIALIZATION (CALLED ON LOAD)
+// ==========================================
 function initAuth() {
-  if (typeof google === 'undefined') return;
+  if (typeof google === 'undefined') {
+    console.log("Google script failed to load.");
+    return;
+  }
+  
   google.accounts.id.initialize({
     client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
     callback: handleGoogleLogin
   });
+  
   const container = document.getElementById('google-btn-landing');
   if (container) {
-    container.innerHTML = '';
-    google.accounts.id.renderButton(container, { theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill" });
+    container.innerHTML = ''; // Clear any previous attempts
+    google.accounts.id.renderButton(container, { 
+      theme: "outline", 
+      size: "large", 
+      width: "300", 
+      text: "continue_with", 
+      shape: "pill" 
+    });
   }
 }
 
@@ -316,10 +332,13 @@ async function handleGoogleLogin(response) {
     setToken(res.token);
     location.reload();
   } catch (err) { 
-    alert(err.message); // This will now show the exact backend error!
+    alert(err.message); 
   }
 }
 
+// ==========================================
+// ROUTING & INIT
+// ==========================================
 async function init() {
   if (getToken()) {
     try {
@@ -331,7 +350,12 @@ async function init() {
     } catch (e) { clearToken(); }
   }
   showView("public");
-  initAuth();
+  
+  // Fallback: If Google script loaded before this file, init manually.
+  // (Normally handled by the onload attribute in the <head>)
+  if (typeof google !== 'undefined') {
+    initAuth();
+  }
 }
 init();
 
