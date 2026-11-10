@@ -353,5 +353,19 @@ def trigger_daily_reports():
     success = generate_and_send_reports()
     return jsonify(ok=True, message="Reports generated.") if success else jsonify(ok=False), 500
 
+@app.get("/api/test-invoice")
+def test_invoice():
+    u = {"name": "Brian Ondieki", "email": "brayondueki815@gmail.com", "id": 2}
+    payment = {
+        "transaction_id": "EDU-TEST123456",
+        "user_id": 2,
+        "amount": 100,
+        "status": "pending",
+        "created_at": datetime.now()
+    }
+    # Send email
+    send_pending_invoice_email(u["email"], u["name"], payment)
+    return jsonify(ok=True, message="Test invoice triggered! Check logs and Gmail.")
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
