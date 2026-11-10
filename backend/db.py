@@ -24,33 +24,6 @@ CREATE TABLE IF NOT EXISTS access(
     transaction_id TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE TABLE IF NOT EXISTS saved_courses(
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    course_name TEXT NOT NULL,
-    university TEXT NOT NULL,
-    cutoff NUMERIC(6,3),
-    UNIQUE(user_id, course_name, university)
-);
-CREATE TABLE IF NOT EXISTS student_cvs(
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    full_name TEXT,
-    email TEXT,
-    phone TEXT,
-    education TEXT,
-    skills TEXT,
-    experience TEXT,
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS quiz_results(
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    subject TEXT NOT NULL,
-    score INTEGER NOT NULL,
-    total INTEGER NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
 CREATE TABLE IF NOT EXISTS payments(
     id SERIAL PRIMARY KEY,
     transaction_id TEXT UNIQUE NOT NULL,
@@ -90,7 +63,7 @@ CREATE TABLE IF NOT EXISTS offers(
     button_text TEXT DEFAULT 'Grab This Offer',
     terms TEXT,
     visibility TEXT DEFAULT 'all',
-    status TEXT DEFAULT 'active', -- draft, active, paused
+    status TEXT DEFAULT 'active', 
     requires_approval BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -99,7 +72,7 @@ CREATE TABLE IF NOT EXISTS offer_claims(
     offer_id INTEGER REFERENCES offers(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     reference TEXT UNIQUE NOT NULL,
-    status TEXT DEFAULT 'approved', -- pending, approved, rejected, redeemed
+    status TEXT DEFAULT 'approved', 
     created_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(offer_id, user_id)
 );
@@ -135,10 +108,37 @@ CREATE TABLE IF NOT EXISTS student_scholarships(
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     scholarship_name TEXT NOT NULL,
-    status TEXT DEFAULT 'Discovered', -- Discovered, Interested, Preparing, Applied, Awarded, Rejected
+    status TEXT DEFAULT 'Discovered', 
     notes TEXT,
     updated_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(user_id, scholarship_name)
+);
+CREATE TABLE IF NOT EXISTS saved_courses(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    course_name TEXT NOT NULL,
+    university TEXT NOT NULL,
+    cutoff NUMERIC(6,3),
+    UNIQUE(user_id, course_name, university)
+);
+CREATE TABLE IF NOT EXISTS student_cvs(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    full_name TEXT,
+    email TEXT,
+    phone TEXT,
+    education TEXT,
+    skills TEXT,
+    experience TEXT,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS quiz_results(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    subject TEXT NOT NULL,
+    score INTEGER NOT NULL,
+    total INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 """
 
@@ -146,7 +146,6 @@ def connect():
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL is not set.")
     conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
-    # Create an isolated schema for EduPoint and set it as the default
     with conn.cursor() as cur:
         cur.execute("CREATE SCHEMA IF NOT EXISTS edupoint;")
         cur.execute("SET search_path TO edupoint;")
@@ -156,16 +155,4 @@ def connect():
 def init_db():
     with connect() as conn:
         with conn.cursor() as cur:
-            # 1. Create tables if they don't exist
             cur.execute(SCHEMA)
-            
-            # 2. Migration: Add 'credits' column if it's missing from existing tables
-            cur.execute("""
-                DO $$ 
-                BEGIN 
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                                   WHERE table_schema='edupoint' AND table_name='users' AND column_name='credits') THEN
-                        ALTER TABLE edupoint.users ADD COLUMN credits INTEGER NOT NULL DEFAULT 1;
-                    END IF;
-                END $$;
-            """)
