@@ -1,6 +1,7 @@
 import os
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -142,15 +143,31 @@ CREATE TABLE IF NOT EXISTS quiz_results(
 );
 """
 
-def connect():
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL is not set.")
-    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+def _configure_connection(conn):
+    """Automatically sets the schema every time a connection is used from the pool."""
     with conn.cursor() as cur:
         cur.execute("CREATE SCHEMA IF NOT EXISTS edupoint;")
         cur.execute("SET search_path TO edupoint;")
     conn.commit()
-    return conn
+
+# Initialize the Connection Pool once globally
+if DATABASE_URL:
+    pool = ConnectionPool(
+        DATABASE_URL,
+        min_size=1,
+        max_size=10,
+        kwargs={"row_factory": dict_row},
+        configure=_configure_connection
+    )
+    pool.wait() # Wait for the pool to establish initial connections
+else:
+    pool = None
+
+def connect():
+    if not pool:
+        raise RuntimeError("DATABASE_URL is not set or pool is not initialized.")
+    # Returns a context manager. When the 'with' block ends, the connection is returned to the pool automatically.
+    return pool.connection()
 
 def init_db():
     with connect() as conn:
