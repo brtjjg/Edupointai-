@@ -10,12 +10,12 @@
 <style>
   /* Base Dashboard Styles */
   body { background: #080916; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-  .container { width: min(100%, 800px); margin: auto; padding: 20px; }
+  .container { width: min(100%, 850px); margin: auto; padding: 15px; }
   
-  /* Header */
-  .top-banner { display: flex; justify-content: center; gap: 10px; padding: 15px 0; font-size: 12px; color: #4ade80; flex-wrap: wrap; }
+  /* Top Trust Banner */
+  .top-banner { display: flex; justify-content: center; gap: 8px; padding: 10px 0; font-size: 11px; color: #4ade80; flex-wrap: wrap; }
   .top-banner span { background: rgba(74,222,128,0.1); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3); }
-  
+
   /* Main Cards */
   .card { background: #111326; border: 1px solid #303451; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
   .card h2 { font-size: 20px; color: #73e8ff; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
@@ -23,59 +23,75 @@
   /* Calculator Form */
   .subject-row { display: flex; gap: 10px; margin-bottom: 10px; }
   .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #303451; border-radius: 8px; font-size: 14px; }
-  .subject-row select.grade { width: 100px; flex: none; }
-  .btn-calc { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+  .subject-row select.grade { width: 110px; flex: none; }
+  .btn-calc { width: 100%; padding: 16px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
   
-  /* Results Table */
-  .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-  .results-header h3 { margin: 0; color: #fff; }
-  .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #303451; }
+  /* Summary Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .stat-box { background: #111326; border: 1px solid #303451; padding: 15px 5px; border-radius: 12px; text-align: center; }
+  .stat-box h3 { margin: 0; font-size: 22px; }
+  .stat-box p { margin: 5px 0 0; font-size: 11px; color: #aab1ca; text-transform: uppercase; font-weight: bold; }
+  
+  /* Results Tables */
+  .table-header { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px; }
+  .table-header h3 { margin: 0; font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+  .badge-orange { background: rgba(251,191,36,0.1); color: #fbbf24; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+  
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #303451; margin-bottom: 20px; }
   table { width: 100%; border-collapse: collapse; min-width: 600px; }
-  th { background: #1a1c33; color: #73e8ff; padding: 12px; text-align: left; font-size: 13px; }
-  td { padding: 12px; border-bottom: 1px solid #2a2e4d; color: #e2e8f0; font-size: 14px; }
+  th { background: #1a1c33; color: #73e8ff; padding: 12px; text-align: left; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+  td { padding: 12px; border-bottom: 1px solid #2a2e4d; color: #e2e8f0; font-size: 13px; }
   tr:hover td { background: rgba(255,255,255,0.02); }
-  .status-q { color: #4ade80; font-weight: bold; }
-  .status-c { color: #fbbf24; font-weight: bold; }
-  .status-n { color: #ff7b7b; font-weight: bold; }
   
+  .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-block; }
+  .bg-q { background: rgba(74,222,128,0.1); color: #4ade80; }
+  .bg-c { background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .bg-n { background: rgba(255,123,123,0.1); color: #ff7b7b; }
+
+  /* Filter Input */
+  .filter-input { width: 100%; padding: 12px; background: #080a18; color: #fff; border: 1px solid #303451; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+
   /* AI Career Advisor */
   .chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .chip { background: #080a18; border: 1px solid #303451; color: #73e8ff; padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: 0.2s; }
   .chip:hover { border-color: #73e8ff; }
   
   /* Scholarship Finder */
-  .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
-  .input-group input { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #303451; border-radius: 8px; }
-  .btn-orange { width: 100%; padding: 12px; background: #f97316; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .input-row input { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #303451; border-radius: 8px; }
+  .btn-orange { width: 100%; padding: 14px; background: #f97316; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; }
   
   /* EduBot Chat */
-  .chat-box { background: #080a18; border: 1px solid #303451; border-radius: 12px; padding: 15px; margin-bottom: 10px; }
-  .chat-messages { height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 14px; color: #aab1ca; }
+  .chat-box { background: #080a18; border: 1px solid #303451; border-radius: 12px; padding: 15px; }
+  .chat-messages { height: 180px; overflow-y: auto; margin-bottom: 15px; font-size: 14px; color: #aab1ca; display: flex; flex-direction: column; gap: 10px; }
   .chat-input-row { display: flex; gap: 10px; }
-  .chat-input-row input { flex: 1; padding: 10px; background: #111326; color: #fff; border: 1px solid #303451; border-radius: 8px; }
+  .chat-input-row input { flex: 1; padding: 12px; background: #111326; color: #fff; border: 1px solid #303451; border-radius: 8px; }
   .btn-send { padding: 10px 20px; background: #73e8ff; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-  .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .quick-btn { background: rgba(115,232,255,0.1); border: 1px solid rgba(115,232,255,0.3); color: #73e8ff; padding: 5px 10px; border-radius: 15px; font-size: 12px; cursor: pointer; }
+  .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+  .quick-btn { background: rgba(115,232,255,0.1); border: 1px solid rgba(115,232,255,0.3); color: #73e8ff; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
   
-  /* Footer & Socials */
-  .social-row { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
-  .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #111326; color: #fff; text-decoration: none; }
+  /* Follow Us & Founder */
+  .social-row { display: flex; justify-content: center; gap: 12px; margin: 15px 0; flex-wrap: wrap; }
+  .social-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #111326; color: #fff; text-decoration: none; border: none; }
   .social-icon.whatsapp { background: #25D366; }
   .social-icon.linkedin { background: #0077B5; }
   .social-icon.instagram { background: #E1306C; }
   .social-icon.tiktok { background: #000; border: 1px solid #fff; }
   .social-icon.email { background: #EA4335; }
   
-  /* Modal */
-  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-  .modal-content { background: #111326; border: 1px solid #303451; border-radius: 16px; width: min(400px, 100%); padding: 25px; text-align: center; max-height: 90vh; overflow-y: auto; }
-  .modal-content h2 { color: #fff; margin-top: 0; }
-  .pesapal-box { border: 1px solid #73e8ff; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: center; background: rgba(115,232,255,0.05); }
-  .pesapal-box p { margin: 5px 0; color: #fff; font-size: 14px; }
-  .input-phone { width: 100%; padding: 12px; background: #080a18; border: 1px solid #303451; color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
-  .checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; font-size: 13px; color: #aab1ca; text-align: left; }
-  .btn-green { width: 100%; padding: 15px; background: #15803D; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+  .founder-card { border-color: #9b59ff; text-align: center; }
+  .founder-btn { background: transparent; border: 1px solid #73e8ff; color: #73e8ff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
+  
+  /* Payment Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .modal-content { background: #111326; border: 1px solid #303451; border-radius: 16px; width: min(420px, 100%); padding: 25px; text-align: center; max-height: 95vh; overflow-y: auto; }
+  .modal-content h2 { color: #fff; margin-top: 0; font-size: 22px; }
+  .pesapal-box { border: 1px solid #4ade80; border-radius: 10px; padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(74,222,128,0.05); }
+  .pesapal-box p { margin: 5px 0; color: #fff; }
+  .input-phone { width: 100%; padding: 14px; background: #080a18; border: 1px solid #303451; color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; font-size: 16px; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; font-size: 13px; color: #aab1ca; text-align: left; }
+  .btn-pay { width: 100%; padding: 16px; background: #15803D; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
   
   /* Floating Chat Widget */
   .floating-chat { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 999; }
@@ -86,16 +102,16 @@
 <div class="container">
   <!-- Top Trust Banner -->
   <div class="top-banner">
-    <span>✅ Secure Pesapal Payment</span>
+    <span>✅ Secure Payment</span>
     <span>⚡ Instant Results</span>
     <span>📚 Trusted by Students</span>
   </div>
 
   <!-- Header -->
   <div style="text-align: center; margin-bottom: 20px;">
-    <div style="font-size: 40px;">🎓</div>
-    <h1 style="margin: 10px 0 5px; font-size: 24px; color: #73e8ff;">EduPoint AI v10.0</h1>
-    <p style="color: #aab1ca; font-size: 14px;">Academic Helpdesk • KUCCPS Platform</p>
+    <div style="font-size: 45px; margin-bottom: 5px;">🎓</div>
+    <h1 style="margin: 0 0 5px; font-size: 24px; color: #73e8ff;">EduPoint AI v10.0</h1>
+    <p style="color: #aab1ca; font-size: 14px; margin: 0;">Academic Helpdesk • KUCCPS Platform</p>
   </div>
 
   <!-- Calculator Card -->
@@ -108,10 +124,68 @@
     <div id="calcStatusMsg" style="text-align: center; margin-top: 10px; font-weight: bold; color: #fbbf24;"></div>
   </div>
 
-  <!-- Results Card (Hidden initially) -->
-  <div class="card" id="resultsCard" style="display: none;">
-    <h2>📊 Your Results</h2>
-    <div id="resultsArea"></div>
+  <!-- Results Section (Hidden initially) -->
+  <div id="resultsSection" style="display: none;">
+    
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+      <div class="stat-box" style="grid-column: span 2;">
+        <h3 style="color: #73e8ff; font-size: 32px;" id="statPoints">30.857</h3>
+        <p>Your Cluster Points</p>
+      </div>
+      <div class="stat-box">
+        <h3 style="color: #4ade80;" id="statQualified">9</h3>
+        <p>✅ Qualified</p>
+      </div>
+      <div class="stat-box">
+        <h3 style="color: #fbbf24;" id="statClose">4</h3>
+        <p>⚠️ Close</p>
+      </div>
+      <div class="stat-box">
+        <h3 style="color: #ff7b7b;" id="statNot">50</h3>
+        <p>❌ Not</p>
+      </div>
+      <div class="stat-box">
+        <h3 style="color: #73e8ff;" id="statRate">14.3%</h3>
+        <p>Rate</p>
+      </div>
+    </div>
+
+    <!-- Qualified Courses -->
+    <div class="table-header">
+      <h3>✅ Courses You Qualify For</h3>
+      <span class="badge-green" id="badgeQual">0</span>
+    </div>
+    <div class="table-wrap">
+      <table id="qualifiedTable">
+        <thead><tr><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Close Matches -->
+    <div class="table-header">
+      <h3>⚠️ Close Matches</h3>
+      <span class="badge-orange" id="badgeClose">0</span>
+    </div>
+    <div class="table-wrap">
+      <table id="closeTable">
+        <thead><tr><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Full Course List -->
+    <div class="card">
+      <h2>📚 Courses Matching Your Points</h2>
+      <input type="text" class="filter-input" id="courseFilter" placeholder="🔍 Filter courses..." oninput="filterCourses()">
+      <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
+        <table id="allCoursesTable">
+          <thead><tr><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- AI Career Advisor Card -->
@@ -126,15 +200,15 @@
       <div class="chip" onclick="getCareerAdvice('Education')">📚 Education</div>
       <div class="chip" onclick="getCareerAdvice('Arts')">🎨 Arts</div>
     </div>
-    <div id="careerAdviceResult" style="margin-top: 15px; font-size: 14px; color: #4ade80;"></div>
+    <div id="careerAdviceResult" style="margin-top: 15px; font-size: 14px; color: #4ade80; line-height: 1.5;"></div>
   </div>
 
   <!-- Scholarship Finder Card -->
   <div class="card">
     <h2>💰 Scholarship Finder</h2>
     <p style="font-size: 13px; color: #aab1ca; margin-top: 0;">Find scholarships that match your GPA and intended major.</p>
-    <div class="input-group">
-      <input type="text" id="schMajor" placeholder="Intended major (e.g., Computer Scie)">
+    <div class="input-row">
+      <input type="text" id="schMajor" placeholder="Intended major">
       <input type="number" id="schGPA" placeholder="GPA (0-4.0)" step="0.1">
     </div>
     <button class="btn-orange" onclick="findScholarships()">🔍 Find Scholarships</button>
@@ -146,27 +220,28 @@
     <h2>💬 Ask EduBot (KUCCPS Assistant)</h2>
     <div class="chat-box">
       <div class="chat-messages" id="chatMessages">
-        <div style="margin-bottom: 10px;">👋 Hi! I'm EduBot. Ask me anything about KUCCPS – courses, cutoffs, requirements, transfers, or scholarships.</div>
+        <div style="color: #73e8ff;"><b>EduBot:</b></div>
+        <div>👋 Hi! I'm EduBot. Ask me anything about KUCCPS – courses, cutoffs, requirements, transfers, or scholarships.</div>
       </div>
       <div class="chat-input-row">
         <input type="text" id="chatInput" placeholder="Type your question here...">
         <button class="btn-send" onclick="sendChat()">Send</button>
       </div>
       <div class="quick-buttons">
-        <div class="quick-btn" onclick="sendQuick('What are cluster points?')">Cluster Points</div>
-        <div class="quick-btn" onclick="sendQuick('What courses can I do?')">My Courses</div>
-        <div class="quick-btn" onclick="sendQuick('Computer Science cutoff')">CS Cutoff</div>
-        <div class="quick-btn" onclick="sendQuick('Nursing B-')">Nursing B-</div>
-        <div class="quick-btn" onclick="sendQuick('Marketable courses')">Marketable</div>
-        <div class="quick-btn" onclick="sendQuick('HELB application')">HELB</div>
+        <div class="quick-btn" onclick="sendQuick('What are cluster points?')">📐 Cluster Points</div>
+        <div class="quick-btn" onclick="sendQuick('My Courses')">🎓 My Courses</div>
+        <div class="quick-btn" onclick="sendQuick('Computer Science cutoff')">💻 CS Cutoff</div>
+        <div class="quick-btn" onclick="sendQuick('Nursing B-')">🩺 Nursing B-</div>
+        <div class="quick-btn" onclick="sendQuick('Marketable courses')">📈 Marketable</div>
+        <div class="quick-btn" onclick="sendQuick('HELB application')">💰 HELB</div>
       </div>
     </div>
   </div>
 
-  <!-- Footer Section -->
+  <!-- Follow Us -->
   <div class="card" style="text-align: center;">
-    <h3 style="color: #73e8ff; margin-bottom: 10px;">📢 Follow Us For More Information</h3>
-    <p style="font-size: 12px; color: #aab1ca;">Get KUCCPS updates, course tips & career guidance</p>
+    <h3 style="color: #73e8ff; margin: 0 0 5px;">📢 Follow Us For More Information</h3>
+    <p style="font-size: 12px; color: #aab1ca; margin-top: 0;">Get KUCCPS updates, course tips & career guidance</p>
     <div class="social-row">
       <a href="https://wa.me/254114812308" target="_blank" class="social-icon whatsapp">💬</a>
       <a href="#" class="social-icon linkedin">in</a>
@@ -175,26 +250,27 @@
       <a href="mailto:academichelpdesk1@gmail.com" class="social-icon email">✉️</a>
     </div>
     <p style="font-size: 12px; color: #aab1ca; margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
+    <p style="font-size: 12px; color: #aab1ca; margin: 5px 0;">💬 WhatsApp: Join our community for instant updates</p>
   </div>
 
   <!-- Founder Section -->
-  <div class="card" style="text-align: center; border-color: #73e8ff;">
-    <div style="font-size: 40px;">👨‍💻</div>
-    <h3 style="color: #73e8ff; margin: 10px 0 5px;">Founder & CEO</h3>
-    <h2 style="color: #fff; margin: 5px 0;">Mr. Nex</h2>
-    <p style="color: #aab1ca; font-size: 13px;">Full Stack Developer • AI Systems Engineer</p>
-    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
-      <a href="tel:0114812308" style="background: #24306d; color: #fff; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 13px;">📞 Call</a>
-      <a href="mailto:academichelpdesk1@gmail.com" style="background: #24306d; color: #fff; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 13px;">📧 Email</a>
-      <a href="https://wa.me/254114812308" target="_blank" style="background: #25D366; color: #fff; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 13px;">💬 WhatsApp</a>
+  <div class="card founder-card">
+    <div style="font-size: 45px;">👨‍💻</div>
+    <h3 style="color: #9b59ff; margin: 10px 0 5px;">Founder & CEO</h3>
+    <h2 style="color: #fff; margin: 0 0 5px; font-size: 22px;">Mr. Nex</h2>
+    <p style="color: #aab1ca; font-size: 13px; margin-top: 0;">Full Stack Developer • AI Systems Engineer</p>
+    <div style="margin-top: 15px;">
+      <a href="tel:0114812308" class="founder-btn">📞 Call</a>
+      <a href="mailto:academichelpdesk1@gmail.com" class="founder-btn">📧 Email</a>
+      <a href="https://wa.me/254114812308" target="_blank" style="background: #25D366; color: #fff; border: none;" class="founder-btn">💬 WhatsApp</a>
     </div>
   </div>
 
   <!-- Footer -->
-  <div style="text-align: center; padding-bottom: 40px; color: #aab1ca; font-size: 12px;">
+  <div style="text-align: center; padding-bottom: 60px; color: #aab1ca; font-size: 12px;">
     <p>© 2026 EduPoint AI v10.0 · All Rights Reserved</p>
+    <p><a href="#" style="color: #73e8ff; text-decoration: none;">About Us</a> | <a href="#" style="color: #73e8ff; text-decoration: none;">Rules</a> | <a href="#" style="color: #73e8ff; text-decoration: none;">Terms</a> | <a href="#" style="color: #73e8ff; text-decoration: none;">Privacy</a></p>
   </div>
-
 </div>
 
 <!-- Floating Chat Widget -->
@@ -209,18 +285,18 @@
       <li>✓ Full cluster point calculation</li>
       <li>✓ Courses you qualify for with cutoff gaps</li>
       <li>✓ Universities you can join</li>
-      <li>✓ Admission chances</li>
+      <li>✓ Admission chances (qualified / close / not)</li>
       <li>✓ AI career recommendations</li>
-      <li>✓ Scholarship finder</li>
+      <li>✓ Scholarship finder (GPA + major)</li>
     </ul>
 
     <div class="pesapal-box">
       <p><b>Secure Checkout via Pesapal</b></p>
       <p>M-PESA, Airtel Money, T-Kash, or Card</p>
-      <p style="font-size: 20px; color: #4ade80; font-weight: bold; margin-top: 10px;">KES 100</p>
+      <p style="font-size: 24px; color: #4ade80; font-weight: bold; margin-top: 15px;">KES 100</p>
     </div>
 
-    <p style="font-size: 13px; color: #aab1ca; margin-bottom: 10px;">Enter your phone number (used for M-PESA/Airtel prompt)</p>
+    <p style="font-size: 13px; color: #aab1ca; margin-bottom: 10px;">Enter your phone number to receive the payment prompt</p>
     <input type="tel" class="input-phone" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678">
     
     <div class="checkbox-row">
@@ -228,8 +304,8 @@
       <label for="agreeCheck">I agree to the <a href="#" style="color: #73e8ff;">Terms & Conditions</a> and <a href="#" style="color: #73e8ff;">Privacy Policy</a></label>
     </div>
 
-    <button class="btn-green" id="payBtn" onclick="initiatePayment()">📱 Pay with Pesapal</button>
-    <div id="payMessage" style="color: #fbbf24; font-size: 13px; margin-top: 10px;"></div>
+    <button class="btn-pay" id="payBtn" onclick="initiatePayment()">📱 Pay with Pesapal</button>
+    <div id="payMessage" style="color: #fbbf24; font-size: 13px; margin-top: 15px;"></div>
     <button style="background: transparent; border: none; color: #aab1ca; margin-top: 15px; cursor: pointer; font-size: 13px;" onclick="closeModal()">Cancel</button>
   </div>
 </div>
@@ -271,6 +347,8 @@ function preventDuplicates() {
 // ==========================================
 // CALCULATE LOGIC
 // ==========================================
+let allResultsData = [];
+
 async function calculatePoints() {
   const subjects = {};
   const grades = {};
@@ -300,13 +378,13 @@ async function calculatePoints() {
       body: JSON.stringify({ subjects, grades })
     });
     
+    allResultsData = data.results;
     renderResults(data);
     btn.textContent = "⚡ Calculate Again";
     btn.disabled = false;
     
   } catch (err) {
     if (err.status === 402 || (err.data && err.data.code === "payment_required")) {
-      // Open Pesapal Modal
       document.getElementById("paymentModal").style.display = "flex";
       msg.textContent = "Payment required to calculate.";
     } else {
@@ -319,32 +397,79 @@ async function calculatePoints() {
 
 // Render Results
 function renderResults(data) {
-  const card = document.getElementById("resultsCard");
-  const area = document.getElementById("resultsArea");
-  card.style.display = "block";
+  document.getElementById("resultsSection").style.display = "block";
   
   const qualified = data.results.filter(r => r.match === "qualified");
   const close = data.results.filter(r => r.match === "close");
+  const not = data.results.filter(r => r.match === "not_qualified");
   
-  let html = `
-    <div class="results-header">
-      <h3>Your Cluster Points</h3>
-      <span class="badge-green">${data.cluster_points} Points</span>
-    </div>
-    <div class="table-wrap" style="margin-bottom: 20px;">
-      <table>
-        <thead><tr><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead>
-        <tbody>
-          ${qualified.map(c => `<tr><td>${c.n}</td><td>${c.u}</td><td>${c.c}</td><td class="status-q">+${c.difference.toFixed(1)}</td><td class="status-q">✅ Qualified</td></tr>`).join("")}
-          ${close.map(c => `<tr><td>${c.n}</td><td>${c.u}</td><td>${c.c}</td><td class="status-c">${c.difference.toFixed(1)}</td><td class="status-c">⚠️ Close</td></tr>`).join("")}
-        </tbody>
-      </table>
-    </div>
-    <p style="color: #4ade80; font-weight: bold;">✅ ${qualified.length} Courses You Qualify For</p>
-    <p style="color: #fbbf24; font-weight: bold;">⚠️ ${close.length} Close Matches</p>
-  `;
-  area.innerHTML = html;
-  card.scrollIntoView({ behavior: "smooth" });
+  // Summary Stats
+  document.getElementById("statPoints").textContent = data.cluster_points;
+  document.getElementById("statQualified").textContent = qualified.length;
+  document.getElementById("statClose").textContent = close.length;
+  document.getElementById("statNot").textContent = not.length;
+  
+  const total = data.results.length;
+  const rate = ((qualified.length / total) * 100).toFixed(1);
+  document.getElementById("statRate").textContent = rate + "%";
+  
+  // Badges
+  document.getElementById("badgeQual").textContent = qualified.length;
+  document.getElementById("badgeClose").textContent = close.length;
+  
+  // Tables
+  document.querySelector("#qualifiedTable tbody").innerHTML = qualified.map(c => `
+    <tr>
+      <td>${c.n}</td>
+      <td>${c.u}</td>
+      <td>${c.c}</td>
+      <td style="color: #4ade80;">+${c.difference.toFixed(1)}</td>
+      <td><span class="status-badge bg-q">✅ Qualified</span></td>
+    </tr>
+  `).join("");
+
+  document.querySelector("#closeTable tbody").innerHTML = close.map(c => `
+    <tr>
+      <td>${c.n}</td>
+      <td>${c.u}</td>
+      <td>${c.c}</td>
+      <td style="color: #fbbf24;">${c.difference.toFixed(1)}</td>
+      <td><span class="status-badge bg-c">⚠️ Close</span></td>
+    </tr>
+  `).join("");
+
+  // All courses table
+  renderAllCourses(allResultsData);
+  
+  // Scroll to results
+  document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
+}
+
+function renderAllCourses(data) {
+  const term = document.getElementById("courseFilter").value.toLowerCase();
+  const filtered = term ? data.filter(c => c.n.toLowerCase().includes(term) || c.u.toLowerCase().includes(term)) : data;
+  
+  document.querySelector("#allCoursesTable tbody").innerHTML = filtered.map((c, i) => {
+    let status = "❌ Not";
+    let color = "#ff7b7b";
+    let bg = "bg-n";
+    if (c.match === "qualified") { status = "✅ Qualified"; color = "#4ade80"; bg = "bg-q"; }
+    if (c.match === "close") { status = "⚠️ Close"; color = "#fbbf24"; bg = "bg-c"; }
+    
+    return `
+      <tr>
+        <td>${i+1}. ${c.n}</td>
+        <td>${c.u}</td>
+        <td>${c.c}</td>
+        <td style="color: ${color};">${c.difference > 0 ? "+" : ""}${c.difference.toFixed(1)}</td>
+        <td><span class="status-badge ${bg}">${status}</span></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function filterCourses() {
+  renderAllCourses(allResultsData);
 }
 
 // ==========================================
@@ -367,14 +492,12 @@ async function initiatePayment() {
   msg.textContent = "";
 
   try {
-    // 1. Create payment request with backend
     const j = await api("/api/payment/initiate", { 
       method: "POST", 
       body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone }) 
     });
 
     if (j.redirect_url) {
-      // 2. Open Pesapal popup window
       const w = 600, h = 700;
       const left = (screen.width/2)-(w/2);
       const top = (screen.height/2)-(h/2);
@@ -383,7 +506,6 @@ async function initiatePayment() {
       msg.innerHTML = '<span style="color:#fbbf24;">Waiting for payment confirmation... Do not close this tab.</span>';
       btn.textContent = "Waiting for Payment...";
       
-      // 3. Poll backend to check if payment succeeded
       let n = 0;
       const t = setInterval(async () => {
         n++;
@@ -425,14 +547,14 @@ function closeModal() {
 // ==========================================
 function getCareerAdvice(field) {
   const advice = {
-    "Medicine": "Top courses: Medicine, Pharmacy, Nursing. Requires strong sciences.",
-    "Technology": "Top courses: Computer Science, IT, Software Engineering. High demand.",
+    "Medicine": "Top courses: Medicine, Pharmacy, Nursing. Requires strong sciences (Biology, Chemistry, Physics).",
+    "Technology": "Top courses: Computer Science, IT, Software Engineering. High demand in the job market.",
     "Engineering": "Top courses: Civil, Electrical, Mechanical. Strong math & physics needed.",
-    "Business": "Top courses: Commerce, Economics, Actuarial Science. Good with numbers.",
-    "Education": "Top courses: Education (Arts/Science). Rewarding career.",
-    "Arts": "Top courses: Law, Journalism, Psychology. Good communication skills."
+    "Business": "Top courses: Commerce, Economics, Actuarial Science. Good with numbers and analytical thinking.",
+    "Education": "Top courses: Education (Arts/Science). Rewarding career shaping future generations.",
+    "Arts": "Top courses: Law, Journalism, Psychology. Good communication and writing skills required."
   };
-  document.getElementById("careerAdviceResult").textContent = advice[field] || "Select an interest to get advice.";
+  document.getElementById("careerAdviceResult").innerHTML = `<b>${field}:</b> ${advice[field] || "Select an interest to get advice."}`;
 }
 
 // ==========================================
@@ -452,6 +574,7 @@ function findScholarships() {
   
   setTimeout(() => {
     resultsDiv.innerHTML = `
+      <p style="color: #4ade80; font-weight: bold; margin-bottom: 10px;">✅ 3 scholarships found</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Scholarship</th><th>Amount</th><th>Min GPA</th><th>Eligibility</th></tr></thead>
@@ -480,18 +603,18 @@ function sendChat() {
   if (!msg) return;
   
   const messages = document.getElementById("chatMessages");
-  messages.innerHTML += `<div style="margin-bottom: 10px; color: #73e8ff;"><b>You:</b> ${msg}</div>`;
+  messages.innerHTML += `<div style="color: #73e8ff; margin-top: 10px;"><b>You:</b></div><div>${msg}</div>`;
   input.value = "";
   messages.scrollTop = messages.scrollHeight;
 
   setTimeout(() => {
-    let reply = "I'm still learning! Try asking about specific courses or cutoffs.";
+    let reply = "I'm still learning! Try asking about specific courses, cutoffs, or HELB.";
     if (msg.toLowerCase().includes("cluster")) reply = "Cluster points are calculated using your best 7 subjects. Use the calculator above to find yours!";
     if (msg.toLowerCase().includes("nursing")) reply = "Nursing cutoffs: UoN 43.6, Maseno 42.5, Moi 42.3. A B- (8 points) can qualify if your overall cluster meets the cutoff.";
     if (msg.toLowerCase().includes("computer")) reply = "Computer Science cutoffs: UoN 44.8, JKUAT 44.1, Kenyatta 43.4. Strong math grades are essential.";
     if (msg.toLowerCase().includes("helb")) reply = "You can apply for HELB after getting your admission letter. Visit helb.co.ke for details.";
     
-    messages.innerHTML += `<div style="margin-bottom: 10px; color: #4ade80;"><b>EduBot:</b> ${reply}</div>`;
+    messages.innerHTML += `<div style="color: #4ade80; margin-top: 10px;"><b>EduBot:</b></div><div>${reply}</div>`;
     messages.scrollTop = messages.scrollHeight;
   }, 800);
 }
