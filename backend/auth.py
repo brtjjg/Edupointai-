@@ -10,12 +10,10 @@ from db import connect
 
 SESSION_DAYS = int(os.getenv("SESSION_DAYS", "30"))
 
-
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 200_000).hex()
     return salt + "$" + digest
-
 
 def verify_password(password: str, stored: str) -> bool:
     try:
@@ -24,7 +22,6 @@ def verify_password(password: str, stored: str) -> bool:
         return hmac.compare_digest(candidate, digest)
     except Exception:
         return False
-
 
 def create_session(user_id: int) -> str:
     token = secrets.token_urlsafe(32)
@@ -36,11 +33,9 @@ def create_session(user_id: int) -> str:
         )
     return token
 
-
 def destroy_session(token: str):
     with connect() as conn:
         conn.execute("DELETE FROM sessions WHERE token=%s", (token,))
-
 
 def bearer_token() -> str | None:
     header = request.headers.get("Authorization", "")
@@ -48,7 +43,6 @@ def bearer_token() -> str | None:
         return None
     token = header[7:].strip()
     return token or None
-
 
 def current_user():
     token = bearer_token()
@@ -63,7 +57,6 @@ def current_user():
         ).fetchone()
     return row
 
-
 def public_user(u):
     return {
         "id": u["id"],
@@ -75,7 +68,6 @@ def public_user(u):
         "active": bool(u["active"]),
     }
 
-
 def login_required(fn):
     @wraps(fn)
     def wrapper(*a, **kw):
@@ -83,7 +75,6 @@ def login_required(fn):
             return jsonify(ok=False, error="Login required."), 401
         return fn(*a, **kw)
     return wrapper
-
 
 def admin_required(fn):
     @wraps(fn)
