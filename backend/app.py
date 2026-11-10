@@ -367,5 +367,35 @@ def test_invoice():
     send_pending_invoice_email(u["email"], u["name"], payment)
     return jsonify(ok=True, message="Test invoice triggered! Check logs and Gmail.")
 
+# ==========================================
+# GLOBAL ERROR HANDLERS (Add before if __name__)
+# ==========================================
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify(ok=False, error="The requested resource was not found."), 404
+
+@app.errorhandler(405)
+def method_not_allowed_error(error):
+    return jsonify(ok=False, error="Method not allowed."), 405
+
+@app.errorhandler(500)
+def internal_error(error):
+    # Log the actual error to Render logs for debugging
+    logger.error(f"Internal Server Error: {traceback.format_exc()}")
+    return jsonify(ok=False, error="A system error occurred. Please try again later."), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Pass through HTTP errors (like 401 Unauthorized)
+    if isinstance(e, HTTPException):
+        return jsonify(ok=False, error=e.description), e.code
+    
+    # Log the actual Python error to Render logs
+    logger.error(f"Unhandled Exception: {traceback.format_exc()}")
+    
+    # Return a safe message to the user
+    return jsonify(ok=False, error="An unexpected error occurred. Please contact support."), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
