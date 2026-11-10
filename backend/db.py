@@ -18,11 +18,39 @@ CREATE TABLE IF NOT EXISTS users(
     credits INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS access(
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    paid INTEGER NOT NULL DEFAULT 0,
+    plan TEXT,
+    transaction_id TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS payments(
+    id SERIAL PRIMARY KEY,
+    transaction_id TEXT UNIQUE NOT NULL,
+    user_id INTEGER,
+    provider_reference TEXT,
+    phone TEXT NOT NULL,
+    network TEXT NOT NULL,
+    amount NUMERIC(12,2) NOT NULL,
+    plan TEXT NOT NULL,
+    status TEXT NOT NULL,
+    message TEXT,
+    redirect_url TEXT,
+    calculation_data JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS payments_provider_ref ON payments(provider_reference);
 CREATE TABLE IF NOT EXISTS sessions(
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at TIMESTAMPTZ NOT NULL
+);
+CREATE TABLE IF NOT EXISTS settings(
+    key TEXT PRIMARY KEY,
+    value TEXT
 );
 CREATE TABLE IF NOT EXISTS calculation_history(
     id SERIAL PRIMARY KEY,
@@ -45,22 +73,6 @@ CREATE TABLE IF NOT EXISTS calculation_courses(
     cutoff NUMERIC(6,3),
     difference NUMERIC(6,3),
     match_type TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS payments(
-    id SERIAL PRIMARY KEY,
-    transaction_id TEXT UNIQUE NOT NULL,
-    user_id INTEGER,
-    provider_reference TEXT,
-    phone TEXT NOT NULL,
-    network TEXT NOT NULL,
-    amount NUMERIC(12,2) NOT NULL,
-    plan TEXT NOT NULL,
-    status TEXT NOT NULL,
-    message TEXT,
-    redirect_url TEXT,
-    calculation_data JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
 
@@ -91,3 +103,12 @@ def init_db():
     with connect() as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
+            cur.execute("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                   WHERE table_schema='edupoint' AND table_name='payments' AND column_name='calculation_data') THEN
+                        ALTER TABLE edupoint.payments ADD COLUMN calculation_data JSONB;
+                    END IF;
+                END $$;
+            """)
