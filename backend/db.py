@@ -1,7 +1,6 @@
 import os
 import psycopg
 from psycopg.rows import dict_row
-from psycopg_pool import ConnectionPool
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -76,32 +75,15 @@ CREATE TABLE IF NOT EXISTS calculation_courses(
 );
 """
 
-def _configure_connection(conn):
+def connect():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not set.")
+    conn = psycopg.connect(DATABASE_URL, row_factory=dict_row, connect_timeout=5)
     with conn.cursor() as cur:
         cur.execute("CREATE SCHEMA IF NOT EXISTS edupoint;")
         cur.execute("SET search_path TO edupoint;")
     conn.commit()
-
-if DATABASE_URL:
-    # Added check=ConnectionPool.check_connection to verify connections before use
-    # Reduced max_size to 5 to prevent Render DB exhaustion
-    pool = ConnectionPool(
-        DATABASE_URL,
-        min_size=1,
-        max_size=5,
-        timeout=10,
-        kwargs={"row_factory": dict_row, "connect_timeout": 5},
-        configure=_configure_connection,
-        check=ConnectionPool.check_connection 
-    )
-    pool.wait()
-else:
-    pool = None
-
-def connect():
-    if not pool:
-        raise RuntimeError("DATABASE_URL is not set or pool is not initialized.")
-    return pool.connection()
+    return conn
 
 def init_db():
     with connect() as conn:
