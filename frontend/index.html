@@ -7,59 +7,41 @@
 <title>EduPoint AI - Your Education. Your Future.</title>
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- FIX: Added onload="initAuth()" to trigger the button render exactly when the script is ready -->
 <script src="https://accounts.google.com/gsi/client" onload="initAuth()" async defer></script>
 <style>
-  /* --- GLOBAL THEME --- */
-  :root {
-    --navy: #05081c;
-    --card-bg: #0f1430;
-    --cyan: #00d4ff;
-    --purple: #8a2be2;
-    --gold: #ffd700;
-    --text-light: #e2e8f0;
-    --text-muted: #94a3b8;
-  }
+  :root { --navy: #05081c; --card-bg: #0f1430; --cyan: #00d4ff; --purple: #8a2be2; --gold: #ffd700; --text-light: #e2e8f0; --text-muted: #94a3b8; }
   body { background: var(--navy); color: var(--text-light); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-  
-  /* --- VIEW ROUTING --- */
   .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; }
   .view.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* --- LANDING PAGE --- */
+  /* LANDING */
   .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
   .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; }
-  
   .hero-section { position: relative; padding: 140px 20px 60px; max-width: 800px; margin: 0 auto; text-align: center; }
   .hero-content h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.1; margin-bottom: 20px; }
   .hero-content h1 span { color: var(--cyan); }
   .hero-content h1 .gold { color: var(--gold); }
   .hero-content p { font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
   .google-wrapper { display: flex; justify-content: center; margin: 30px 0; min-height: 50px; }
-
   .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
   .feature-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   .feature-icon { font-size: 40px; margin-bottom: 15px; display: inline-block; padding: 15px; background: rgba(0,212,255,0.1); border-radius: 50%; }
   .feature-card h3 { color: #fff; margin: 0 0 10px; font-size: 20px; }
   .feature-card p { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
-  .journey-section { text-align: center; padding: 60px 20px; background: linear-gradient(180deg, transparent, rgba(138,43,226,0.1)); }
 
-  /* --- STUDENT DASHBOARD (Scrolling Layout) --- */
+  /* DASHBOARD */
   .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
   .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
   .app-header h1 { font-size: 22px; margin: 0; }
   .app-header .logout { color: var(--text-muted); text-decoration: none; font-size: 14px; }
-
   .card { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
   .card-title { color: var(--cyan); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
-
-  /* Inputs */
   .subject-row { display: flex; gap: 10px; margin-bottom: 10px; }
   .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
   .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-
-  /* Summary Stats */
+  
+  /* RESULTS */
   .summary-banner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
   .summary-banner h2 { font-size: 42px; color: var(--cyan); margin: 0 0 5px 0; }
   .summary-banner p { color: var(--text-muted); margin: 0; font-size: 14px; }
@@ -67,10 +49,7 @@
   .stat-box { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; }
   .stat-box h3 { margin: 0 0 5px 0; font-size: 24px; }
   .stat-box p { margin: 0; font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
-  .stat-qual { color: #4ade80; } .stat-close { color: #fbbf24; }
-  .stat-not { color: #ff7b7b; } .stat-rate { color: var(--cyan); }
-
-  /* Tables */
+  .stat-qual { color: #4ade80; } .stat-close { color: #fbbf24; } .stat-not { color: #ff7b7b; } .stat-rate { color: var(--cyan); }
   .table-wrap { overflow-x: auto; margin-bottom: 20px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { color: var(--cyan); text-align: left; padding: 10px; border-bottom: 1px solid #2a324b; font-weight: 600; }
@@ -81,59 +60,42 @@
   .badge-red { background: rgba(255,123,123,0.1); color: #ff7b7b; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
 
-  /* AI Career Advisor */
+  /* OTHER TOOLS */
   .chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .chip { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
-  
-  /* Scholarship Finder */
   .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
   .input-group input { flex: 1; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
   .btn-orange { width: 100%; padding: 14px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-
-  /* EduBot Chat */
   .chat-box { background: #080a18; border: 1px solid #2a324b; border-radius: 12px; padding: 15px; }
   .chat-input-row { display: flex; gap: 10px; margin-top: 15px; }
   .chat-input-row input { flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
   .btn-send { background: linear-gradient(90deg, #19c8ff, #9b59ff); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
   .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-
-  /* Socials & Founder */
   .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
   .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; text-decoration: none; }
   .bg-wa { background: #25D366; } .bg-li { background: #0077B5; } .bg-ig { background: #E1306C; } .bg-tt { background: #000; border: 1px solid #fff; } .bg-mail { background: #EA4335; }
   .founder-card { border: 1px solid #8a2be2; text-align: center; }
   .btn-founder { background: transparent; border: 1px solid var(--text-muted); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
-  
   .floating-chat { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 999; }
-
-  /* Modal */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
   .modal-content { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; width: min(450px, 100%); padding: 25px; text-align: center; }
 </style>
 </head>
 <body>
 
-<!-- ========================================== -->
-<!-- 1. PUBLIC LANDING PAGE                     -->
-<!-- ========================================== -->
 <div id="view-public" class="view active">
   <header class="header">
     <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
   </header>
-
   <main class="hero-section">
     <div class="hero-content">
       <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
       <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
-      
-      <!-- The Google Button -->
       <div id="google-btn-landing" class="google-wrapper"></div>
-      
       <p style="margin-top: 15px; font-size: 13px; color: var(--text-muted);">Sign in or create your account easily.</p>
     </div>
   </main>
-
   <section class="features-grid">
     <div class="feature-card"><div class="feature-icon">🧮</div><h3>KCSE Calculator</h3><p>Calculate cluster points instantly and accurately based on your KCSE grades.</p></div>
     <div class="feature-card"><div class="feature-icon">🎓</div><h3>Course Matching</h3><p>Discover university courses based on your academic results and cutoff points.</p></div>
@@ -141,18 +103,12 @@
   </section>
 </div>
 
-<!-- ========================================== -->
-<!-- 2. STUDENT DASHBOARD (Scrolling Layout)    -->
-<!-- ========================================== -->
 <div id="view-student" class="view">
   <div class="app-container">
-    
     <div class="app-header">
       <h1>🎓 EduPoint AI</h1>
       <a href="#" class="logout" onclick="logout()">Logout</a>
     </div>
-
-    <!-- Calculator Input -->
     <div class="card">
       <div class="card-title">📋 Enter Your 7 KCSE Subjects</div>
       <div id="subjectList"></div>
@@ -160,7 +116,6 @@
       <div id="calcMessage" style="text-align: center; margin-top: 10px; font-size: 13px; color: #fbbf24;"></div>
     </div>
 
-    <!-- Results Section (Hidden until payment succeeds) -->
     <div id="resultsSection" style="display: none;">
       <div class="summary-banner">
         <h2 id="resPoints">0.000</h2>
@@ -172,21 +127,14 @@
         <div class="stat-box"><h3 class="stat-not" id="resNot">0</h3><p>❌ Not</p></div>
         <div class="stat-box"><h3 class="stat-rate" id="resRate">0%</h3><p>Rate</p></div>
       </div>
-
       <div class="card">
         <div class="card-title" style="color: #4ade80;">✅ <span id="qualCountTitle">0</span> Courses You Qualify For</div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="qualifiedTableBody"></tbody></table>
-        </div>
+        <div class="table-wrap"><table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="qualifiedTableBody"></tbody></table></div>
       </div>
-
       <div class="card">
         <div class="card-title" style="color: #fbbf24;">⚠️ <span id="closeCountTitle">0</span> Close Matches</div>
-        <div class="table-wrap">
-          <table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="closeTableBody"></tbody></table>
-        </div>
+        <div class="table-wrap"><table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="closeTableBody"></tbody></table></div>
       </div>
-
       <div class="card">
         <div class="card-title">📚 Courses Matching Your Points</div>
         <input type="text" class="filter-input" id="courseFilter" placeholder="🔍 Filter courses..." oninput="filterCourses()">
@@ -269,23 +217,19 @@
       <p>© 2026 EduPoint AI v10.0 · All Rights Reserved</p>
       <p><a href="#" style="color: var(--cyan); text-decoration: none;">About Us</a> | <a href="#" style="color: var(--cyan); text-decoration: none;">Rules</a> | <a href="#" style="color: var(--cyan); text-decoration: none;">Terms</a> | <a href="#" style="color: var(--cyan); text-decoration: none;">Privacy</a></p>
     </div>
-
   </div>
 </div>
 
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
-<!-- PAYMENT MODAL -->
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-content">
     <h2 style="color: #fff; margin-top: 0;">Unlock Results</h2>
     <p style="color: var(--text-muted); font-size: 14px;">Pay securely via Pesapal to view your results and receive a PDF copy.</p>
-    
     <div style="border: 1px solid #4ade80; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <p><b>M-PESA, Airtel, T-Kash, Card</b></p>
       <p style="font-size: 24px; color: #4ade80; font-weight: bold; margin-top: 10px;">KES 100</p>
     </div>
-
     <input type="tel" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678" style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #2a324b; background:#080a18; color:#fff;">
     <button class="btn-primary" id="payBtn" onclick="initiatePayment()">📱 Pay with Pesapal</button>
     <div id="payMessage" style="color: #fbbf24; font-size: 13px; margin-top: 15px;"></div>
@@ -299,30 +243,16 @@ let me = null;
 let pendingCalculation = null;
 let allResultsData = [];
 
-// ==========================================
-// GOOGLE AUTH INITIALIZATION (CALLED ON LOAD)
-// ==========================================
 function initAuth() {
-  if (typeof google === 'undefined') {
-    console.log("Google script failed to load.");
-    return;
-  }
-  
+  if (typeof google === 'undefined') return;
   google.accounts.id.initialize({
     client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
     callback: handleGoogleLogin
   });
-  
   const container = document.getElementById('google-btn-landing');
   if (container) {
-    container.innerHTML = ''; // Clear any previous attempts
-    google.accounts.id.renderButton(container, { 
-      theme: "outline", 
-      size: "large", 
-      width: "300", 
-      text: "continue_with", 
-      shape: "pill" 
-    });
+    container.innerHTML = '';
+    google.accounts.id.renderButton(container, { theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill" });
   }
 }
 
@@ -331,14 +261,9 @@ async function handleGoogleLogin(response) {
     const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
     setToken(res.token);
     location.reload();
-  } catch (err) { 
-    alert(err.message); 
-  }
+  } catch (err) { alert(err.message); }
 }
 
-// ==========================================
-// ROUTING & INIT
-// ==========================================
 async function init() {
   if (getToken()) {
     try {
@@ -350,12 +275,7 @@ async function init() {
     } catch (e) { clearToken(); }
   }
   showView("public");
-  
-  // Fallback: If Google script loaded before this file, init manually.
-  // (Normally handled by the onload attribute in the <head>)
-  if (typeof google !== 'undefined') {
-    initAuth();
-  }
+  if (typeof google !== 'undefined') initAuth();
 }
 init();
 
@@ -414,17 +334,23 @@ async function initiatePayment() {
   const btn = document.getElementById("payBtn");
   const msg = document.getElementById("payMessage");
   const phone = document.getElementById("phoneInput").value;
-  btn.disabled = true; btn.textContent = "Connecting to Pesapal...";
+  
+  btn.disabled = true; 
+  btn.textContent = "Connecting to Pesapal...";
+  msg.textContent = "";
 
   try {
     const j = await api("/api/payment/initiate", { 
       method: "POST", 
-      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone, subjects: pendingCalculation.subjects, grades: pendingCalculation.grades }) 
+      body: JSON.stringify({ 
+        plan: "standard", provider: "pesapal", phone: phone, 
+        subjects: pendingCalculation.subjects, grades: pendingCalculation.grades 
+      }) 
     });
 
     if (j.redirect_url) {
       window.open(j.redirect_url, 'Pesapal Payment', `width=600,height=700`);
-      msg.innerHTML = 'Waiting for payment confirmation...';
+      msg.innerHTML = '<span style="color:#fbbf24;">Waiting for payment confirmation...</span>';
       btn.textContent = "Waiting for Payment...";
       
       let n = 0;
@@ -438,7 +364,9 @@ async function initiatePayment() {
       }, 3000);
     }
   } catch (err) {
-    msg.textContent = err.message; btn.disabled = false; btn.textContent = "📱 Pay with Pesapal";
+    msg.textContent = err.message; 
+    btn.disabled = false; 
+    btn.textContent = "📱 Pay with Pesapal";
   }
 }
 
