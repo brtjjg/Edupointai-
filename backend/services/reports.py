@@ -22,15 +22,12 @@ logger = logging.getLogger(__name__)
 nairobi_tz = pytz.timezone('Africa/Nairobi')
 now_nairobi = datetime.now(nairobi_tz)
 today_str = now_nairobi.strftime("%Y-%m-%d")
-timestamp_str = now_nairobi.strftime("%Y%m%d_%H%M%S")
 
 def create_excel(data, headers, title):
-    """Helper to create an Excel file in memory"""
     wb = Workbook()
     ws = wb.active
     ws.title = title
 
-    # Style headers
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     
@@ -40,12 +37,10 @@ def create_excel(data, headers, title):
         cell.fill = header_fill
         cell.alignment = Alignment(horizontal="center")
 
-    # Add data
     for row_num, row_data in enumerate(data, 2):
         for col_num, value in enumerate(row_data, 1):
             ws.cell(row=row_num, column=col_num, value=value)
 
-    # Auto-adjust column widths
     for col in ws.columns:
         max_length = 0
         column = col[0].column_letter
@@ -64,7 +59,6 @@ def create_excel(data, headers, title):
     return buffer
 
 def create_pdf(title, headers, data, summary_text):
-    """Helper to create a PDF report in memory"""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
     story = []
@@ -101,16 +95,11 @@ def create_pdf(title, headers, data, summary_text):
     return buffer
 
 def generate_and_send_reports():
-    """Main function to query DB, generate reports, and email them."""
     try:
         with connect() as conn:
-            # 1. Fetch Student Enrollments
             users = conn.execute("SELECT id, name, email, phone, credits, created_at FROM users WHERE role = 'student' ORDER BY id DESC").fetchall()
-            
-            # 2. Fetch Payments
             payments = conn.execute("SELECT transaction_id, user_id, amount, plan, status, created_at FROM payments ORDER BY created_at DESC").fetchall()
 
-        # --- Process Data for Excel ---
         enrollment_data = []
         for u in users:
             local_time = u["created_at"].astimezone(nairobi_tz).strftime("%Y-%m-%d %H:%M")
@@ -133,27 +122,23 @@ def generate_and_send_reports():
             ["Total Registered Students", len(users)],
             ["Total Successful Payments", successful_payments],
             ["Total Lifetime Revenue", f"KES {total_revenue:,.2f}"],
-            ["Daily Revenue (Today)", f"KES {total_revenue:,.2f}"], # Simplified for now
             ["Net Revenue", f"KES {total_revenue:,.2f}"]
         ]
 
-        # --- Generate Excel Files ---
         ex1 = create_excel(enrollment_data, ["ID", "Name", "Email", "Phone", "Credits", "Enrollment Date", "Status"], "Enrollments")
         ex2 = create_excel(revenue_data, ["TxID", "User ID", "Plan", "Amount", "Currency", "Method", "Status", "Date"], "Revenue")
         ex3 = create_excel(summary_data, ["Metric", "Value"], "Summary")
 
-        # --- Generate PDF Files ---
         pdf1 = create_pdf("Student Enrollments Report", ["ID", "Name", "Email", "Enrolled On"], [r[:4] for r in enrollment_data[:50]], f"Total Students: {len(users)}")
         pdf2 = create_pdf("Revenue & Payments Report", ["TxID", "User", "Amount", "Status"], [r[:4] for r in revenue_data[:50]], f"Total Revenue: KES {total_revenue:,.2f}")
 
-        # --- Prepare Brevo Email ---
         api_key = os.getenv("BREVO_API_KEY")
         sender_email = os.getenv("SENDER_EMAIL")
         admin_email = os.getenv("ADMIN_EMAIL", "brayondueki815@gmail.com")
         
         if not api_key or not sender_email:
-            logger.warning("Brevo credentials missing. Cannot send reports.")
-            return
+            logger.warning("Brevo credentials missing.")
+            return False
 
         def to_b64(buf): return base64.b64encode(buf.getvalue()).decode('utf-8')
 
