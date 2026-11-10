@@ -6,15 +6,18 @@
 <meta name="theme-color" content="#080916">
 <title>EduPoint AI v10.0</title>
 <link rel="stylesheet" href="/css/style.css">
-<script src="/js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   /* Base Dashboard Styles */
   body { background: #080916; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
   .container { width: min(100%, 850px); margin: auto; padding: 15px; }
   
-  /* Top Trust Banner */
-  .top-banner { display: flex; justify-content: center; gap: 8px; padding: 10px 0; font-size: 11px; color: #4ade80; flex-wrap: wrap; }
-  .top-banner span { background: rgba(74,222,128,0.1); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3); }
+  /* Top Navigation */
+  .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0b0d1d; border-bottom: 1px solid #303451; }
+  .top-nav .brand { font-size: 18px; font-weight: bold; color: #fff; }
+  .top-nav .btn-login { background: #24306d; color: #fff; border: 1px solid #5c6cff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+  .top-nav .btn-login:hover { background: #5c6cff; }
 
   /* Main Cards */
   .card { background: #111326; border: 1px solid #303451; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
@@ -83,10 +86,19 @@
   .founder-card { border-color: #9b59ff; text-align: center; }
   .founder-btn { background: transparent; border: 1px solid #73e8ff; color: #73e8ff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
   
-  /* Payment Modal */
+  /* Modals */
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
   .modal-content { background: #111326; border: 1px solid #303451; border-radius: 16px; width: min(420px, 100%); padding: 25px; text-align: center; max-height: 95vh; overflow-y: auto; }
   .modal-content h2 { color: #fff; margin-top: 0; font-size: 22px; }
+  
+  /* Auth Modal Specific */
+  #authModal .modal-content { padding: 40px 30px; }
+  #authModal .brand { font-size: 24px; margin-bottom: 10px; }
+  #authModal h2 { font-size: 24px; margin-bottom: 10px; }
+  #authModal p { color: #aab1ca; margin-bottom: 30px; }
+  .btn-close-modal { background: transparent; border: none; color: #aab1ca; margin-top: 20px; cursor: pointer; font-size: 13px; text-decoration: underline; }
+
+  /* Pesapal Modal Specific */
   .pesapal-box { border: 1px solid #4ade80; border-radius: 10px; padding: 20px; margin-bottom: 20px; text-align: center; background: rgba(74,222,128,0.05); }
   .pesapal-box p { margin: 5px 0; color: #fff; }
   .input-phone { width: 100%; padding: 14px; background: #080a18; border: 1px solid #303451; color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; font-size: 16px; }
@@ -99,19 +111,28 @@
 </head>
 <body>
 
-<div class="container">
-  <!-- Top Trust Banner -->
-  <div class="top-banner">
-    <span>✅ Secure Payment</span>
-    <span>⚡ Instant Results</span>
-    <span>📚 Trusted by Students</span>
+<!-- Top Navigation -->
+<div class="top-nav">
+  <div class="brand">🎓 EduPoint AI</div>
+  <div id="navActions">
+    <!-- Injected by JS based on auth state -->
+    <button class="btn-login" onclick="showAuthModal()">Login / Sign Up</button>
   </div>
+</div>
 
+<div class="container">
   <!-- Header -->
-  <div style="text-align: center; margin-bottom: 20px;">
+  <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
     <div style="font-size: 45px; margin-bottom: 5px;">🎓</div>
     <h1 style="margin: 0 0 5px; font-size: 24px; color: #73e8ff;">EduPoint AI v10.0</h1>
     <p style="color: #aab1ca; font-size: 14px; margin: 0;">Academic Helpdesk • KUCCPS Platform</p>
+  </div>
+
+  <!-- Top Trust Banner -->
+  <div class="top-banner" style="display: flex; justify-content: center; gap: 8px; padding: 10px 0; font-size: 11px; color: #4ade80; flex-wrap: wrap;">
+    <span style="background: rgba(74,222,128,0.1); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3);">✅ Secure Payment</span>
+    <span style="background: rgba(74,222,128,0.1); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3);">⚡ Instant Results</span>
+    <span style="background: rgba(74,222,128,0.1); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3);">📚 Trusted by Students</span>
   </div>
 
   <!-- Calculator Card -->
@@ -250,7 +271,6 @@
       <a href="mailto:academichelpdesk1@gmail.com" class="social-icon email">✉️</a>
     </div>
     <p style="font-size: 12px; color: #aab1ca; margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
-    <p style="font-size: 12px; color: #aab1ca; margin: 5px 0;">💬 WhatsApp: Join our community for instant updates</p>
   </div>
 
   <!-- Founder Section -->
@@ -276,7 +296,20 @@
 <!-- Floating Chat Widget -->
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
-<!-- Payment Modal -->
+<!-- Auth Modal (Google Login) -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-content">
+    <div class="brand">🎓 EduPoint AI</div>
+    <h2>Welcome</h2>
+    <p>Login or create an account instantly with Google to start calculating.</p>
+    
+    <div id="google-btn-container" style="display: flex; justify-content: center; min-height: 50px;"></div>
+    
+    <button class="btn-close-modal" onclick="closeAuthModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Payment Modal (Pesapal) -->
 <div class="modal-overlay" id="paymentModal">
   <div class="modal-content">
     <h2>Unlock Premium Features</h2>
@@ -285,9 +318,9 @@
       <li>✓ Full cluster point calculation</li>
       <li>✓ Courses you qualify for with cutoff gaps</li>
       <li>✓ Universities you can join</li>
-      <li>✓ Admission chances (qualified / close / not)</li>
+      <li>✓ Admission chances</li>
       <li>✓ AI career recommendations</li>
-      <li>✓ Scholarship finder (GPA + major)</li>
+      <li>✓ Scholarship finder</li>
     </ul>
 
     <div class="pesapal-box">
@@ -296,7 +329,7 @@
       <p style="font-size: 24px; color: #4ade80; font-weight: bold; margin-top: 15px;">KES 100</p>
     </div>
 
-    <p style="font-size: 13px; color: #aab1ca; margin-bottom: 10px;">Enter your phone number to receive the payment prompt</p>
+    <p style="font-size: 13px; color: #aab1ca; margin-bottom: 10px;">Enter your phone number for M-PESA/Airtel prompt</p>
     <input type="tel" class="input-phone" id="phoneInput" placeholder="07XX XXX XXX" value="0712345678">
     
     <div class="checkbox-row">
@@ -310,7 +343,67 @@
   </div>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
+// ==========================================
+// AUTH STATE & GOOGLE INIT
+// ==========================================
+let isLoggedIn = false;
+
+function initApp() {
+  if (getToken()) {
+    // User is logged in
+    isLoggedIn = true;
+    document.getElementById("navActions").innerHTML = `<button class="btn-login" style="background: transparent; border-color: #ff7b7b; color: #ff7b7b;" onclick="logout()">Logout</button>`;
+  } else {
+    // User is a guest
+    isLoggedIn = false;
+    document.getElementById("navActions").innerHTML = `<button class="btn-login" onclick="showAuthModal()">Login / Sign Up</button>`;
+  }
+}
+initApp();
+
+function logout() {
+  clearToken();
+  location.reload();
+}
+
+// Render Google Button inside the Modal
+function renderGoogleButton() {
+  if (typeof google === 'undefined') return;
+  const container = document.getElementById('google-btn-container');
+  if (!container) return;
+  
+  google.accounts.id.initialize({
+    client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
+    callback: handleGoogleLogin
+  });
+  
+  google.accounts.id.renderButton(container, {
+    theme: "outline", size: "large", width: "300", text: "continue_with", shape: "rectangular"
+  });
+}
+
+function showAuthModal() {
+  document.getElementById("authModal").style.display = "flex";
+  renderGoogleButton(); // Render button when modal opens
+}
+
+function closeAuthModal() {
+  document.getElementById("authModal").style.display = "none";
+}
+
+async function handleGoogleLogin(response) {
+  try {
+    const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
+    setToken(res.token);
+    closeAuthModal();
+    location.reload(); // Reload to update UI
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 // ==========================================
 // INIT & SUBJECT DROPDOWNS
 // ==========================================
@@ -350,6 +443,11 @@ function preventDuplicates() {
 let allResultsData = [];
 
 async function calculatePoints() {
+  if (!isLoggedIn) {
+    showAuthModal();
+    return;
+  }
+
   const subjects = {};
   const grades = {};
   let count = 0;
@@ -403,7 +501,6 @@ function renderResults(data) {
   const close = data.results.filter(r => r.match === "close");
   const not = data.results.filter(r => r.match === "not_qualified");
   
-  // Summary Stats
   document.getElementById("statPoints").textContent = data.cluster_points;
   document.getElementById("statQualified").textContent = qualified.length;
   document.getElementById("statClose").textContent = close.length;
@@ -413,11 +510,9 @@ function renderResults(data) {
   const rate = ((qualified.length / total) * 100).toFixed(1);
   document.getElementById("statRate").textContent = rate + "%";
   
-  // Badges
   document.getElementById("badgeQual").textContent = qualified.length;
   document.getElementById("badgeClose").textContent = close.length;
   
-  // Tables
   document.querySelector("#qualifiedTable tbody").innerHTML = qualified.map(c => `
     <tr>
       <td>${c.n}</td>
@@ -438,10 +533,7 @@ function renderResults(data) {
     </tr>
   `).join("");
 
-  // All courses table
   renderAllCourses(allResultsData);
-  
-  // Scroll to results
   document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -503,7 +595,7 @@ async function initiatePayment() {
       const top = (screen.height/2)-(h/2);
       window.open(j.redirect_url, 'Pesapal Payment', `width=${w},height=${h},top=${top},left=${left}`);
       
-      msg.innerHTML = '<span style="color:#fbbf24;">Waiting for payment confirmation... Do not close this tab.</span>';
+      msg.innerHTML = '<span style="color:#fbbf24;">Waiting for payment confirmation...</span>';
       btn.textContent = "Waiting for Payment...";
       
       let n = 0;
@@ -528,8 +620,6 @@ async function initiatePayment() {
         } catch(e) {}
       }, 3000);
       
-    } else {
-      throw new Error("Failed to get Pesapal redirect URL.");
     }
   } catch (err) {
     msg.textContent = err.message;
