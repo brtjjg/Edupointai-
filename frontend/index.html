@@ -66,12 +66,17 @@
   .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
   .input-group input { flex: 1; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
   .btn-orange { width: 100%; padding: 14px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+  
+  /* CHAT */
   .chat-box { background: #080a18; border: 1px solid #2a324b; border-radius: 12px; padding: 15px; }
+  .chat-messages { height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
   .chat-input-row { display: flex; gap: 10px; margin-top: 15px; }
   .chat-input-row input { flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
   .btn-send { background: linear-gradient(90deg, #19c8ff, #9b59ff); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
   .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+  
+  /* SOCIALS & FOUNDER */
   .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
   .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; text-decoration: none; }
   .bg-wa { background: #25D366; } .bg-li { background: #0077B5; } .bg-ig { background: #E1306C; } .bg-tt { background: #000; border: 1px solid #fff; } .bg-mail { background: #EA4335; }
@@ -166,33 +171,34 @@
       <button class="btn-orange" onclick="findScholarships()">🔍 Find Scholarships</button>
       <div id="scholarshipResults" style="margin-top: 15px;"></div>
     </div>
-<!-- AI Career Advisor (EduBot) -->
-<div class="card">
-  <div class="card-title">🧑‍💼 EduBot Career Advisor</div>
-  <div class="chat-box">
-    <p style="font-size: 13px; color: var(--text-muted); margin-top: 0;">
-      👋 Hi! I'm EduBot. Ask me anything about career pathways, university courses, KCSE requirements, or job opportunities.
-    </p>
-    
-    <div class="chat-messages" id="chatMessages" style="height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
-      <div style="color: #4ade80;"><b>EduBot:</b> What career would you like to explore today?</div>
-    </div>
 
-    <div class="chat-input-row">
-      <input type="text" id="chatInput" placeholder="E.g., Can I study CS with a B-?">
-      <button class="btn-send" onclick="sendChat()">Send</button>
+    <!-- AI Career Advisor (EduBot) -->
+    <div class="card">
+      <div class="card-title">🧑‍💼 EduBot Career Advisor</div>
+      <div class="chat-box">
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 0;">
+          👋 Hi! I'm EduBot. Ask me anything about career pathways, university courses, KCSE requirements, or job opportunities.
+        </p>
+        
+        <div class="chat-messages" id="chatMessages">
+          <div style="color: #4ade80;"><b>EduBot:</b> What career would you like to explore today?</div>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="E.g., What does a civil engineer do?">
+          <button class="btn-send" onclick="sendChat()">Send</button>
+        </div>
+        
+        <div class="quick-buttons">
+          <div class="quick-btn" onclick="sendChat('Software Engineer')">💻 Tech Careers</div>
+          <div class="quick-btn" onclick="sendChat('Medical doctor requirements')">🏥 Medical Careers</div>
+          <div class="quick-btn" onclick="sendChat('B plain courses')">📊 B Plain Courses</div>
+          <div class="quick-btn" onclick="sendChat('Good at mathematics')">📐 Math Careers</div>
+          <div class="quick-btn" onclick="sendChat('Difference between civil and mechanical engineering')">⚙️ Engineering</div>
+          <div class="quick-btn" onclick="sendChat('Actuarial Science')">📈 Business</div>
+        </div>
+      </div>
     </div>
-    
-    <div class="quick-buttons">
-      <div class="quick-btn" onclick="sendChat('Software Engineering careers')">💻 Tech Careers</div>
-      <div class="quick-btn" onclick="sendChat('Medicine requirements')">🏥 Medical Careers</div>
-      <div class="quick-btn" onclick="sendChat('B plain courses')">📊 B Plain Courses</div>
-      <div class="quick-btn" onclick="sendChat('Good at math')">📐 Math Careers</div>
-      <div class="quick-btn" onclick="sendChat('Difference between civil and mechanical')">⚙️ Engineering</div>
-      <div class="quick-btn" onclick="sendChat('Actuarial Science')">📈 Business</div>
-    </div>
-  </div>
-</div>
 
     <div class="card" style="text-align: center;">
       <div class="card-title" style="justify-content: center;">📢 Follow Us For More Information</div>
@@ -473,12 +479,42 @@ function findScholarships() {
   }, 800);
 }
 
-function sendChat(msgText = null) {
+async function sendChat(msgText = null) {
   const input = document.getElementById("chatInput");
   const msg = msgText || input.value.trim();
   if (!msg) return;
   input.value = "";
-  alert(`EduBot: You asked "${msg}". I'm still learning, but check the calculator above!`);
+  
+  const messages = document.getElementById("chatMessages");
+  
+  // Add user message to UI
+  messages.innerHTML += `<div style="color: #73e8ff; text-align: right; margin-bottom: 5px; margin-top: 10px;"><b>You:</b> ${msg}</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  // Show typing indicator
+  const typingId = "typing-" + Date.now();
+  messages.innerHTML += `<div id="${typingId}" style="color: var(--text-muted); font-style: italic; margin-top: 5px;">EduBot is typing...</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const res = await api("/api/chat", { 
+      method: "POST", 
+      body: JSON.stringify({ question: msg }) 
+    });
+
+    // Remove typing indicator
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    // Add bot response
+    messages.innerHTML += `<div style="color: #4ade80; margin-bottom: 5px; margin-top: 10px;"><b>EduBot:</b> ${res.answer}</div>`;
+    messages.scrollTop = messages.scrollHeight;
+
+  } catch (err) {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    messages.innerHTML += `<div style="color: #ff7b7b; margin-top: 5px;"><b>Error:</b> ${err.message}</div>`;
+  }
 }
 </script>
 </body>
