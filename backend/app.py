@@ -346,6 +346,48 @@ def admin_access(user_id):
             conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
     return jsonify(ok=True, added=credits_to_add)
 
+@app.post("/api/chat")
+@login_required
+def chat():
+    d = request.get_json(silent=True) or {}
+    question = str(d.get("question", "")).lower().strip()
+    
+    if not question: 
+        return jsonify(answer="Ask me about any career, course, or subject requirement!")
+
+    # 1. Clean the question (Remove common stop words to improve matching)
+    stop_words = {"what", "is", "a", "an", "the", "can", "i", "do", "with", "to", "for", "in", "of", "and", "how", "which", "are", "my", "me"}
+    words = [w for w in re.findall(r'\b\w+\b', question) if w not in stop_words]
+    
+    # 2. Score all knowledge base entries
+    best_match = None
+    highest_score = 0
+
+    for qa in CHATBOT_QA:
+        score = 0
+        # Score based on keyword matches
+        for kw in qa["keywords"]:
+            kw_words = kw.lower().split()
+            # If the exact phrase is in the question, huge boost
+            if kw in question:
+                score += 10
+            else:
+                # Otherwise, check individual word overlap
+                for kw_word in kw_words:
+                    if kw_word in words:
+                        score += 2
+        
+        if score > highest_score:
+            highest_score = score
+            best_match = qa
+
+    # 3. Return the best match (if score is above a threshold)
+    if best_match and highest_score >= 2:
+        return jsonify(answer=best_match["answer"])
+
+    # 4. Fallback if no good match is found
+    return jsonify(answer="I am still expanding my career database. Try asking about specific careers (e.g., 'Software Engineer', 'Nursing'), subject requirements, or KCSE grades.")
+
 @app.get("/api/cron/daily-reports")
 def trigger_daily_reports():
     secret = request.args.get("secret")
