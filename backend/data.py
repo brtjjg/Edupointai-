@@ -126,3 +126,66 @@ CHATBOT_QA = [
 {"keywords":["mechatronics careers","mechatronics jobs"],"answer":"Mechatronics Engineering can lead to robotics, automation, automotive, manufacturing, controls and R&D careers."},
 {"keywords":["fully government sponsored","government sponsorship"],"answer":"Government sponsorship depends on the current funding and placement rules. Check current KUCCPS/HELB information."},
 ]
+
+# Add this at the bottom of your data.py file (replace the old CHATBOT_QA)
+
+CAREER_QA = [
+    # Category 1: Career Discovery
+    {"keywords": ["career guidance", "what is career guidance", "choose right career", "career choice"], "answer": "Career guidance is the process of helping individuals understand their interests, abilities, values, and qualifications so they can choose suitable career paths and make informed professional decisions. Start by identifying subjects you enjoy and comparing them with available occupations."},
+    {"keywords": ["discover talents", "personality career", "passion vs career", "strongest subjects", "career pays well", "don't know career"], "answer": "To discover your path, examine activities you learn quickly and problems you solve effectively. Income is important, but you should also consider your abilities, interests, and long-term satisfaction. If you don't know what career you want, explore different career families and complete a career assessment."},
+    
+    # Category 2: Tech & Engineering Careers
+    {"keywords": ["software engineer", "software engineering", "developer"], "answer": "A software engineer designs, develops, tests, and maintains software applications and computer systems. They may work on websites, mobile applications, enterprise systems, and other digital products. Key subjects: Mathematics, Physics, Computer Studies."},
+    {"keywords": ["data scientist", "data science"], "answer": "A data scientist analyses large datasets, identifies patterns, builds predictive models, and communicates findings that help organizations make decisions. Key subjects: Mathematics, Statistics, Computer Science."},
+    {"keywords": ["cybersecurity", "cyber security"], "answer": "A cybersecurity specialist protects computer networks, systems, and information against cyberattacks, unauthorized access, and security vulnerabilities."},
+    {"keywords": ["civil engineer", "civil engineering"], "answer": "A civil engineer plans, designs, supervises, and maintains infrastructure such as roads, bridges, buildings, drainage systems, and water infrastructure. Requires strong Mathematics and Physics."},
+    {"keywords": ["mechanical engineer", "mechanical engineering"], "answer": "A mechanical engineer designs, develops, tests, and maintains mechanical systems, machinery, engines, and industrial equipment."},
+    {"keywords": ["electrical engineer", "electrical engineering"], "answer": "An electrical engineer designs and works with electrical systems, power generation, transmission, control systems, and electrical equipment."},
+    {"keywords": ["ai engineer", "artificial intelligence", "machine learning"], "answer": "AI engineering involves designing, developing, integrating, and maintaining systems that use artificial intelligence to perform tasks like prediction, language processing, and automation. Machine learning engineers develop models that learn patterns from data."},
+    {"keywords": ["cloud engineering", "cloud computing"], "answer": "Cloud engineering involves designing, deploying, and managing computing infrastructure and services hosted on cloud platforms (like AWS, Azure, or Google Cloud)."},
+    {"keywords": ["robotics", "mechatronics"], "answer": "Robotics and Mechatronics combine mechanical engineering, electronics, computer programming, and control systems to design and develop automated machines and robots."},
+
+    # Category 3: Medical & Health Careers
+    {"keywords": ["medical doctor", "doctor", "medicine", "mbchb"], "answer": "A medical doctor assesses patients, diagnoses illnesses, recommends treatments, and supports disease prevention. The profession requires recognized medical education (MBChB), clinical training, and professional registration."},
+    {"keywords": ["nurse", "nursing"], "answer": "Registered nurses provide patient care, support treatment, and promote health. Career pathways include clinical education, research, management, and community health. Requires strong Biology, Chemistry, and English."},
+    {"keywords": ["pharmacist", "pharmacy"], "answer": "A pharmacist supports the safe preparation, supply, and appropriate use of medicines. Requires a Bachelor of Pharmacy (BPharm) and professional registration."},
+    {"keywords": ["clinical officer", "clinical medicine"], "answer": "Clinical officers follow a separate clinical training pathway (Diploma or Degree) and have their own professional scope and registration requirements for diagnosing and treating patients."},
+    {"keywords": ["radiographer", "radiography"], "answer": "A radiographer operates medical imaging equipment (like X-rays and MRIs) and produces diagnostic images, following radiation safety and professional practice requirements."},
+
+    # Category 4: Business & Finance Careers
+    {"keywords": ["accountant", "accounting", "cpa"], "answer": "An accountant prepares financial records, analyses transactions, produces financial reports, and supports organizations with financial management and compliance. Certifications like CPA are highly recommended."},
+    {"keywords": ["actuarial science", "actuary"], "answer": "Actuarial science applies mathematics, statistics, and financial theory to assess risk, particularly in insurance, pensions, and financial services. Highly math-intensive."},
+    {"keywords": ["economist", "economics"], "answer": "An economist studies how resources, markets, businesses, and governments operate. They analyse economic information and advise on economic decisions and policies."},
+    {"keywords": ["supply chain", "procurement"], "answer": "Supply chain management involves planning and coordinating the movement of goods, services, information, and resources from suppliers to customers."},
+    {"keywords": ["entrepreneur", "entrepreneurship", "business"], "answer": "Entrepreneurship involves identifying business opportunities, developing products or services, managing operations, and building sustainable enterprises."},
+
+    # Category 5: Law, Creative & Social Sciences
+    {"keywords": ["lawyer", "law", "llb"], "answer": "A lawyer provides legal advice, interprets legislation, prepares legal documents, and represents clients. Requires an LLB degree and completion of the Kenya School of Law (KSL)."},
+    {"keywords": ["graphic designer", "graphic design"], "answer": "A graphic designer creates visual communication materials such as logos, advertisements, digital graphics, publications, and brand identities."},
+    {"keywords": ["journalist", "journalism", "media"], "answer": "A journalist researches, verifies, and communicates information through newspapers, websites, television, radio, and other media. Requires strong English and communication skills."},
+    {"keywords": ["architect", "architecture"], "answer": "An architect designs buildings and spaces, prepares architectural plans, considers safety and functionality, and coordinates with other construction professionals."},
+
+    # Category 6: KCSE & Subject Matching
+    {"keywords": ["b plain", "b plain career"], "answer": "With a B plain, many careers are possible depending on your specific subject grades. You can pursue Education, Business, IT, or certain engineering/actuarial pathways if your Math and Sciences are strong. EduBot evaluates your full results rather than just the overall grade."},
+    {"keywords": ["c plain", "c plain career"], "answer": "With a C plain, you can pursue diploma-level professional training, technical occupations, business, ICT, hospitality, creative fields, and other skills-based careers."},
+    {"keywords": ["good at mathematics", "math careers", "love math"], "answer": "If you are good at Mathematics, consider Actuarial Science, Statistics, Economics, Accounting, Data Science, Engineering, Computer Science, and Quantitative Research."},
+    {"keywords": ["good at biology", "biology careers"], "answer": "If you are good at Biology, consider Medicine, Nursing, Pharmacy, Biomedical Science, Laboratory Technology, Biotechnology, Agriculture, and Environmental Science."},
+    {"keywords": ["good at physics", "physics careers"], "answer": "If you are good at Physics, consider Engineering, Physical Sciences, Electronics, Renewable Energy, Astronomy, and Medical Physics."},
+    {"keywords": ["good at english", "english careers"], "answer": "If you are good at English, consider Journalism, Communication, Public Relations, Law, Education, Editing, Writing, and Publishing."},
+    {"keywords": ["programmer without computer studies", "coding without cs"], "answer": "Yes, you can become a programmer without taking Computer Studies in high school. You can learn through Mathematics, independent learning (bootcamps, online courses), practical projects, and recognized academic programmes. Degree admissions may still require Math."},
+    
+    # Category 7: Course-to-Career Mapping
+    {"keywords": ["computer science career", "careers with computer science", "cs jobs"], "answer": "A degree in Computer Science can lead to careers as a Software Engineer, Systems Developer, Data Scientist, Cybersecurity Specialist, Database Administrator, AI Engineer, or Research Scientist."},
+    {"keywords": ["information technology career", "it jobs", "careers with it"], "answer": "IT graduates may pursue Systems Administration, IT Support, Network Administration, Cloud Operations, Database Management, Cybersecurity, and IT Consulting."},
+    {"keywords": ["commerce career", "bcom jobs", "bachelor of commerce"], "answer": "Depending on specialization, BCom graduates can become Accountants, Financial Analysts, Auditors, Marketing Specialists, Business Analysts, and Management Professionals."},
+]
+
+# Fallback knowledge from previous categories
+GENERAL_QA = [
+    {"keywords": ["kuccps", "what is kuccps"], "answer": "KUCCPS is the Kenya Universities and Colleges Central Placement Service. It coordinates the placement of eligible students into universities and colleges."},
+    {"keywords": ["change university", "transfer", "change course"], "answer": "Course and programme changes may be possible through the official KUCCPS transfer process, subject to the applicable rules, deadlines, and programme requirements."},
+    {"keywords": ["helb", "helb funding", "loan"], "answer": "HELB provides financing for government-sponsored students. Funding depends on the applicable student financing framework, eligibility criteria, and application process. Always verify via the official HELB portal."}
+]
+
+# Combine them for the engine
+CHATBOT_QA = CAREER_QA + GENERAL_QA
