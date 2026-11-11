@@ -166,25 +166,33 @@
       <button class="btn-orange" onclick="findScholarships()">🔍 Find Scholarships</button>
       <div id="scholarshipResults" style="margin-top: 15px;"></div>
     </div>
-
-    <div class="card">
-      <div class="card-title">💬 Ask EduBot (KUCCPS Assistant)</div>
-      <div class="chat-box">
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 0;">👋 Hi! I'm EduBot. Ask me anything about KUCCPS – courses, cutoffs, requirements, transfers, or scholarships.</p>
-        <div class="chat-input-row">
-          <input type="text" id="chatInput" placeholder="Type your question here...">
-          <button class="btn-send" onclick="sendChat()">Send</button>
-        </div>
-        <div class="quick-buttons">
-          <div class="quick-btn" onclick="sendChat('Cluster Points')">📐 Cluster Points</div>
-          <div class="quick-btn" onclick="sendChat('My Courses')">🎓 My Courses</div>
-          <div class="quick-btn" onclick="sendChat('CS Cutoff')">💻 CS Cutoff</div>
-          <div class="quick-btn" onclick="sendChat('Nursing B-')">🩺 Nursing B-</div>
-          <div class="quick-btn" onclick="sendChat('Marketable')">📈 Marketable</div>
-          <div class="quick-btn" onclick="sendChat('HELB')">💰 HELB</div>
-        </div>
-      </div>
+<!-- AI Career Advisor (EduBot) -->
+<div class="card">
+  <div class="card-title">🧑‍💼 EduBot Career Advisor</div>
+  <div class="chat-box">
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 0;">
+      👋 Hi! I'm EduBot. Ask me anything about career pathways, university courses, KCSE requirements, or job opportunities.
+    </p>
+    
+    <div class="chat-messages" id="chatMessages" style="height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="color: #4ade80;"><b>EduBot:</b> What career would you like to explore today?</div>
     </div>
+
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="E.g., Can I study CS with a B-?">
+      <button class="btn-send" onclick="sendChat()">Send</button>
+    </div>
+    
+    <div class="quick-buttons">
+      <div class="quick-btn" onclick="sendChat('Software Engineering careers')">💻 Tech Careers</div>
+      <div class="quick-btn" onclick="sendChat('Medicine requirements')">🏥 Medical Careers</div>
+      <div class="quick-btn" onclick="sendChat('B plain courses')">📊 B Plain Courses</div>
+      <div class="quick-btn" onclick="sendChat('Good at math')">📐 Math Careers</div>
+      <div class="quick-btn" onclick="sendChat('Difference between civil and mechanical')">⚙️ Engineering</div>
+      <div class="quick-btn" onclick="sendChat('Actuarial Science')">📈 Business</div>
+    </div>
+  </div>
+</div>
 
     <div class="card" style="text-align: center;">
       <div class="card-title" style="justify-content: center;">📢 Follow Us For More Information</div>
