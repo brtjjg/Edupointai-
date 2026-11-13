@@ -6,15 +6,26 @@ class PesapalError(RuntimeError):
     pass
 
 class PesapalClient:
+    # Explicitly defined URLs
     SANDBOX = "https://cybqa.pesapal.com/pesapalv3"
     PRODUCTION = "https://pay.pesapal.com/v3"
 
     def __init__(self, consumer_key=None, consumer_secret=None, base_url=None, env=None, timeout=30):
         self.consumer_key = (consumer_key or os.getenv("PESAPAL_CONSUMER_KEY", "")).strip()
         self.consumer_secret = (consumer_secret or os.getenv("PESAPAL_CONSUMER_SECRET", "")).strip()
+        
+        # Check environment
         env = (env or os.getenv("PESAPAL_ENV", "sandbox")).strip().lower()
-        default = self.PRODUCTION if env == "production" else self.SANDBOX
-        self.base_url = (base_url or os.getenv("PESAPAL_BASE_URL") or default).rstrip("/")
+        
+        # Force the Production URL if env is 'production'
+        if env == "production":
+            default_url = self.PRODUCTION
+        else:
+            default_url = self.SANDBOX
+            
+        self.base_url = (base_url or os.getenv("PESAPAL_BASE_URL") or default_url).rstrip("/")
+        logger.info(f"Pesapal Client initialized with URL: {self.base_url}")
+        
         self.timeout = timeout
         self._token = None
         self._token_expiry = 0.0
@@ -36,14 +47,17 @@ class PesapalClient:
     def token(self):
         if self._token and time.time() < self._token_expiry - 30:
             return self._token
+            
         data = self._request(
             "POST", "/api/Auth/RequestToken",
             json={"consumer_key": self.consumer_key, "consumer_secret": self.consumer_secret},
             headers={"Content-Type": "application/json", "Accept": "application/json"},
         )
+        
         tok = data.get("token")
         if not tok:
             raise PesapalError(f"Pesapal auth returned no token: {data}")
+            
         self._token = tok
         self._token_expiry = time.time() + float(data.get("expiryDateInSeconds") or 300)
         return tok
