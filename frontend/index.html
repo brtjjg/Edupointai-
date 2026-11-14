@@ -257,6 +257,17 @@
   .return-btn:hover { background: #1d4ed8; }
 
   /* ========================================= */
+  /* ADMIN DASHBOARD                           */
+  /* ========================================= */
+  .admin-stat-card { background: var(--white); border: 1px solid var(--border-grey); border-radius: 12px; padding: 20px; text-align: center; }
+  .admin-stat-card h3 { font-size: 28px; margin: 0 0 5px; }
+  .admin-stat-card p { margin: 0; font-size: 13px; color: var(--text-dark); text-transform: uppercase; }
+  .admin-table th { color: var(--navy); border-bottom: 1px solid var(--border-grey); }
+  .admin-table td { color: var(--text-dark); border-bottom: 1px solid var(--border-grey); }
+  .small-btn { padding: 6px 12px; border: 1px solid #3a4065; border-radius: 6px; background: var(--soft-white); color: var(--text-dark); cursor: pointer; font-size: 12px; font-weight: 600; }
+  .small-btn:hover { background: var(--border-grey); }
+
+  /* ========================================= */
   /* EDPOINTAI V11.0 MINIMAL FOOTER            */
   /* ========================================= */
   .edupoint-footer {
@@ -290,6 +301,7 @@
     .edupoint-footer__links a { font-size: 13px; }
     .info-modal-content { padding: 20px; }
     .about-grid { grid-template-columns: 1fr; }
+    .stats-mini-grid { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
     .edupoint-footer__links a { transition: none; }
@@ -391,7 +403,9 @@
   <div class="app-container">
     <div class="app-header">
       <h1>🎓 EduPoint AI</h1>
-      <a href="#" class="logout" onclick="logout()">Logout</a>
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <a href="#" class="logout" onclick="logout()">Logout</a>
+      </div>
     </div>
 
     <div class="card" id="calculatorCard">
@@ -493,6 +507,83 @@
   </div>
 </div>
 
+<!-- ================================ -->
+<!-- ADMIN DASHBOARD                  -->
+<!-- ================================ -->
+<div id="view-admin" class="view" style="background: var(--soft-white); color: var(--text-dark);">
+  <div class="app-container" style="max-width: 1000px; padding-top: 40px;">
+    <div class="app-header">
+      <h1 style="color: var(--navy);">👑 Admin Dashboard</h1>
+      <div style="display: flex; gap: 15px;">
+        <a href="#" class="small-btn" style="color: var(--navy); text-decoration: none; padding: 8px 16px;" onclick="showView('student'); event.preventDefault();">← Back to Dashboard</a>
+        <a href="#" class="logout" style="color: var(--error-red);" onclick="logout()">Logout</a>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="stats-mini-grid" style="grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
+      <div class="admin-stat-card">
+        <h3 style="color: var(--success-green);">KES <span id="admRevenue">0</span></h3>
+        <p>Total Revenue</p>
+      </div>
+      <div class="admin-stat-card">
+        <h3 style="color: var(--royal-blue);" id="admUsers">0</h3>
+        <p>Total Students</p>
+      </div>
+      <div class="admin-stat-card">
+        <h3 style="color: var(--purple);" id="admCalcs">0</h3>
+        <p>Calculations</p>
+      </div>
+      <div class="admin-stat-card">
+        <h3 style="color: var(--warning-amber);" id="admPending">0</h3>
+        <p>Pending Payments</p>
+      </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card" style="background: var(--white); border-color: var(--border-grey);">
+      <div class="card-title" style="color: var(--navy); display: flex; justify-content: space-between; align-items: center;">
+        <span>Recent Payments</span>
+        <button class="small-btn" style="background: var(--royal-blue); color: var(--white); border: none;" onclick="downloadPaymentsSheet()">⬇️ Download Excel Sheet</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>TxID</th>
+              <th>User ID</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admPaymentsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Calculations Table -->
+    <div class="card" style="background: var(--white); border-color: var(--border-grey);">
+      <div class="card-title" style="color: var(--navy);">Recent Calculations</div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Ref</th>
+              <th>Student</th>
+              <th>Cluster Points</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="admCalcsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ========================================= -->
 <!-- INFO MODAL (About, Rules, Terms, Privacy) -->
 <!-- ========================================= -->
@@ -500,7 +591,7 @@
   <div class="info-modal-content">
     <button class="info-modal-close" onclick="closeInfoModal()">✕</button>
     
-    <!-- About Us Content (Expanded) -->
+    <!-- About Us Content -->
     <div id="info-content-about" class="info-modal-body" style="display: none;">
       
       <div class="about-hero">
@@ -1275,7 +1366,7 @@
       <p style="text-align: center; font-size: 12px; color: var(--slate); margin-top: 20px;">© 2026 EduPoint AI. All Rights Reserved.</p>
     </div>
 
-    <!-- Privacy Content (Expanded) -->
+    <!-- Privacy Content -->
     <div id="info-content-privacy" class="info-modal-body" style="display: none;">
       <h1>Privacy Policy</h1>
       <p><strong>Version 1.0</strong><br><strong>Last Updated:</strong> 15 November 2026</p>
@@ -1836,6 +1927,24 @@ async function init() {
         setupCalculator();
       }
       
+      // Inject Admin Button if admin
+      if (me.role === 'admin') {
+        const header = document.querySelector('#view-student .app-header div');
+        if (header && !document.getElementById('adminBtn')) {
+            const btn = document.createElement('a');
+            btn.id = 'adminBtn';
+            btn.href = '#';
+            btn.className = 'logout'; // Using the same style as logout for consistency
+            btn.style.color = 'var(--electric-blue)';
+            btn.textContent = '👑 Admin Panel';
+            btn.onclick = (e) => {
+                e.preventDefault();
+                showView('admin');
+            };
+            header.insertBefore(btn, header.querySelector('.logout'));
+        }
+      }
+      
     } catch (e) {
       if (e.status === 401) {
         clearToken();
@@ -1859,6 +1968,10 @@ function showView(viewId) {
   const target = document.getElementById(`view-${viewId}`);
   if (target) target.classList.add('active');
   window.scrollTo(0,0);
+  
+  if (viewId === 'admin') {
+    loadAdminDashboard();
+  }
 }
 
 function triggerWelcomeAnimation(name) {
@@ -2174,6 +2287,91 @@ async function sendChat(msgText = null) {
     if (typingEl) typingEl.remove();
     messages.innerHTML += `<div style="color: var(--error-red); margin-top: 5px;"><b>Error:</b> ${err.message}</div>`;
   }
+}
+
+// ==========================================
+// ADMIN DASHBOARD LOGIC
+// ==========================================
+async function loadAdminDashboard() {
+    try {
+        const mRes = await api("/api/admin/metrics");
+        document.getElementById("admRevenue").textContent = mRes.metrics.revenue.toLocaleString();
+        document.getElementById("admUsers").textContent = mRes.metrics.users;
+        document.getElementById("admCalcs").textContent = mRes.metrics.calculations;
+        document.getElementById("admPending").textContent = mRes.metrics.pending_payments;
+
+        const pRes = await api("/api/admin/payments");
+        document.getElementById("admPaymentsBody").innerHTML = pRes.payments.map(p => {
+            let badge = `<span class="badge-yellow">Pending</span>`;
+            if (p.status === 'completed' || p.status === 'paid') badge = `<span class="badge-green">Paid</span>`;
+            if (p.status === 'failed') badge = `<span class="badge-red">Failed</span>`;
+            
+            let actionBtn = p.status === 'pending' || p.status === 'paid' 
+                ? `<button class="small-btn" onclick="retryPayment('${p.transaction_id}')">Retry</button>` 
+                : `-`;
+
+            return `<tr>
+                <td style="font-size: 11px;">${p.transaction_id}</td>
+                <td>${p.user_id}</td>
+                <td>KES ${parseFloat(p.amount).toFixed(2)}</td>
+                <td>${badge}</td>
+                <td style="font-size: 12px;">${new Date(p.created_at).toLocaleDateString()}</td>
+                <td>${actionBtn}</td>
+            </tr>`;
+        }).join("");
+
+        const cRes = await api("/api/admin/calculations");
+        document.getElementById("admCalcsBody").innerHTML = cRes.calculations.map(c => {
+            return `<tr>
+                <td>${c.reference}</td>
+                <td>${c.name}<br><span style="font-size:11px;color:var(--slate);">${c.email}</span></td>
+                <td><strong style="color:var(--success-green);">${c.cluster_points}</strong></td>
+                <td style="font-size: 12px;">${new Date(c.created_at).toLocaleString()}</td>
+            </tr>`;
+        }).join("");
+
+    } catch (e) {
+        alert("Error loading admin data: " + e.message);
+    }
+}
+
+async function retryPayment(txId) {
+    if(!confirm("Are you sure you want to force a status check and process this payment?")) return;
+    try {
+        const res = await api(`/api/admin/payments/${txId}/retry`, { method: "POST" });
+        alert(res.message || "Retry successful.");
+        loadAdminDashboard();
+    } catch(e) {
+        alert("Retry failed: " + e.message);
+    }
+}
+
+function downloadPaymentsSheet() {
+    const url = window.EDUPOINT_API + "/api/admin/payments/export";
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + getToken()
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Failed to download");
+        return response.blob();
+    })
+    .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `EduPoint_Payments_${new Date().toISOString().slice(0,10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    })
+    .catch(err => {
+        alert("Error downloading Excel sheet: " + err.message);
+    });
 }
 </script>
 </body>
