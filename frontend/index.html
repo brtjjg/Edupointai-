@@ -4,129 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080916">
+<!-- Google Tag Manager -->
+<script>
+(function(w,d,s,l,i){
+w[l]=w[l]||[];
+w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+j.async=true;
+j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5CXDVBHG');
+</script>
+<!-- End Google Tag Manager -->
 <title>EduPoint AI - Your Education. Your Future.</title>
-<link rel="stylesheet" href="/css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://accounts.google.com/gsi/client" onload="initAuth()" async defer></script>
-<style>
-  :root { --navy: #05081c; --card-bg: #0f1430; --cyan: #00d4ff; --purple: #8a2be2; --gold: #ffd700; --text-light: #e2e8f0; --text-muted: #94a3b8; }
-  body { background: var(--navy); color: var(--text-light); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-  .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; }
-  .view.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* LANDING */
-  .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
-  .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; }
-  .hero-section { position: relative; padding: 140px 20px 60px; max-width: 800px; margin: 0 auto; text-align: center; }
-  .hero-content h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.1; margin-bottom: 20px; }
-  .hero-content h1 span { color: var(--cyan); }
-  .hero-content h1 .gold { color: var(--gold); }
-  .hero-content p { font-size: 18px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
-  .google-wrapper { display: flex; justify-content: center; margin: 30px 0; min-height: 50px; }
-  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-  .feature-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-  .feature-icon { font-size: 40px; margin-bottom: 15px; display: inline-block; padding: 15px; background: rgba(0,212,255,0.1); border-radius: 50%; }
-  .feature-card h3 { color: #fff; margin: 0 0 10px; font-size: 20px; }
-  .feature-card p { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
-
-  /* DASHBOARD */
-  .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
-  .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-  .app-header h1 { font-size: 22px; margin: 0; }
-  .app-header .logout { color: var(--text-muted); text-decoration: none; font-size: 14px; }
-  .card { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-  .card-title { color: var(--cyan); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
-  .subject-row { display: flex; gap: 10px; margin-bottom: 10px; }
-  .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
-  .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-  
-  /* RESULTS */
-  .summary-banner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
-  .summary-banner h2 { font-size: 42px; color: var(--cyan); margin: 0 0 5px 0; }
-  .summary-banner p { color: var(--text-muted); margin: 0; font-size: 14px; }
-  .stats-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .stat-box { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; }
-  .stat-box h3 { margin: 0 0 5px 0; font-size: 24px; }
-  .stat-box p { margin: 0; font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
-  .stat-qual { color: #4ade80; } .stat-close { color: #fbbf24; } .stat-not { color: #ff7b7b; } .stat-rate { color: var(--cyan); }
-  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { color: var(--cyan); text-align: left; padding: 10px; border-bottom: 1px solid #2a324b; font-weight: 600; }
-  td { padding: 12px 10px; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
-  tr:last-child td { border-bottom: none; }
-  .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .badge-yellow { background: rgba(251,191,36,0.1); color: #fbbf24; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .badge-red { background: rgba(255,123,123,0.1); color: #ff7b7b; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
-
-  /* OTHER TOOLS */
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
-  .chip { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
-  .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-  .input-group input { flex: 1; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
-  .btn-orange { width: 100%; padding: 14px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-  
-  /* CHAT */
-  .chat-box { background: #080a18; border: 1px solid #2a324b; border-radius: 12px; padding: 15px; }
-  .chat-messages { height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
-  .chat-input-row { display: flex; gap: 10px; margin-top: 15px; }
-  .chat-input-row input { flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
-  .btn-send { background: linear-gradient(90deg, #19c8ff, #9b59ff); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-  .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
-  .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-  
-  /* SOCIALS & FOUNDER */
-  .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-  .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; text-decoration: none; }
-  .bg-wa { background: #25D366; } .bg-li { background: #0077B5; } .bg-ig { background: #E1306C; } .bg-tt { background: #000; border: 1px solid #fff; } .bg-mail { background: #EA4335; }
-  .founder-card { border: 1px solid #8a2be2; text-align: center; }
-  .btn-founder { background: transparent; border: 1px solid var(--text-muted); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
-  .floating-chat { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 999; }
-</style>
-</head>
-<body>
-
-<div id="view-public" class="view">
-  <header class="header">
-    <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
-  </header>
-  <main class="hero-section">
-    <div class="hero-content">
-      <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
-      <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
-      <div id="google-btn-landing" class="google-wrapper"></div>
-      <p style="margin-top: 15px; font-size: 13px; color: var(--text-muted);">Sign in or create your account easily.</p>
-    </div>
-  </main>
-  <section class="features-grid">
-    <div class="feature-card"><div class="feature-icon">🧮</div><h3>KCSE Calculator</h3><p>Calculate cluster points instantly and accurately based on your KCSE grades.</p></div>
-    <div class="feature-card"><div class="feature-icon">🎓</div><h3>Course Matching</h3><p>Discover university courses based on your academic results and cutoff points.</p></div>
-    <div class="feature-card"><div class="feature-icon">🏆</div><h3>Scholarships</h3><p>Discover funding and scholarship opportunities tailored to your profile.</p></div>
-  </section>
-</div>
-
-<div id="view-student" class="view">
-  <div class="app-container">
-    <div class="app-header">
-      <h1>🎓 EduPoint AI</h1>
-      <a href="#" class="logout" onclick="logout()">Logout</a>
-    </div>
-    <div class="card">
-      <div class="card-title">📋 Enter Your 7 KCSE Subjects</div>
-      <div id="subjectList"></div>
-      <button class="btn-primary" id="btnCalculate">⚡ Calculate My Cluster Points</button>
-      <div id="calcMessage" style="text-align: center; margin-top: 10px; font-size: 13px; color: #fbbf24;"></div>
-    </div>
-
-    <div id="resultsSection" style="display: none;">
-      <div class="summary-banner">
-        <h2 id="resPoints">0.000</h2>
-        <p>Your Cluster Points</p>
-      </div>
-      <div class="stats-mini-grid">
-        <div class="stat-box"><h3 class="stat-qual" id="resQualified">0</h3><p>✅ Qualified</p></div>
-        <div class="stat-box"><h3 class="stat-close" id="resClose">0</h3><p>⚠️ Close</p></div>
+<link ohse</p></div>
         <div class="stat-box"><h3 class="stat-not" id="resNot">0</h3><p>❌ Not</p></div>
         <div class="stat-box"><h3 class="stat-rate" id="resRate">0%</h3><p>Rate</p></div>
       </div>
