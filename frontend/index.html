@@ -460,7 +460,9 @@ function initAuth() {
   if (typeof google === 'undefined') return;
   google.accounts.id.initialize({
     client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
-    callback: handleGoogleLogin
+    callback: handleGoogleLogin,
+    ux_mode: 'popup',
+    auto_select: false
   });
   const container = document.getElementById('google-btn-landing');
   if (container) {
@@ -469,6 +471,7 @@ function initAuth() {
   }
 }
 
+// FIXED: Handles both mobile redirect and desktop popup gracefully
 async function handleGoogleLogin(response) {
   try {
     const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
@@ -477,8 +480,18 @@ async function handleGoogleLogin(response) {
     // Force the welcome screen to show upon successful sign in
     sessionStorage.removeItem('edupoint_welcome_shown');
     
-    location.reload();
-  } catch (err) { alert(err.message); }
+    // If this is a popup, notify the parent window and close
+    if (window.opener && !window.opener.closed) {
+      window.opener.location.reload();
+      window.close();
+    } else {
+      // If it's the main window (e.g., mobile redirect), go back to base URL
+      window.location.href = window.location.origin;
+    }
+  } catch (err) { 
+    alert("Login failed: " + err.message); 
+    if (window.opener) window.close();
+  }
 }
 
 // ==========================================
