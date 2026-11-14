@@ -223,7 +223,100 @@ P = [
     {"n":"Certificate in Welding","u":"KENYA POLYTECHNIC","c":15.000,"y":"2","s":"20K-60K","i":"⚒️"},
     {"n":"Certificate in Secretarial Studies","u":"KENYA POLYTECHNIC","c":17.500,"y":"2","s":"20K-50K","i":"📝"},
     {"n":"Diploma in Supply Chain Management","u":"KENYA POLYTECHNIC","c":22.100,"y":"3","s":"30K-90K","i":"🚚"},
-    {"n":"Diploma in Journalism","u":"KENYA INSTITUTE OF MASS COMMUNICATION","c":27.500,"y":"3","s":"35K-120K","i":"📰"}
+    {"n":"Diploma in Journalism","u":"KENYA INSTITUTE OF MASS COMMUNICATION","c":27.500,"y":"3","s":"35K-120K","i":"📰"},
+        # --- EXPANSION: TVET, DIPLOMAS & CERTIFICATES ---
+    
+    # 1. KENYA MEDICAL TRAINING COLLEGE (KMTC) - HEALTH
+    {"n":"Diploma in Nursing","u":"KMTC NAIROBI","c":34.500,"y":"3","s":"50K-150K","i":"🩺"},
+    {"n":"Diploma in Clinical Medicine & Surgery","u":"KMTC NAIROBI","c":32.100,"y":"3","s":"45K-130K","i":"🩻"},
+    {"n":"Diploma in Pharmacy","u":"KMTC NAIROBI","c":30.800,"y":"3","s":"40K-120K","i":"💊"},
+    {"n":"Diploma in Medical Laboratory Sciences","u":"KMTC NAIROBI","c":29.500,"y":"3","s":"40K-120K","i":"🔬"},
+    {"n":"Diploma in Radiography","u":"KMTC NAIROBI","c":31.200,"y":"3","s":"50K-140K","i":"🩻"},
+    {"n":"Diploma in Health Records & IT","u":"KMTC NAIROBI","c":24.100,"y":"3","s":"30K-90K","i":"📄"},
+    {"n":"Diploma in Nutrition & Dietetics","u":"KMTC NAIROBI","c":26.500,"y":"3","s":"35K-100K","i":"🍎"},
+    {"n":"Diploma in Dental Technology","u":"KMTC NAIROBI","c":28.200,"y":"3","s":"40K-110K","i":"🦷"},
+    {"n":"Diploma in Orthopaedic Technology","u":"KMTC NAIROBI","c":25.800,"y":"3","s":"35K-100K","i":"🦴"},
+    {"n":"Diploma in Occupational Therapy","u":"KMTC NAIROBI","c":27.100,"y":"3","s":"35K-100K","i":"💪"},
+
+    # 2. KENYA POLYTECHNIC / TECHNICAL UNIVERSITY OF KENYA - ENGINEERING
+    {"n":"Diploma in Electrical & Electronic Engineering","u":"KENYA POLYTECHNIC","c":28.500,"y":"3","s":"35K-100K","i":"⚡"},
+    {"n":"Diploma in Mechanical Engineering","u":"KENYA POLYTECHNIC","c":27.100,"y":"3","s":"35K-100K","i":"⚙️"},
+    {"n":"Diploma in Civil Engineering","u":"KENYA POLYTECHNIC","c":29.200,"y":"3","s":"40K-110K","i":"🏗️"},
+    {"n":"Diploma in Automotive Engineering","u":"KENYA POLYTECHNIC","c":25.500,"y":"3","s":"35K-100K","i":"🚗"},
+    {"n":"Diploma in Building Technology","u":"KENYA POLYTECHNIC","c":26.800,"y":"3","s":"35K-100K","i":"🧱"},
+    {"n":"Diploma in Architecture","u":"KENYA POLYTECHNIC","c":30.100,"y":"3","s":"40K-120K","i":"🏛️"},
+    {"n":"Diploma in Quantity Surveying","u":"KENYA POLYTECHNIC","c":29.800,"y":"3","s":"40K-120K","i":"📐"},
+    {"n":"Diploma in Land Surveying","u":"KENYA POLYTECHNIC","c":27.500,"y":"3","s":"35K-100K","i":"📍"},
+    {"n":"Diploma in Refrigeration & Air Conditioning","u":"KENYA POLYTECHNIC","c":23.200,"y":"3","s":"30K-90K","i":"❄️"},
+    {"n":"Diploma in Telecommunications","u":"KENYA POLYTECHNIC","c":28.100,"y":"3","s":"35K-110K","i":"📡"},
+
+    # 3. KENYA POLYTECHNIC - IT & BUSINESS
+    {"n":"Diploma in Information Communication Technology","u":"KENYA POLYTECHNIC","c":30.500,"y":"3","s":"35K-120K","i":"💻"},
+    {"n":"Diploma in Computer Science","u":"KENYA POLYTECHNIC","c":32.100,"y":"3","s":"40K-130K","i":"🖥️"},
+    {"n":"Diploma in Business Management","u":"KENYA POLYTECHNIC","c":25.800,"y":"3","s":"30K-90K","i":"💼"},
+    {"n":"Diploma in Sales & Marketing","u":"KENYA POLYTECHNIC","c":23.500,"y":"3","s":"30K-80K","i":"📈"},
+    {"n":"Diploma in Human Resource Management","u":"KENYA POLYTECHNIC","c":24.100,"y":"3","s":"30K-80K","i":"👥"},
+    {"n":"Diploma in Supply Chain Management","u":"KENYA POLYTECHNIC","c":26.200,"y":"3","s":"30K-90K","i":"🚚"},
+    {"n":"Diploma in Accountancy","u":"KENYA POLYTECHNIC","c":28.400,"y":"3","s":"35K-100K","i":"📊"},
+    {"n":"Diploma in Secretarial Studies","u":"KENYA POLYTECHNIC","c":22.500,"y":"3","s":"25K-70K","i":"📝"},
+    {"n":"Diploma in Library & Information Science","u":"KENYA POLYTECHNIC","c":21.800,"y":"3","s":"25K-70K","i":"📚"},
+
+    # 4. KENYA INSTITUTE OF MASS COMMUNICATION (KIMC)
+    {"n":"Diploma in Broadcast Journalism","u":"KIMC NAIROBI","c":33.500,"y":"3","s":"50K-150K","i":"📺"},
+    {"n":"Diploma in Print Journalism","u":"KIMC NAIROBI","c":31.200,"y":"3","s":"45K-130K","i":"📰"},
+    {"n":"Diploma in Film & Video Production","u":"KIMC NAIROBI","c":34.100,"y":"3","s":"60K-180K","i":"🎥"},
+    {"n":"Diploma in Public Relations","u":"KIMC NAIROBI","c":32.800,"y":"3","s":"50K-140K","i":"🤝"},
+    {"n":"Diploma in Advertising","u":"KIMC NAIROBI","c":30.500,"y":"3","s":"45K-130K","i":"📢"},
+    {"n":"Diploma in Sound Engineering","u":"KIMC NAIROBI","c":29.100,"y":"3","s":"50K-150K","i":"🎧"},
+    {"n":"Diploma in Photography","u":"KIMC NAIROBI","c":27.500,"y":"3","s":"40K-120K","i":"📷"},
+
+    # 5. KENYA UTALII COLLEGE - HOSPITALITY & TOURISM
+    {"n":"Diploma in Food & Beverage Management","u":"KENYA UTALII COLLEGE","c":30.100,"y":"3","s":"50K-150K","i":"🍽️"},
+    {"n":"Diploma in Hotel Management","u":"KENYA UTALII COLLEGE","c":32.500,"y":"3","s":"60K-180K","i":"🏨"},
+    {"n":"Diploma in Tourism Management","u":"KENYA UTALII COLLEGE","c":29.800,"y":"3","s":"45K-140K","i":"✈️"},
+    {"n":"Diploma in Tour Guiding & Administration","u":"KENYA UTALII COLLEGE","c":26.500,"y":"3","s":"40K-120K","i":"🗺️"},
+    {"n":"Diploma in Baking & Pastry","u":"KENYA UTALII COLLEGE","c":24.100,"y":"3","s":"35K-110K","i":"🧁"},
+    {"n":"Diploma in Housekeeping & Laundry","u":"KENYA UTALII COLLEGE","c":21.500,"y":"3","s":"30K-90K","i":"🧹"},
+
+    # 6. BUKURA AGRICULTURAL COLLEGE
+    {"n":"Diploma in General Agriculture","u":"BUKURA AGRICULTURAL COLLEGE","c":24.500,"y":"3","s":"30K-90K","i":"🌾"},
+    {"n":"Diploma in Agribusiness Management","u":"BUKURA AGRICULTURAL COLLEGE","c":23.100,"y":"3","s":"30K-80K","i":"🚜"},
+    {"n":"Diploma in Horticulture","u":"BUKURA AGRICULTURAL COLLEGE","c":22.800,"y":"3","s":"25K-80K","i":"🌻"},
+    {"n":"Diploma in Animal Health & Production","u":"BUKURA AGRICULTURAL COLLEGE","c":25.200,"y":"3","s":"30K-90K","i":"🐄"},
+    {"n":"Diploma in Agricultural Engineering","u":"BUKURA AGRICULTURAL COLLEGE","c":26.100,"y":"3","s":"35K-100K","i":"⚙️"},
+
+    # 7. RIFT VALLEY TECHNICAL TRAINING INSTITUTE (RVTTI)
+    {"n":"Diploma in Mechanical Engineering (Production)","u":"RVTTI ELDORET","c":24.100,"y":"3","s":"30K-90K","i":"⚙️"},
+    {"n":"Diploma in Electrical & Electronics","u":"RVTTI ELDORET","c":25.500,"y":"3","s":"35K-100K","i":"⚡"},
+    {"n":"Diploma in Automotive Engineering","u":"RVTTI ELDORET","c":22.800,"y":"3","s":"30K-90K","i":"🚗"},
+    {"n":"Diploma in Building Technology","u":"RVTTI ELDORET","c":23.200,"y":"3","s":"30K-90K","i":"🧱"},
+    {"n":"Diploma in Applied Biology","u":"RVTTI ELDORET","c":26.500,"y":"3","s":"35K-100K","i":"🧬"},
+    {"n":"Diploma in Analytical Chemistry","u":"RVTTI ELDORET","c":27.100,"y":"3","s":"35K-100K","i":"🧪"},
+    {"n":"Diploma in Fashion Design & Clothing Tech","u":"RVTTI ELDORET","c":21.000,"y":"3","s":"25K-80K","i":"👗"},
+
+    # 8. MERU NATIONAL POLYTECHNIC & OTHERS
+    {"n":"Diploma in ICT","u":"MERU NATIONAL POLYTECHNIC","c":26.500,"y":"3","s":"30K-90K","i":"💻"},
+    {"n":"Diploma in Business Administration","u":"MERU NATIONAL POLYTECHNIC","c":22.100,"y":"3","s":"25K-80K","i":"💼"},
+    {"n":"Diploma in Agriculture","u":"MERU NATIONAL POLYTECHNIC","c":21.500,"y":"3","s":"25K-80K","i":"🌾"},
+    {"n":"Diploma in Civil Engineering","u":"MERU NATIONAL POLYTECHNIC","c":24.800,"y":"3","s":"30K-90K","i":"🏗️"},
+    
+    {"n":"Diploma in Marine Engineering","u":"BANDARI COLLEGE MOMBASA","c":28.100,"y":"3","s":"50K-150K","i":"🚢"},
+    {"n":"Diploma in Shipping & Logistics","u":"BANDARI COLLEGE MOMBASA","c":25.500,"y":"3","s":"40K-120K","i":"⚓"},
+    {"n":"Diploma in Mechanical Engineering (Marine)","u":"BANDARI COLLEGE MOMBASA","c":26.800,"y":"3","s":"45K-130K","i":"⚙️"},
+
+    {"n":"Diploma in Petroleum Geoscience","u":"KIGANJO PETROLEUM INSTITUTE","c":29.100,"y":"3","s":"60K-180K","i":"🛢️"},
+    {"n":"Diploma in Petroleum Engineering","u":"KIGANJO PETROLEUM INSTITUTE","c":30.500,"y":"3","s":"70K-200K","i":"🛢️"},
+
+    # 9. CERTIFICATES & ARTISAN COURSES (For D and E grades)
+    {"n":"Certificate in Plumbing","u":"KENYA POLYTECHNIC","c":16.000,"y":"2","s":"20K-60K","i":"🔧"},
+    {"n":"Certificate in Welding & Fabrication","u":"KENYA POLYTECHNIC","c":15.500,"y":"2","s":"20K-60K","i":"⚒️"},
+    {"n":"Certificate in Masonry","u":"RVTTI ELDORET","c":15.000,"y":"2","s":"20K-50K","i":"🧱"},
+    {"n":"Certificate in Motor Vehicle Mechanics","u":"RVTTI ELDORET","c":16.200,"y":"2","s":"25K-60K","i":"🚗"},
+    {"n":"Certificate in Electrical Installation","u":"MERU NATIONAL POLYTECHNIC","c":17.100,"y":"2","s":"20K-60K","i":"⚡"},
+    {"n":"Artisan in Carpentry & Joinery","u":"KENYA POLYTECHNIC","c":12.000,"y":"2","s":"15K-40K","i":"🪵"},
+    {"n":"Artisan in Bricklaying","u":"KENYA POLYTECHNIC","c":12.000,"y":"2","s":"15K-40K","i":"🧱"},
+    {"n":"Artisan in Tailoring & Dressmaking","u":"RVTTI ELDORET","c":13.500,"y":"2","s":"15K-45K","i":"✂️"}
+]
 ]
 
 SCHOLARSHIPS = [
