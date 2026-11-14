@@ -51,10 +51,6 @@ payments = PaymentService()
 # HELPERS
 # ==========================================
 
-def add_credit(user_id):
-    with connect() as conn:
-        conn.execute("UPDATE users SET credits = credits + 1 WHERE id=%s", (user_id,))
-
 def ensure_admin():
     email = os.getenv("ADMIN_EMAIL", "").strip().lower()
     password = os.getenv("ADMIN_PASSWORD", "")
@@ -114,11 +110,16 @@ def process_calculation(u, subjects, grades):
 
 
 # ==========================================
-# ATOMIC CLAIM + PROCESS (idempotent)
+# ATOMIC CLAIM + PROCESS (pay-per-calculation)
 # ==========================================
-
+#
+# This is the ONLY code path that ever computes results.
+# It requires a payment row with status='paid', and atomically flips it to
+# 'completed' so no double-processing is possible. If a webhook and the frontend
+# race, only one wins. Results are then persisted to results_json so the loser
+# can still return them without recomputing.
+#
 def _claim_and_process(tx_id):
-    """Atomically claim a paid payment and process it. Safe to call from webhook AND polling."""
     with connect() as conn:
         claimed = conn.execute(
             "UPDATE payments SET status = 'completed', updated_at = now() "
@@ -132,7 +133,7 @@ def _claim_and_process(tx_id):
     row = payments.get(tx_id)
     calc_data = row.get("calculation_data")
     if not calc_data:
-        logger.info(f"Claimed {tx_id} but no calc_data — nothing to process")
+        logger.warning(f"Claimed {tx_id} but no calc_data")
         return None
 
     with connect() as conn:
@@ -140,16 +141,21 @@ def _claim_and_process(tx_id):
 
     try:
         calc_results = process_calculation(u, calc_data["subjects"], calc_data["grades"])
-        add_credit(row["user_id"])
+
+        # Persist results so the webhook-first / polling race doesn't lose them
+        with connect() as conn:
+            conn.execute(
+                "UPDATE payments SET results_json = %s WHERE transaction_id = %s",
+                (json.dumps(calc_results), tx_id)
+            )
+
         send_paid_receipt_email(
             u["email"], u["name"],
             calc_results["cluster_points"], calc_results["results"],
             calc_data["subjects"], calc_data["grades"],
             SCHOLARSHIPS, row
         )
-        with connect() as conn:
-            conn.execute("UPDATE payments SET calculation_data = NULL WHERE transaction_id = %s", (tx_id,))
-        logger.info(f"Processed results for {tx_id} and sent email to {u['email']}")
+        logger.info(f"Processed {tx_id} and emailed results to {u['email']}")
         return calc_results
     except Exception as e:
         with connect() as conn:
@@ -236,7 +242,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
         t.setStyle(TableStyle(style))
         return t
 
-    # Cover
     story = []
     brand = Table([[P("EduPointAI", "Brand"),
                     P("COMPREHENSIVE CLUSTER & COURSE REPORT", "WhiteSmall")]],
@@ -375,7 +380,6 @@ def _get_brevo():
 
 
 def send_invoice_email(user_email, user_name, payment):
-    """Send invoice email with PAY NOW button + link."""
     try:
         client, sender_email = _get_brevo()
         if not client:
@@ -439,7 +443,6 @@ def send_invoice_email(user_email, user_name, payment):
 
 
 def send_reminder_email(user_email, user_name, payment):
-    """Send a reminder email for an unpaid invoice."""
     try:
         client, sender_email = _get_brevo()
         if not client:
@@ -624,6 +627,9 @@ def me():
     u = current_user()
     return jsonify(ok=True, user=public_user(u), credits=u.get("credits", 0))
 
+# ==========================================
+# PAYMENT: every call creates a NEW Pesapal order + invoice (pay-per-calculation)
+# ==========================================
 @app.post("/api/payment/initiate")
 @login_required
 def initiate_payment():
@@ -639,26 +645,24 @@ def initiate_payment():
     if plan not in PAYMENT_PLANS: return jsonify(ok=False, error="Invalid plan."), 400
     if not validate_provider(provider): return jsonify(ok=False, error="Unsupported provider."), 400
     if not phone: return jsonify(ok=False, error="Invalid phone number."), 400
+    if not calc_data: return jsonify(ok=False, error="Subjects and grades are required."), 400
 
     amount = PAYMENT_PLANS[plan]["amount"]
     tx = "EDU-" + uuid.uuid4().hex[:16].upper()
     callback_url = f"{os.getenv('FRONTEND_URL', '').rstrip('/')}/"
 
     try:
-        # 1. Create pending record
         payments.create_pending(
             transaction_id=tx, user_id=u["id"], phone=phone,
             network=provider, amount=amount, plan=plan,
             calculation_data=calc_data
         )
 
-        # 2. Get Pesapal checkout URL FIRST
         r = payments.initiate(
             provider=provider, phone=phone, amount=amount,
             transaction_id=tx, plan=plan, user=u, callback_url=callback_url
         )
 
-        # 3. Persist checkout URL so invoice email can use it
         payments.update(
             tx,
             status=r.get("status"),
@@ -667,7 +671,6 @@ def initiate_payment():
             redirect_url=r.get("redirect_url")
         )
 
-        # 4. NOW send the invoice email (redirect_url is available)
         pending_payment = payments.get(tx)
         threading.Thread(
             target=send_invoice_email,
@@ -675,7 +678,6 @@ def initiate_payment():
             daemon=True
         ).start()
 
-        # 5. Track that invoice was sent
         with connect() as conn:
             conn.execute(
                 "UPDATE payments SET invoice_sent_at = now() WHERE transaction_id = %s",
@@ -692,8 +694,6 @@ def initiate_payment():
 
 @app.route("/api/payment/webhook/pesapal", methods=["GET", "POST"])
 def pesapal_webhook():
-    """Pesapal IPN — fires on payment status change. Handles results delivery
-       even if the user never returns to the frontend."""
     try:
         body = request.get_json(silent=True) or {}
         tracking_id = (
@@ -750,6 +750,7 @@ def payment_status(transaction_id):
     if not row or (row.get("user_id") and row["user_id"] != u["id"] and u["role"] != "admin"):
         return jsonify(ok=False, error="Transaction not found."), 404
 
+    # Poll Pesapal if still pending
     if row["status"] == "pending":
         try:
             rr = payments.check_status(row)
@@ -759,10 +760,15 @@ def payment_status(transaction_id):
         except Exception:
             logger.exception("Status check failed")
 
-    calc_results = None
+    # If the payment has just become 'paid', try to claim & process.
     if row["status"] == "paid":
-        calc_results = _claim_and_process(transaction_id)
+        _claim_and_process(transaction_id)
         row = payments.get(transaction_id)
+
+    # Return stored results (whether we just processed them or webhook already did).
+    calc_results = None
+    if row["status"] == "completed" and row.get("results_json"):
+        calc_results = row["results_json"]
 
     return jsonify(ok=True, payment=row, calculation_results=calc_results)
 
@@ -773,8 +779,20 @@ def trigger_reminders():
     expected = os.getenv("CRON_SECRET", "edupoint_secret_123")
     if secret != expected:
         return "Unauthorized", 401
+
+    # 1. Retry any stuck 'paid' payments (webhook ran but processing crashed)
+    with connect() as conn:
+        stuck = conn.execute("""
+            SELECT transaction_id FROM payments 
+            WHERE status = 'paid' AND updated_at < now() - INTERVAL '5 minutes'
+            LIMIT 20
+        """).fetchall()
+    for s in stuck:
+        _claim_and_process(s["transaction_id"])
+
+    # 2. Send daily reminders
     sent = send_pending_reminders()
-    return jsonify(ok=True, reminders_sent=sent), 200
+    return jsonify(ok=True, reminders_sent=sent, stuck_retried=len(stuck)), 200
 
 
 @app.get("/api/history")
@@ -847,16 +865,6 @@ def admin_payments():
             FROM payments ORDER BY id DESC LIMIT 100
         """).fetchall()
     return jsonify(ok=True, payments=[dict(r) for r in rows])
-
-@app.post("/api/admin/access/<int:user_id>")
-@admin_required
-def admin_access(user_id):
-    d = request.get_json(silent=True) or {}
-    credits_to_add = int(d.get("credits", 1))
-    if credits_to_add > 0:
-        with connect() as conn:
-            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
-    return jsonify(ok=True, added=credits_to_add)
 
 
 @app.get("/api/cron/daily-reports")
