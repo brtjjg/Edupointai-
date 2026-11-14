@@ -48,7 +48,7 @@ init_db()
 payments = PaymentService()
 
 # ==========================================
-# HELPER FUNCTIONS
+# HELPERS
 # ==========================================
 
 def add_credit(user_id):
@@ -114,7 +114,52 @@ def process_calculation(u, subjects, grades):
 
 
 # ==========================================
-# PDF GENERATION (ALL COURSES + SUBJECT REQUIREMENTS)
+# ATOMIC CLAIM + PROCESS (idempotent)
+# ==========================================
+
+def _claim_and_process(tx_id):
+    """Atomically claim a paid payment and process it. Safe to call from webhook AND polling."""
+    with connect() as conn:
+        claimed = conn.execute(
+            "UPDATE payments SET status = 'completed', updated_at = now() "
+            "WHERE transaction_id = %s AND status = 'paid' RETURNING id",
+            (tx_id,)
+        ).fetchone()
+
+    if not claimed:
+        return None
+
+    row = payments.get(tx_id)
+    calc_data = row.get("calculation_data")
+    if not calc_data:
+        logger.info(f"Claimed {tx_id} but no calc_data — nothing to process")
+        return None
+
+    with connect() as conn:
+        u = conn.execute("SELECT * FROM users WHERE id = %s", (row["user_id"],)).fetchone()
+
+    try:
+        calc_results = process_calculation(u, calc_data["subjects"], calc_data["grades"])
+        add_credit(row["user_id"])
+        send_paid_receipt_email(
+            u["email"], u["name"],
+            calc_results["cluster_points"], calc_results["results"],
+            calc_data["subjects"], calc_data["grades"],
+            SCHOLARSHIPS, row
+        )
+        with connect() as conn:
+            conn.execute("UPDATE payments SET calculation_data = NULL WHERE transaction_id = %s", (tx_id,))
+        logger.info(f"Processed results for {tx_id} and sent email to {u['email']}")
+        return calc_results
+    except Exception as e:
+        with connect() as conn:
+            conn.execute("UPDATE payments SET status = 'paid' WHERE transaction_id = %s", (tx_id,))
+        logger.error(f"Claim+process failed for {tx_id}: {traceback.format_exc()}")
+        return None
+
+
+# ==========================================
+# PDF GENERATION
 # ==========================================
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
@@ -191,7 +236,7 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
         t.setStyle(TableStyle(style))
         return t
 
-    # ============ COVER ============
+    # Cover
     story = []
     brand = Table([[P("EduPointAI", "Brand"),
                     P("COMPREHENSIVE CLUSTER & COURSE REPORT", "WhiteSmall")]],
@@ -246,7 +291,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     ]))
     story += [cards, Spacer(1, 4*mm)]
 
-    # Subject breakdown
     story += [P("01  Your KCSE Subject Breakdown", "Section")]
     grades_data = [[P("SUBJECT", "Tiny"), P("GRADE", "Tiny"), P("POINTS", "Tiny")]]
     for i in range(7):
@@ -267,7 +311,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
               P(f"<i>Formula:</i> (sum of best 7 subject points ÷ {BEST:.0f}) × {MAX:.0f} "
                 f"= ({total_pts} ÷ {BEST:.0f}) × {MAX:.0f} = <b>{cluster_points}</b>", "Sub")]
 
-    # Top 10
     story.append(PageBreak())
     story += [P("02  Top 10 Recommended Courses", "Section"),
               P(f"These are the highest-cutoff courses you currently qualify for. Your cluster ({cluster_points}) meets or exceeds their cutoffs — great choices to prioritise in KUCCPS.", "Sub"),
@@ -277,7 +320,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     else:
         story.append(P("You do not yet meet the cutoff for any course in our database. See the Close (±2) and Not Yet Qualified sections below — they show the shortest paths forward.", "BodySmall"))
 
-    # All qualified
     if qualified:
         story.append(PageBreak())
         story += [P(f"03  All Courses You Qualify For ({len(qualified)})", "Section"),
@@ -285,7 +327,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
                   Spacer(1, 3*mm),
                   build_course_table(qualified, GREEN_HDR)]
 
-    # Close matches
     if close:
         story.append(PageBreak())
         story += [P(f"04  Close Matches — Within 2.0 Points ({len(close)})", "Section"),
@@ -293,7 +334,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
                   Spacer(1, 3*mm),
                   build_course_table(close, AMBER_HDR)]
 
-    # Not yet qualified
     if not_qual:
         story.append(PageBreak())
         story += [P(f"05  Not Yet Qualified ({len(not_qual)})", "Section"),
@@ -301,7 +341,6 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
                   Spacer(1, 3*mm),
                   build_course_table(not_qual, RED_HDR)]
 
-    # Scholarships
     story.append(PageBreak())
     story += [P("06  Scholarship Opportunities", "Section")]
     sch_data = [[P("SCHOLARSHIP", "Tiny"), P("AMOUNT", "Tiny"), P("LINK", "Tiny")]]
@@ -323,39 +362,156 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
     return buffer
 
 
-def send_pending_invoice_email(user_email, user_name, payment):
+# ==========================================
+# EMAIL SENDERS
+# ==========================================
+
+def _get_brevo():
+    api_key = os.getenv("BREVO_API_KEY")
+    sender_email = os.getenv("SENDER_EMAIL")
+    if not api_key or not sender_email:
+        return None, None
+    return Brevo(api_key=api_key), sender_email
+
+
+def send_invoice_email(user_email, user_name, payment):
+    """Send invoice email with PAY NOW button + link."""
     try:
-        inv_buffer = generate_invoice_pdf({"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment)
-        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode('utf-8')
-        api_key = os.getenv("BREVO_API_KEY"); sender_email = os.getenv("SENDER_EMAIL")
-        if not api_key or not sender_email: return
-        client = Brevo(api_key=api_key)
-        html = f"<div style='font-family: Arial;'><h2>Dear {user_name},</h2><p>Your payment has been initiated. Please find your pending invoice attached.</p><p>Complete the payment on the Pesapal page to unlock your results. Once paid, you will receive a final Receipt and your Results Report.</p><p>EduPointAI Team</p></div>"
+        client, sender_email = _get_brevo()
+        if not client:
+            logger.warning("Brevo not configured, skipping invoice email")
+            return
+
+        inv_buffer = generate_invoice_pdf(
+            {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
+        )
+        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
+
+        pay_link = (payment.get("redirect_url") or "").strip()
+        amount = float(payment.get("amount", 0))
+        inv_short = payment["transaction_id"][-8:].upper()
+
+        pay_button_html = ""
+        if pay_link:
+            pay_button_html = f"""
+            <p style="text-align:center;margin:32px 0;">
+              <a href="{pay_link}"
+                 style="display:inline-block;background:#2563EB;color:#ffffff;padding:16px 52px;
+                        text-decoration:none;border-radius:10px;font-weight:bold;font-size:16px;">
+                💳 PAY NOW — KES {amount:.0f}
+              </a>
+            </p>
+            <p style="text-align:center;font-size:12px;color:#64748B;">
+              You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.
+            </p>
+            """
+
+        html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;line-height:1.6;color:#1F2937;">
+          <h2>Hi {user_name},</h2>
+          <p>Thank you for using <b>EduPointAI</b>! Your invoice is attached below.</p>
+          <div style="background:#F4F6FC;padding:16px;border-radius:8px;margin:20px 0;">
+            <p style="margin:0;"><b>Invoice:</b> INV-{inv_short}</p>
+            <p style="margin:6px 0 0;"><b>Amount:</b> KES {amount:.2f}</p>
+            <p style="margin:6px 0 0;"><b>Status:</b> Awaiting Payment</p>
+          </div>
+          <p>Complete the payment to unlock your <b>Comprehensive Results Report</b>:
+            all 200+ courses, their subject requirements, cutoffs, and scholarship opportunities.</p>
+          {pay_button_html}
+          <p style="font-size:13px;color:#64748B;">
+            Once paid you'll be returned to the EduPointAI website and your report will arrive by email.
+            We'll send a friendly reminder every 24 hours until your invoice is settled.
+          </p>
+          <p>Best regards,<br/><b>EduPointAI Team</b></p>
+        </div>
+        """
+
         client.transactional_emails.send_transac_email(
-            subject="Your EduPointAI Pending Invoice",
+            subject=f"EduPointAI Invoice {inv_short} — KES {amount:.0f}",
             html_content=html,
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=[{"content": inv_base64, "name": f"Pending_Invoice_{payment['transaction_id']}.pdf"}]
+            attachment=[{"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"}],
         )
-        logger.info(f"Sent pending invoice to {user_email}")
-    except Exception as e:
-        logger.error(f"Failed to send pending invoice: {traceback.format_exc()}")
+        logger.info(f"Sent invoice with Pay Now to {user_email}")
+    except Exception:
+        logger.error(f"Failed to send invoice email: {traceback.format_exc()}")
+
+
+def send_reminder_email(user_email, user_name, payment):
+    """Send a reminder email for an unpaid invoice."""
+    try:
+        client, sender_email = _get_brevo()
+        if not client:
+            return
+
+        pay_link = (payment.get("redirect_url") or "").strip()
+        if not pay_link:
+            return
+
+        inv_buffer = generate_invoice_pdf(
+            {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
+        )
+        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
+
+        amount = float(payment.get("amount", 0))
+        inv_short = payment["transaction_id"][-8:].upper()
+        reminder_num = (payment.get("reminder_count") or 0) + 1
+
+        html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;line-height:1.6;color:#1F2937;">
+          <h2>Hi {user_name},</h2>
+          <p>This is a friendly reminder — your <b>EduPointAI invoice is still awaiting payment</b>.</p>
+          <div style="background:#FEF6E0;border-left:4px solid #F59E0B;padding:16px;border-radius:4px;margin:22px 0;">
+            <p style="margin:0;"><b>Invoice:</b> INV-{inv_short}</p>
+            <p style="margin:6px 0 0;"><b>Amount Due:</b> KES {amount:.2f}</p>
+            <p style="margin:6px 0 0;"><b>Reminder:</b> #{reminder_num}</p>
+          </div>
+          <p style="text-align:center;margin:32px 0;">
+            <a href="{pay_link}"
+               style="display:inline-block;background:#2563EB;color:#ffffff;padding:16px 52px;
+                      text-decoration:none;border-radius:10px;font-weight:bold;font-size:16px;">
+              💳 PAY NOW — KES {amount:.0f}
+            </a>
+          </p>
+          <p style="text-align:center;font-size:12px;color:#64748B;">
+            You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.
+          </p>
+          <p style="font-size:13px;color:#64748B;">
+            If you have already paid, please ignore this email — your Results Report will arrive shortly.
+          </p>
+          <p>Best regards,<br/><b>EduPointAI Team</b></p>
+        </div>
+        """
+
+        client.transactional_emails.send_transac_email(
+            subject=f"Reminder: Invoice INV-{inv_short} unpaid — KES {amount:.0f}",
+            html_content=html,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
+            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
+            attachment=[{"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"}],
+        )
+        logger.info(f"Sent reminder #{reminder_num} to {user_email}")
+    except Exception:
+        logger.error(f"Failed to send reminder: {traceback.format_exc()}")
 
 
 def send_paid_receipt_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships, payment):
     try:
+        client, sender_email = _get_brevo()
+        if not client:
+            return
+
         pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
-        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
+        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode("utf-8")
         attachments = [{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
 
-        inv_buffer = generate_invoice_pdf({"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment)
-        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode('utf-8')
+        inv_buffer = generate_invoice_pdf(
+            {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
+        )
+        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
         attachments.append({"content": inv_base64, "name": f"Receipt_{payment['transaction_id']}.pdf"})
 
-        api_key = os.getenv("BREVO_API_KEY"); sender_email = os.getenv("SENDER_EMAIL")
-        if not api_key or not sender_email: return
-        client = Brevo(api_key=api_key)
         html = (
             f"<div style='font-family: Arial; line-height: 1.6;'>"
             f"<h2>Dear {user_name},</h2>"
@@ -365,7 +521,7 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
             f"<ul>"
             f"<li><b>Every course</b> in our database (200+)</li>"
             f"<li>Courses grouped by: <b>Qualified</b> • <b>Close (±2 points)</b> • <b>Not Yet Qualified</b></li>"
-            f"<li>The <b>specific subjects each course requires</b> (e.g. Biology + Chemistry for Medicine)</li>"
+            f"<li>The <b>specific subjects each course requires</b></li>"
             f"<li>Cutoffs, duration and how far you are from each course</li>"
             f"</ul>"
             f"<p>You will also find your <b>Payment Receipt</b> attached.</p>"
@@ -377,11 +533,52 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
             html_content=html,
             sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=attachments
+            attachment=attachments,
         )
         logger.info(f"Successfully sent results and receipt to {user_email}")
-    except Exception as e:
-        logger.error(f"Failed to send email: {traceback.format_exc()}")
+    except Exception:
+        logger.error(f"Failed to send results email: {traceback.format_exc()}")
+
+
+# ==========================================
+# REMINDER BATCH
+# ==========================================
+
+def send_pending_reminders():
+    sent = 0
+    try:
+        with connect() as conn:
+            rows = conn.execute("""
+                SELECT p.*, u.name AS user_name, u.email AS user_email
+                FROM payments p
+                JOIN users u ON u.id = p.user_id
+                WHERE p.status = 'pending'
+                  AND p.redirect_url IS NOT NULL
+                  AND p.created_at < now() - INTERVAL '24 hours'
+                  AND (p.last_reminder_at IS NULL OR p.last_reminder_at < now() - INTERVAL '24 hours')
+                ORDER BY p.created_at ASC
+                LIMIT 100
+            """).fetchall()
+    except Exception:
+        logger.error(f"Reminder query failed: {traceback.format_exc()}")
+        return 0
+
+    for row in rows:
+        try:
+            send_reminder_email(row["user_email"], row["user_name"], row)
+            with connect() as conn:
+                conn.execute(
+                    "UPDATE payments SET last_reminder_at = now(), "
+                    "reminder_count = COALESCE(reminder_count, 0) + 1 "
+                    "WHERE transaction_id = %s",
+                    (row["transaction_id"],)
+                )
+            sent += 1
+        except Exception:
+            logger.error(f"Reminder for {row['transaction_id']} failed: {traceback.format_exc()}")
+
+    logger.info(f"Reminder batch complete — {sent} sent")
+    return sent
 
 
 # ==========================================
@@ -404,7 +601,11 @@ def google_login():
         with connect() as conn:
             u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
             if not u:
-                u = conn.execute("INSERT INTO users(name, email, phone, password_hash, role, credits) VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *", (name, email, "0700000000", "GOOGLE_AUTH")).fetchone()
+                u = conn.execute(
+                    "INSERT INTO users(name, email, phone, password_hash, role, credits) "
+                    "VALUES(%s, %s, %s, %s, 'student', 0) RETURNING *",
+                    (name, email, "0700000000", "GOOGLE_AUTH")
+                ).fetchone()
         session_token = create_session(u["id"])
         return jsonify(ok=True, token=session_token, user=public_user(u), redirect="/")
     except Exception as e:
@@ -444,25 +645,102 @@ def initiate_payment():
     callback_url = f"{os.getenv('FRONTEND_URL', '').rstrip('/')}/"
 
     try:
+        # 1. Create pending record
         payments.create_pending(
             transaction_id=tx, user_id=u["id"], phone=phone,
             network=provider, amount=amount, plan=plan,
             calculation_data=calc_data
         )
 
+        # 2. Get Pesapal checkout URL FIRST
+        r = payments.initiate(
+            provider=provider, phone=phone, amount=amount,
+            transaction_id=tx, plan=plan, user=u, callback_url=callback_url
+        )
+
+        # 3. Persist checkout URL so invoice email can use it
+        payments.update(
+            tx,
+            status=r.get("status"),
+            provider_reference=r.get("provider_reference"),
+            message=r.get("message"),
+            redirect_url=r.get("redirect_url")
+        )
+
+        # 4. NOW send the invoice email (redirect_url is available)
         pending_payment = payments.get(tx)
-        threading.Thread(target=send_pending_invoice_email, args=(u["email"], u["name"], pending_payment)).start()
+        threading.Thread(
+            target=send_invoice_email,
+            args=(u["email"], u["name"], pending_payment),
+            daemon=True
+        ).start()
 
-        r = payments.initiate(provider=provider, phone=phone, amount=amount, transaction_id=tx, plan=plan, user=u, callback_url=callback_url)
-
-        payments.update(tx, status=r.get("status"), provider_reference=r.get("provider_reference"), message=r.get("message"), redirect_url=r.get("redirect_url"))
+        # 5. Track that invoice was sent
+        with connect() as conn:
+            conn.execute(
+                "UPDATE payments SET invoice_sent_at = now() WHERE transaction_id = %s",
+                (tx,)
+            )
 
         return jsonify(ok=True, transaction_id=tx, redirect_url=r.get("redirect_url"))
 
     except Exception as e:
-        logger.error(f"Pesapal Error: {traceback.format_exc()}")
+        logger.error(f"Pesapal initiation failed: {traceback.format_exc()}")
         payments.update(tx, status="failed", message=str(e))
         return jsonify(ok=False, error=f"Error: {str(e)}"), 502
+
+
+@app.route("/api/payment/webhook/pesapal", methods=["GET", "POST"])
+def pesapal_webhook():
+    """Pesapal IPN — fires on payment status change. Handles results delivery
+       even if the user never returns to the frontend."""
+    try:
+        body = request.get_json(silent=True) or {}
+        tracking_id = (
+            request.args.get("OrderTrackingId")
+            or request.args.get("orderTrackingId")
+            or body.get("OrderTrackingId")
+            or body.get("orderTrackingId")
+        )
+        if not tracking_id:
+            logger.warning("Pesapal IPN missing OrderTrackingId")
+            return jsonify(ok=False, error="Missing OrderTrackingId"), 400
+
+        with connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM payments WHERE provider_reference = %s",
+                (tracking_id,)
+            ).fetchone()
+
+        if not row:
+            logger.warning(f"Pesapal IPN: unknown tracking_id {tracking_id}")
+            return jsonify(ok=True, note="unknown")
+
+        from services.pesapal import PesapalClient
+        try:
+            st = PesapalClient().transaction_status(tracking_id)
+        except Exception:
+            logger.error(f"Pesapal status check failed in webhook: {traceback.format_exc()}")
+            return jsonify(ok=False), 500
+
+        status_code = st.get("status_code", -1)
+        new_status = {1: "paid", 2: "failed", 3: "reversed", 0: "invalid"}.get(status_code, "pending")
+
+        payments.update(
+            row["transaction_id"],
+            status=new_status,
+            message=st.get("status") or ""
+        )
+
+        if new_status == "paid":
+            _claim_and_process(row["transaction_id"])
+
+        return jsonify(ok=True, status=new_status)
+
+    except Exception:
+        logger.error(f"Webhook error: {traceback.format_exc()}")
+        return jsonify(ok=False), 500
+
 
 @app.get("/api/payment/status/<transaction_id>")
 @login_required
@@ -482,34 +760,39 @@ def payment_status(transaction_id):
             logger.exception("Status check failed")
 
     calc_results = None
-    if row["status"] == "paid" and row.get("calculation_data"):
-        add_credit(row["user_id"])
-        payments.update(transaction_id, status="completed")
-        row["status"] = "completed"
-        try:
-            calc_results = process_calculation(u, row["calculation_data"]["subjects"], row["calculation_data"]["grades"])
-
-            threading.Thread(
-                target=send_paid_receipt_email,
-                args=(u["email"], u["name"], calc_results["cluster_points"], calc_results["results"],
-                      row["calculation_data"]["subjects"], row["calculation_data"]["grades"], SCHOLARSHIPS, row)
-            ).start()
-
-            payments.update(transaction_id, calculation_data=None)
-        except Exception as e:
-            logger.error(f"Calculation failed post-payment: {e}")
+    if row["status"] == "paid":
+        calc_results = _claim_and_process(transaction_id)
+        row = payments.get(transaction_id)
 
     return jsonify(ok=True, payment=row, calculation_results=calc_results)
+
+
+@app.get("/api/cron/send-reminders")
+def trigger_reminders():
+    secret = request.args.get("secret")
+    expected = os.getenv("CRON_SECRET", "edupoint_secret_123")
+    if secret != expected:
+        return "Unauthorized", 401
+    sent = send_pending_reminders()
+    return jsonify(ok=True, reminders_sent=sent), 200
+
 
 @app.get("/api/history")
 @login_required
 def get_history():
     u = current_user()
     with connect() as conn:
-        rows = conn.execute("""SELECT h.*, (SELECT COUNT(*) FROM calculation_courses WHERE history_id = h.id AND match_type = 'qualified') as qual_count
-               FROM calculation_history h WHERE h.user_id = %s ORDER BY h.created_at DESC""", (u["id"],)).fetchall()
+        rows = conn.execute("""
+            SELECT h.*,
+                   (SELECT COUNT(*) FROM calculation_courses
+                    WHERE history_id = h.id AND match_type = 'qualified') AS qual_count
+            FROM calculation_history h
+            WHERE h.user_id = %s
+            ORDER BY h.created_at DESC
+        """, (u["id"],)).fetchall()
     for r in rows:
-        r["created_at"] = r["created_at"].isoformat(); r["cluster_points"] = float(r["cluster_points"])
+        r["created_at"] = r["created_at"].isoformat()
+        r["cluster_points"] = float(r["cluster_points"])
     return jsonify(ok=True, history=rows)
 
 @app.get("/api/scholarships")
@@ -521,7 +804,6 @@ def scholarships(): return jsonify(SCHOLARSHIPS)
 def chat():
     d = request.get_json(silent=True) or {}
     question = str(d.get("question", "")).lower().strip()
-
     if not question:
         return jsonify(answer="Ask me about any career, course, or subject requirement!")
 
@@ -530,7 +812,6 @@ def chat():
 
     best_match = None
     highest_score = 0
-
     for qa in CHATBOT_QA:
         score = 0
         for kw in qa["keywords"]:
@@ -541,14 +822,12 @@ def chat():
                 for kw_word in kw_words:
                     if kw_word in words:
                         score += 2
-
         if score > highest_score:
             highest_score = score
             best_match = qa
 
     if best_match and highest_score >= 2:
         return jsonify(answer=best_match["answer"])
-
     return jsonify(answer="I am still expanding my career database. Try asking about specific careers (e.g., 'Software Engineer', 'Nursing'), subject requirements, or KCSE grades.")
 
 @app.get("/api/admin/users")
@@ -562,7 +841,11 @@ def admin_users():
 @admin_required
 def admin_payments():
     with connect() as conn:
-        rows = conn.execute("SELECT id,transaction_id,user_id,amount,status FROM payments ORDER BY id DESC LIMIT 100").fetchall()
+        rows = conn.execute("""
+            SELECT id, transaction_id, user_id, amount, status,
+                   invoice_sent_at, last_reminder_at, reminder_count
+            FROM payments ORDER BY id DESC LIMIT 100
+        """).fetchall()
     return jsonify(ok=True, payments=[dict(r) for r in rows])
 
 @app.post("/api/admin/access/<int:user_id>")
@@ -581,19 +864,11 @@ def trigger_daily_reports():
     try:
         secret = request.args.get("secret")
         expected_secret = os.getenv("CRON_SECRET", "edupoint_secret_123")
-
         if secret != expected_secret:
             return "Unauthorized", 401
-
         success = generate_and_send_reports()
-
-        if success:
-            return "OK", 200
-        else:
-            return "Failed to generate", 500
-
-    except Exception as e:
-        import traceback
+        return ("OK", 200) if success else ("Failed to generate", 500)
+    except Exception:
         logger.error(f"Cron Error: {traceback.format_exc()}")
         return "Error", 500
 
