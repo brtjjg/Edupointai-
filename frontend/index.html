@@ -458,12 +458,16 @@ let pendingCalc = null;
 
 function initAuth() {
   if (typeof google === 'undefined') return;
+  
+  // FIXED: Added login_uri to prevent the blank "transform" screen
   google.accounts.id.initialize({
     client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
     callback: handleGoogleLogin,
-    ux_mode: 'popup',
+    ux_mode: 'redirect',
+    login_uri: window.location.origin + window.location.pathname, 
     auto_select: false
   });
+  
   const container = document.getElementById('google-btn-landing');
   if (container) {
     container.innerHTML = '';
@@ -471,7 +475,6 @@ function initAuth() {
   }
 }
 
-// FIXED: Handles both mobile redirect and desktop popup gracefully
 async function handleGoogleLogin(response) {
   try {
     const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
@@ -480,22 +483,15 @@ async function handleGoogleLogin(response) {
     // Force the welcome screen to show upon successful sign in
     sessionStorage.removeItem('edupoint_welcome_shown');
     
-    // If this is a popup, notify the parent window and close
-    if (window.opener && !window.opener.closed) {
-      window.opener.location.reload();
-      window.close();
-    } else {
-      // If it's the main window (e.g., mobile redirect), go back to base URL
-      window.location.href = window.location.origin;
-    }
+    // Redirect cleanly
+    window.location.href = window.location.origin;
   } catch (err) { 
     alert("Login failed: " + err.message); 
-    if (window.opener) window.close();
   }
 }
 
 // ==========================================
-// INIT: Instantly show Welcome or Dashboard, no blank screens
+// INIT: Instantly show Welcome or Dashboard
 // ==========================================
 async function init() {
   if (getToken()) {
