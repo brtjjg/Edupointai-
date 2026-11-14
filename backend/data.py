@@ -78,8 +78,6 @@ P = [
 {"n":"Veterinary Medicine","u":"UNIVERSITY OF NAIROBI","c":37.747,"y":"5","s":"60K-300K","i":"🐄"},
 {"n":"Bachelor of Laws (LLB)","u":"UNIVERSITY OF NAIROBI","c":42.500,"y":"4","s":"80K-500K+","i":"⚖️"},
 {"n":"Bachelor of Laws (LLB)","u":"KENYATTA UNIVERSITY","c":42.000,"y":"4","s":"70K-400K","i":"⚖️"},
-    # --- NEW EXPANSION: 120+ COURSES ---
-
     # 1. HEALTH SCIENCES
     {"n":"Dental Surgery","u":"MOI UNIVERSITY","c":44.120,"y":"5","s":"150K-400K","i":"🦷"},
     {"n":"Pharmacy","u":"MOI UNIVERSITY","c":42.500,"y":"5","s":"100K-300K","i":"💊"},
@@ -91,7 +89,6 @@ P = [
     {"n":"Health Records & IT","u":"KENYATTA UNIVERSITY","c":33.100,"y":"4","s":"50K-120K","i":"📄"},
     {"n":"Radiography","u":"UNIVERSITY OF NAIROBI","c":43.100,"y":"4","s":"80K-200K","i":"🩻"},
     {"n":"Physiotherapy","u":"MOI UNIVERSITY","c":39.500,"y":"4","s":"60K-150K","i":"💪"},
-
     # 2. ENGINEERING & TECHNOLOGY
     {"n":"Aerospace Engineering","u":"UNIVERSITY OF NAIROBI","c":44.500,"y":"5","s":"150K-500K","i":"✈️"},
     {"n":"Biomedical Engineering","u":"KENYATTA UNIVERSITY","c":40.200,"y":"5","s":"100K-300K","i":"🦾"},
@@ -107,7 +104,6 @@ P = [
     {"n":"Agricultural Engineering","u":"JKUAT","c":36.200,"y":"5","s":"60K-180K","i":"🚜"},
     {"n":"Food Science & Technology","u":"JKUAT","c":37.500,"y":"4","s":"60K-150K","i":"🍎"},
     {"n":"Mining Engineering","u":"JKUAT","c":36.800,"y":"5","s":"100K-300K","i":"⛏️"},
-
     # 3. BUSINESS & ECONOMICS
     {"n":"Accounting","u":"UNIVERSITY OF NAIROBI","c":38.400,"y":"4","s":"60K-250K","i":"📊"},
     {"n":"Accounting","u":"KENYATTA UNIVERSITY","c":35.200,"y":"4","s":"60K-250K","i":"📊"},
@@ -122,7 +118,6 @@ P = [
     {"n":"Business Information Technology","u":"STRATHMORE UNIVERSITY","c":36.100,"y":"4","s":"70K-200K","i":"💻"},
     {"n":"Insurance","u":"KENYATTA UNIVERSITY","c":25.800,"y":"4","s":"40K-120K","i":"🛡️"},
     {"n":"Cooperative Management","u":"KARATINA UNIVERSITY","c":24.100,"y":"4","s":"40K-100K","i":"🤝"},
-
     # 4. LAW, ARTS & HUMANITIES
     {"n":"Bachelor of Laws (LLB)","u":"CATHOLIC UNIVERSITY OF EASTERN AFRICA","c":39.800,"y":"4","s":"80K-300K","i":"⚖️"},
     {"n":"Bachelor of Laws (LLB)","u":"STRATHMORE UNIVERSITY","c":41.500,"y":"4","s":"100K-400K","i":"⚖️"},
@@ -143,7 +138,6 @@ P = [
     {"n":"Fine Art","u":"KENYATTA UNIVERSITY","c":25.100,"y":"4","s":"30K-80K","i":"🎨"},
     {"n":"Music","u":"KENYATTA UNIVERSITY","c":24.500,"y":"4","s":"30K-100K","i":"🎵"},
     {"n":"Theatre & Film","u":"KENYATTA UNIVERSITY","c":27.800,"y":"4","s":"40K-150K","i":"🎬"},
-
     # 5. EDUCATION
     {"n":"Education (Science)","u":"MASENO UNIVERSITY","c":32.500,"y":"4","s":"35K-120K","i":"📚"},
     {"n":"Education (Science)","u":"MOI UNIVERSITY","c":34.200,"y":"4","s":"35K-120K","i":"📚"},
@@ -153,7 +147,6 @@ P = [
     {"n":"Special Needs Education","u":"KENYATTA UNIVERSITY","c":25.500,"y":"4","s":"30K-90K","i":"🤝"},
     {"n":"Physical Education","u":"KENYATTA UNIVERSITY","c":24.800,"y":"4","s":"30K-80K","i":"🏃"},
     {"n":"Educational Psychology","u":"KENYATTA UNIVERSITY","c":29.400,"y":"4","s":"40K-100K","i":"🧠"},
-
     # 6. AGRICULTURE & ENVIRONMENT
     {"n":"Agriculture","u":"UNIVERSITY OF NAIROBI","c":29.500,"y":"4","s":"35K-150K","i":"🌾"},
     {"n":"Agriculture","u":"MOI UNIVERSITY","c":24.100,"y":"4","s":"30K-120K","i":"🌾"},
@@ -168,7 +161,6 @@ P = [
     {"n":"Forestry","u":"MOI UNIVERSITY","c":21.500,"y":"4","s":"30K-90K","i":"🌲"},
     {"n":"Wildlife Management","u":"MOI UNIVERSITY","c":24.200,"y":"4","s":"35K-100K","i":"🦁"},
     {"n":"Fisheries & Aquaculture","u":"MOI UNIVERSITY","c":23.100,"y":"4","s":"30K-90K","i":"🐟"},
-
     # 7. PURE SCIENCES & MATH
     {"n":"Mathematics","u":"UNIVERSITY OF NAIROBI","c":38.500,"y":"4","s":"50K-200K","i":"📐"},
     {"n":"Mathematics","u":"KENYATTA UNIVERSITY","c":32.400,"y":"4","s":"40K-150K","i":"📐"},
@@ -181,7 +173,6 @@ P = [
     {"n":"Biotechnology","u":"JKUAT","c":38.200,"y":"4","s":"60K-200K","i":"🔬"},
     {"n":"Geology","u":"UNIVERSITY OF NAIROBI","c":33.500,"y":"4","s":"50K-200K","i":"🪨"},
     {"n":"Meteorology","u":"UNIVERSITY OF NAIROBI","c":31.400,"y":"4","s":"40K-150K","i":"🌦️"},
-
     # 8. COMPUTING & IT
     {"n":"Computer Science","u":"STRATHMORE UNIVERSITY","c":42.500,"y":"4","s":"100K-500K","i":"💻"},
     {"n":"Computer Science","u":"KABARAK UNIVERSITY","c":36.200,"y":"4","s":"60K-300K","i":"💻"},
@@ -193,14 +184,12 @@ P = [
     {"n":"Computer Technology","u":"TECHNICAL UNIVERSITY OF KENYA","c":34.100,"y":"4","s":"50K-200K","i":"🖥️"},
     {"n":"Information Technology","u":"MULTIMEDIA UNIVERSITY","c":33.500,"y":"4","s":"50K-200K","i":"🌐"},
     {"n":"Information Technology","u":"KARATINA UNIVERSITY","c":28.100,"y":"4","s":"40K-150K","i":"🌐"},
-
     # 9. HOSPITALITY & TOURISM
     {"n":"Hospitality Management","u":"KENYATTA UNIVERSITY","c":29.800,"y":"4","s":"40K-150K","i":"🏨"},
     {"n":"Hospitality Management","u":"MOI UNIVERSITY","c":25.500,"y":"4","s":"35K-120K","i":"🏨"},
     {"n":"Tourism Management","u":"MOI UNIVERSITY","c":26.200,"y":"4","s":"35K-120K","i":"✈️"},
     {"n":"Tourism Management","u":"KENYATTA UNIVERSITY","c":28.500,"y":"4","s":"40K-130K","i":"✈️"},
     {"n":"Travel & Tour Operations","u":"TECHNICAL UNIVERSITY OF KENYA","c":22.100,"y":"4","s":"30K-100K","i":"🧳"},
-
     # 10. MEDIA & DESIGN
     {"n":"Graphic Design","u":"TECHNICAL UNIVERSITY OF KENYA","c":30.400,"y":"4","s":"40K-150K","i":"🎨"},
     {"n":"Animation & Motion Graphics","u":"MULTIMEDIA UNIVERSITY","c":33.200,"y":"4","s":"50K-180K","i":"🎬"},
@@ -208,7 +197,6 @@ P = [
     {"n":"Interior Design","u":"TECHNICAL UNIVERSITY OF KENYA","c":29.500,"y":"4","s":"45K-150K","i":"🛋️"},
     {"n":"Photography","u":"MULTIMEDIA UNIVERSITY","c":28.500,"y":"4","s":"40K-130K","i":"📷"},
     {"n":"Film & Video Production","u":"MULTIMEDIA UNIVERSITY","c":34.100,"y":"4","s":"50K-200K","i":"🎥"},
-
     # 11. TVET & TECHNICAL (Diplomas/Certificates)
     {"n":"Diploma in Electrical Engineering","u":"KENYA POLYTECHNIC","c":25.500,"y":"3","s":"30K-100K","i":"⚡"},
     {"n":"Diploma in Mechanical Engineering","u":"KENYA POLYTECHNIC","c":24.100,"y":"3","s":"30K-90K","i":"⚙️"},
@@ -224,9 +212,8 @@ P = [
     {"n":"Certificate in Secretarial Studies","u":"KENYA POLYTECHNIC","c":17.500,"y":"2","s":"20K-50K","i":"📝"},
     {"n":"Diploma in Supply Chain Management","u":"KENYA POLYTECHNIC","c":22.100,"y":"3","s":"30K-90K","i":"🚚"},
     {"n":"Diploma in Journalism","u":"KENYA INSTITUTE OF MASS COMMUNICATION","c":27.500,"y":"3","s":"35K-120K","i":"📰"},
-        # --- EXPANSION: TVET, DIPLOMAS & CERTIFICATES ---
-    
-    # 1. KENYA MEDICAL TRAINING COLLEGE (KMTC) - HEALTH
+    # --- EXPANSION: TVET, DIPLOMAS & CERTIFICATES ---
+    # 1. KMTC - HEALTH
     {"n":"Diploma in Nursing","u":"KMTC NAIROBI","c":34.500,"y":"3","s":"50K-150K","i":"🩺"},
     {"n":"Diploma in Clinical Medicine & Surgery","u":"KMTC NAIROBI","c":32.100,"y":"3","s":"45K-130K","i":"🩻"},
     {"n":"Diploma in Pharmacy","u":"KMTC NAIROBI","c":30.800,"y":"3","s":"40K-120K","i":"💊"},
@@ -237,8 +224,7 @@ P = [
     {"n":"Diploma in Dental Technology","u":"KMTC NAIROBI","c":28.200,"y":"3","s":"40K-110K","i":"🦷"},
     {"n":"Diploma in Orthopaedic Technology","u":"KMTC NAIROBI","c":25.800,"y":"3","s":"35K-100K","i":"🦴"},
     {"n":"Diploma in Occupational Therapy","u":"KMTC NAIROBI","c":27.100,"y":"3","s":"35K-100K","i":"💪"},
-
-    # 2. KENYA POLYTECHNIC / TECHNICAL UNIVERSITY OF KENYA - ENGINEERING
+    # 2. KENYA POLYTECHNIC - ENGINEERING
     {"n":"Diploma in Electrical & Electronic Engineering","u":"KENYA POLYTECHNIC","c":28.500,"y":"3","s":"35K-100K","i":"⚡"},
     {"n":"Diploma in Mechanical Engineering","u":"KENYA POLYTECHNIC","c":27.100,"y":"3","s":"35K-100K","i":"⚙️"},
     {"n":"Diploma in Civil Engineering","u":"KENYA POLYTECHNIC","c":29.200,"y":"3","s":"40K-110K","i":"🏗️"},
@@ -249,7 +235,6 @@ P = [
     {"n":"Diploma in Land Surveying","u":"KENYA POLYTECHNIC","c":27.500,"y":"3","s":"35K-100K","i":"📍"},
     {"n":"Diploma in Refrigeration & Air Conditioning","u":"KENYA POLYTECHNIC","c":23.200,"y":"3","s":"30K-90K","i":"❄️"},
     {"n":"Diploma in Telecommunications","u":"KENYA POLYTECHNIC","c":28.100,"y":"3","s":"35K-110K","i":"📡"},
-
     # 3. KENYA POLYTECHNIC - IT & BUSINESS
     {"n":"Diploma in Information Communication Technology","u":"KENYA POLYTECHNIC","c":30.500,"y":"3","s":"35K-120K","i":"💻"},
     {"n":"Diploma in Computer Science","u":"KENYA POLYTECHNIC","c":32.100,"y":"3","s":"40K-130K","i":"🖥️"},
@@ -260,8 +245,7 @@ P = [
     {"n":"Diploma in Accountancy","u":"KENYA POLYTECHNIC","c":28.400,"y":"3","s":"35K-100K","i":"📊"},
     {"n":"Diploma in Secretarial Studies","u":"KENYA POLYTECHNIC","c":22.500,"y":"3","s":"25K-70K","i":"📝"},
     {"n":"Diploma in Library & Information Science","u":"KENYA POLYTECHNIC","c":21.800,"y":"3","s":"25K-70K","i":"📚"},
-
-    # 4. KENYA INSTITUTE OF MASS COMMUNICATION (KIMC)
+    # 4. KIMC
     {"n":"Diploma in Broadcast Journalism","u":"KIMC NAIROBI","c":33.500,"y":"3","s":"50K-150K","i":"📺"},
     {"n":"Diploma in Print Journalism","u":"KIMC NAIROBI","c":31.200,"y":"3","s":"45K-130K","i":"📰"},
     {"n":"Diploma in Film & Video Production","u":"KIMC NAIROBI","c":34.100,"y":"3","s":"60K-180K","i":"🎥"},
@@ -269,23 +253,20 @@ P = [
     {"n":"Diploma in Advertising","u":"KIMC NAIROBI","c":30.500,"y":"3","s":"45K-130K","i":"📢"},
     {"n":"Diploma in Sound Engineering","u":"KIMC NAIROBI","c":29.100,"y":"3","s":"50K-150K","i":"🎧"},
     {"n":"Diploma in Photography","u":"KIMC NAIROBI","c":27.500,"y":"3","s":"40K-120K","i":"📷"},
-
-    # 5. KENYA UTALII COLLEGE - HOSPITALITY & TOURISM
+    # 5. KENYA UTALII COLLEGE
     {"n":"Diploma in Food & Beverage Management","u":"KENYA UTALII COLLEGE","c":30.100,"y":"3","s":"50K-150K","i":"🍽️"},
     {"n":"Diploma in Hotel Management","u":"KENYA UTALII COLLEGE","c":32.500,"y":"3","s":"60K-180K","i":"🏨"},
     {"n":"Diploma in Tourism Management","u":"KENYA UTALII COLLEGE","c":29.800,"y":"3","s":"45K-140K","i":"✈️"},
     {"n":"Diploma in Tour Guiding & Administration","u":"KENYA UTALII COLLEGE","c":26.500,"y":"3","s":"40K-120K","i":"🗺️"},
     {"n":"Diploma in Baking & Pastry","u":"KENYA UTALII COLLEGE","c":24.100,"y":"3","s":"35K-110K","i":"🧁"},
     {"n":"Diploma in Housekeeping & Laundry","u":"KENYA UTALII COLLEGE","c":21.500,"y":"3","s":"30K-90K","i":"🧹"},
-
     # 6. BUKURA AGRICULTURAL COLLEGE
     {"n":"Diploma in General Agriculture","u":"BUKURA AGRICULTURAL COLLEGE","c":24.500,"y":"3","s":"30K-90K","i":"🌾"},
     {"n":"Diploma in Agribusiness Management","u":"BUKURA AGRICULTURAL COLLEGE","c":23.100,"y":"3","s":"30K-80K","i":"🚜"},
     {"n":"Diploma in Horticulture","u":"BUKURA AGRICULTURAL COLLEGE","c":22.800,"y":"3","s":"25K-80K","i":"🌻"},
     {"n":"Diploma in Animal Health & Production","u":"BUKURA AGRICULTURAL COLLEGE","c":25.200,"y":"3","s":"30K-90K","i":"🐄"},
     {"n":"Diploma in Agricultural Engineering","u":"BUKURA AGRICULTURAL COLLEGE","c":26.100,"y":"3","s":"35K-100K","i":"⚙️"},
-
-    # 7. RIFT VALLEY TECHNICAL TRAINING INSTITUTE (RVTTI)
+    # 7. RVTTI
     {"n":"Diploma in Mechanical Engineering (Production)","u":"RVTTI ELDORET","c":24.100,"y":"3","s":"30K-90K","i":"⚙️"},
     {"n":"Diploma in Electrical & Electronics","u":"RVTTI ELDORET","c":25.500,"y":"3","s":"35K-100K","i":"⚡"},
     {"n":"Diploma in Automotive Engineering","u":"RVTTI ELDORET","c":22.800,"y":"3","s":"30K-90K","i":"🚗"},
@@ -293,21 +274,17 @@ P = [
     {"n":"Diploma in Applied Biology","u":"RVTTI ELDORET","c":26.500,"y":"3","s":"35K-100K","i":"🧬"},
     {"n":"Diploma in Analytical Chemistry","u":"RVTTI ELDORET","c":27.100,"y":"3","s":"35K-100K","i":"🧪"},
     {"n":"Diploma in Fashion Design & Clothing Tech","u":"RVTTI ELDORET","c":21.000,"y":"3","s":"25K-80K","i":"👗"},
-
-    # 8. MERU NATIONAL POLYTECHNIC & OTHERS
+    # 8. MERU & OTHERS
     {"n":"Diploma in ICT","u":"MERU NATIONAL POLYTECHNIC","c":26.500,"y":"3","s":"30K-90K","i":"💻"},
     {"n":"Diploma in Business Administration","u":"MERU NATIONAL POLYTECHNIC","c":22.100,"y":"3","s":"25K-80K","i":"💼"},
     {"n":"Diploma in Agriculture","u":"MERU NATIONAL POLYTECHNIC","c":21.500,"y":"3","s":"25K-80K","i":"🌾"},
     {"n":"Diploma in Civil Engineering","u":"MERU NATIONAL POLYTECHNIC","c":24.800,"y":"3","s":"30K-90K","i":"🏗️"},
-    
     {"n":"Diploma in Marine Engineering","u":"BANDARI COLLEGE MOMBASA","c":28.100,"y":"3","s":"50K-150K","i":"🚢"},
     {"n":"Diploma in Shipping & Logistics","u":"BANDARI COLLEGE MOMBASA","c":25.500,"y":"3","s":"40K-120K","i":"⚓"},
     {"n":"Diploma in Mechanical Engineering (Marine)","u":"BANDARI COLLEGE MOMBASA","c":26.800,"y":"3","s":"45K-130K","i":"⚙️"},
-
     {"n":"Diploma in Petroleum Geoscience","u":"KIGANJO PETROLEUM INSTITUTE","c":29.100,"y":"3","s":"60K-180K","i":"🛢️"},
     {"n":"Diploma in Petroleum Engineering","u":"KIGANJO PETROLEUM INSTITUTE","c":30.500,"y":"3","s":"70K-200K","i":"🛢️"},
-
-    # 9. CERTIFICATES & ARTISAN COURSES (For D and E grades)
+    # 9. CERTIFICATES & ARTISAN
     {"n":"Certificate in Plumbing","u":"KENYA POLYTECHNIC","c":16.000,"y":"2","s":"20K-60K","i":"🔧"},
     {"n":"Certificate in Welding & Fabrication","u":"KENYA POLYTECHNIC","c":15.500,"y":"2","s":"20K-60K","i":"⚒️"},
     {"n":"Certificate in Masonry","u":"RVTTI ELDORET","c":15.000,"y":"2","s":"20K-50K","i":"🧱"},
@@ -316,7 +293,6 @@ P = [
     {"n":"Artisan in Carpentry & Joinery","u":"KENYA POLYTECHNIC","c":12.000,"y":"2","s":"15K-40K","i":"🪵"},
     {"n":"Artisan in Bricklaying","u":"KENYA POLYTECHNIC","c":12.000,"y":"2","s":"15K-40K","i":"🧱"},
     {"n":"Artisan in Tailoring & Dressmaking","u":"RVTTI ELDORET","c":13.500,"y":"2","s":"15K-45K","i":"✂️"}
-]
 ]
 
 SCHOLARSHIPS = [
@@ -327,6 +303,180 @@ SCHOLARSHIPS = [
 {"name":"KCB Foundation 2jiajiri","amount":"KES 100,000","major":"Technical","min_gpa":2.0,"income_req":"Youth 18-35","deadline":"Ongoing","link":"https://kcbgroup.com"},
 {"name":"Zawadi Africa","amount":"KES 200,000/yr","major":"STEM, Business","min_gpa":3.5,"income_req":"Low income girls","deadline":"Feb 28","link":"https://zawadiafrica.org"},
 ]
+
+# =====================================================
+# SUBJECT REQUIREMENT RESOLVER — used by PDF generator
+# Ordered most-specific first — DO NOT RESHUFFLE
+# =====================================================
+_SUBJECT_RULES = [
+    ("artisan", (["Any subject"], "", "Artisan level")),
+    ("certificate", (["English", "Mathematics"], "Any relevant subject", "Certificate level")),
+    ("diploma in nursing", (["Biology", "Chemistry"], "English, Mathematics or Physics", "Minimum C plain")),
+    ("diploma in clinical", (["Biology", "Chemistry"], "English, Mathematics or Physics", "")),
+    ("diploma in pharmacy", (["Chemistry", "Biology"], "English, Mathematics or Physics", "")),
+    ("diploma in medical lab", (["Biology", "Chemistry"], "English, Mathematics or Physics", "")),
+    ("diploma in radiography", (["Biology", "Chemistry", "Physics"], "English or Mathematics", "")),
+    ("diploma in dental", (["Biology", "Chemistry"], "Physics or English", "")),
+    ("diploma in nutrition", (["Biology", "Chemistry"], "English, Mathematics or Physics", "")),
+    ("diploma in health records", (["Biology", "Mathematics"], "English, Chemistry or Physics", "")),
+    ("diploma in electrical", (["Mathematics", "Physics"], "Chemistry or English", "")),
+    ("diploma in mechanical", (["Mathematics", "Physics"], "Chemistry or English", "")),
+    ("diploma in civil", (["Mathematics", "Physics"], "Chemistry or Geography", "")),
+    ("diploma in automotive", (["Mathematics", "Physics"], "Chemistry or English", "")),
+    ("diploma in building", (["Mathematics", "Physics"], "Chemistry or Geography", "")),
+    ("diploma in architecture", (["Mathematics", "Physics"], "Chemistry, Geography or Art", "")),
+    ("diploma in quantity", (["Mathematics", "Physics"], "Chemistry or Geography", "")),
+    ("diploma in land survey", (["Mathematics", "Physics"], "Geography", "")),
+    ("diploma in information", (["Mathematics"], "English, Physics, Chemistry or Biology", "")),
+    ("diploma in computer", (["Mathematics"], "English, Physics, Chemistry or Biology", "")),
+    ("diploma in ict", (["Mathematics"], "English, Physics, Chemistry or Biology", "")),
+    ("diploma in business", (["Mathematics", "English"], "Any business subject", "")),
+    ("diploma in accountancy", (["Mathematics", "English"], "Any business subject", "")),
+    ("diploma in supply", (["Mathematics", "English"], "Any business subject", "")),
+    ("diploma in human resource", (["English"], "Mathematics or Business", "")),
+    ("diploma in sales", (["English"], "Mathematics or Business", "")),
+    ("diploma in secretarial", (["English", "Kiswahili"], "Any subject", "")),
+    ("diploma in library", (["English"], "Any subject", "")),
+    ("diploma in journalism", (["English", "Kiswahili"], "Any subject", "")),
+    ("diploma in broadcast", (["English", "Kiswahili"], "Any subject", "")),
+    ("diploma in print", (["English", "Kiswahili"], "Any subject", "")),
+    ("diploma in film", (["English", "Art"], "Any subject", "")),
+    ("diploma in public relations", (["English"], "Any subject", "")),
+    ("diploma in advertising", (["English"], "Any subject", "")),
+    ("diploma in sound", (["Physics", "Mathematics"], "Music or English", "")),
+    ("diploma in photography", (["Art or Physics"], "Any subject", "")),
+    ("diploma in food", (["Biology", "Chemistry"], "English or Mathematics", "")),
+    ("diploma in hotel", (["English"], "Mathematics or Business", "")),
+    ("diploma in tourism", (["English"], "Geography or Business", "")),
+    ("diploma in tour guiding", (["English", "Geography"], "History or Business", "")),
+    ("diploma in baking", (["Biology or Home Science"], "English or Mathematics", "")),
+    ("diploma in housekeeping", (["English"], "Any subject", "")),
+    ("diploma in general agriculture", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("diploma in agribusiness", (["Biology", "Chemistry"], "Mathematics or Business", "")),
+    ("diploma in horticulture", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("diploma in animal", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("diploma in agricultural", (["Mathematics", "Physics"], "Biology or Chemistry", "")),
+    ("diploma in applied biology", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("diploma in analytical chemistry", (["Chemistry", "Mathematics"], "Physics or Biology", "")),
+    ("diploma in fashion", (["Art or Home Science"], "English or Mathematics", "")),
+    ("diploma in marine", (["Mathematics", "Physics"], "Chemistry or English", "")),
+    ("diploma in shipping", (["Mathematics", "English"], "Geography or Business", "")),
+    ("diploma in petroleum", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("clinical", (["Biology", "Chemistry"], "Physics or Mathematics", "Minimum B- in Biology & Chemistry")),
+    ("medicine", (["Biology", "Chemistry"], "Physics or Mathematics", "Minimum B in Biology & Chemistry")),
+    ("dental", (["Biology", "Chemistry"], "Physics or Mathematics", "Minimum B in Biology & Chemistry")),
+    ("pharmacy", (["Chemistry", "Biology"], "Physics or Mathematics", "Minimum B in Chemistry")),
+    ("nursing", (["Biology", "Chemistry"], "Physics or Mathematics", "Minimum B- in Biology & Chemistry")),
+    ("medical lab", (["Biology", "Chemistry"], "Physics or Mathematics", "")),
+    ("radiography", (["Biology", "Chemistry", "Physics"], "Mathematics", "")),
+    ("physiotherapy", (["Biology", "Chemistry"], "Physics or Mathematics", "")),
+    ("public health", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("environmental health", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("veterinary", (["Biology", "Chemistry"], "Physics or Mathematics", "Minimum B in Biology & Chemistry")),
+    ("biomedical", (["Biology", "Chemistry"], "Physics or Mathematics", "")),
+    ("business information", (["Mathematics", "English"], "Any business subject", "")),
+    ("computer science", (["Mathematics"], "Physics, Chemistry or Biology", "English minimum C+")),
+    ("software engineering", (["Mathematics"], "Physics, Chemistry or Biology", "English minimum C+")),
+    ("information technology", (["Mathematics"], "Physics, Chemistry or Biology", "")),
+    ("information systems", (["Mathematics"], "Physics, Chemistry or Biology", "")),
+    ("data science", (["Mathematics"], "Physics, Chemistry or Biology", "")),
+    ("artificial intelligence", (["Mathematics"], "Physics, Chemistry or Biology", "")),
+    ("cybersecurity", (["Mathematics"], "Physics, Chemistry or Biology", "")),
+    ("computer technology", (["Mathematics"], "Physics, Chemistry or Biology", "")),
+    ("actuarial", (["Mathematics"], "Any two sciences/arts", "Minimum B in Mathematics")),
+    ("statistics", (["Mathematics"], "Any two subjects", "")),
+    ("agricultural engineering", (["Mathematics", "Physics"], "Biology or Chemistry", "")),
+    ("chemical engineering", (["Mathematics", "Chemistry"], "Physics", "")),
+    ("civil engineering", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("electrical", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("mechanical engineering", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("mechatronic", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("aerospace", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("petroleum", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("telecommunication", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("geospatial", (["Mathematics", "Physics"], "Geography", "")),
+    ("surveying", (["Mathematics", "Physics"], "Geography", "")),
+    ("quantity surveying", (["Mathematics", "Physics"], "Chemistry or Geography", "")),
+    ("architecture", (["Mathematics", "Physics"], "Chemistry or Geography", "")),
+    ("construction management", (["Mathematics", "Physics"], "Chemistry or Geography", "")),
+    ("food science", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("mining", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("marine engineering", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("engineering", (["Mathematics", "Physics"], "Chemistry", "Catch-all engineering")),
+    ("accounting", (["Mathematics", "English"], "Any business subject", "Minimum C+ in Math & English")),
+    ("finance", (["Mathematics", "English"], "Any business subject", "")),
+    ("banking", (["Mathematics", "English"], "Any business subject", "")),
+    ("commerce", (["Mathematics", "English"], "Any business subject", "")),
+    ("economics", (["Mathematics", "English"], "Any subject", "")),
+    ("marketing", (["English"], "Mathematics or Business", "")),
+    ("supply chain", (["Mathematics", "English"], "Any subject", "")),
+    ("human resource", (["English"], "Any subject", "")),
+    ("entrepreneurship", (["English", "Mathematics"], "Any business subject", "")),
+    ("insurance", (["Mathematics", "English"], "Any business subject", "")),
+    ("cooperative", (["Mathematics", "English"], "Any business subject", "")),
+    ("law", (["English (minimum B)"], "Any two from Group 2 or 3", "LLB requires strong English")),
+    ("journalism", (["English", "Kiswahili"], "Any subject", "")),
+    ("psychology", (["English", "Biology"], "Any subject", "")),
+    ("sociology", (["English"], "Any subject", "")),
+    ("political science", (["English", "History"], "Any subject", "")),
+    ("international relations", (["English", "History"], "Any subject", "")),
+    ("public administration", (["English", "History"], "Any subject", "")),
+    ("social work", (["English"], "Any subject", "")),
+    ("community development", (["English"], "Any subject", "")),
+    ("anthropology", (["English", "History"], "Any subject", "")),
+    ("philosophy", (["English"], "Any subject", "")),
+    ("literature", (["English"], "Any subject", "")),
+    ("linguistics", (["English"], "Any language", "")),
+    ("fine art", (["Art"], "English", "")),
+    ("music", (["Music"], "English", "")),
+    ("theatre", (["English", "Art"], "Any subject", "")),
+    ("film", (["English", "Art"], "Any subject", "")),
+    ("education (science)", (["Mathematics", "Two Sciences"], "Any subject", "")),
+    ("education (arts)", (["English or Kiswahili"], "Two Arts subjects", "")),
+    ("early childhood", (["English"], "Any subject", "")),
+    ("special needs", (["English"], "Any subject", "")),
+    ("physical education", (["Biology"], "Any subject", "")),
+    ("educational psychology", (["English", "Biology"], "Any subject", "")),
+    ("agricultural economics", (["Mathematics", "Economics"], "Biology or Agriculture", "")),
+    ("agribusiness", (["Biology", "Chemistry"], "Mathematics or Business", "")),
+    ("agriculture", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("animal science", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("horticulture", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("soil science", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("environmental science", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("forestry", (["Biology", "Chemistry"], "Mathematics or Geography", "")),
+    ("wildlife", (["Biology", "Chemistry"], "Mathematics or Geography", "")),
+    ("fisheries", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("biochemistry", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("microbiology", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("biotechnology", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("biology", (["Biology", "Chemistry"], "Mathematics or Physics", "")),
+    ("chemistry", (["Chemistry", "Mathematics"], "Physics or Biology", "")),
+    ("physics", (["Mathematics", "Physics"], "Chemistry", "")),
+    ("mathematics", (["Mathematics"], "Physics or Chemistry", "")),
+    ("geology", (["Chemistry", "Physics"], "Mathematics or Geography", "")),
+    ("meteorology", (["Mathematics", "Physics"], "Geography or Chemistry", "")),
+    ("hospitality", (["English"], "Mathematics or Business", "")),
+    ("tourism", (["English"], "Geography or Business", "")),
+    ("travel", (["English", "Geography"], "Any subject", "")),
+    ("graphic design", (["Art or English"], "Any subject", "")),
+    ("animation", (["Mathematics or Art"], "Any subject", "")),
+    ("fashion", (["Art or Home Science"], "Any subject", "")),
+    ("interior design", (["Art or Mathematics"], "Any subject", "")),
+    ("photography", (["Art or Physics"], "Any subject", "")),
+    ("bachelor of arts", (["English"], "Any two subjects", "")),
+    ("bachelor of commerce", (["Mathematics", "English"], "Any business subject", "")),
+]
+
+
+def get_subject_requirements(course_name):
+    """Return (required_list, other, note) for a course name."""
+    name = (course_name or "").lower()
+    for pattern, req in _SUBJECT_RULES:
+        if pattern in name:
+            return req
+    return (["English", "Mathematics"], "Any two other subjects", "")
+
 
 CHATBOT_QA = [
 {"keywords":["calculate cluster points","how cluster points","cluster points formula","weighted cluster"],"answer":"Cluster points = (sum of your best 7 subject points / 84) × 48. Grade points: A=12, A-=11, B+=10, B=9, B-=8, C+=7, C=6, C-=5, D+=4, D=3, D-=2, E=1."},
@@ -366,14 +516,9 @@ CHATBOT_QA = [
 {"keywords":["fully government sponsored","government sponsorship"],"answer":"Government sponsorship depends on the current funding and placement rules. Check current KUCCPS/HELB information."},
 ]
 
-# Add this at the bottom of your data.py file (replace the old CHATBOT_QA)
-
 CAREER_QA = [
-    # Category 1: Career Discovery
     {"keywords": ["career guidance", "what is career guidance", "choose right career", "career choice"], "answer": "Career guidance is the process of helping individuals understand their interests, abilities, values, and qualifications so they can choose suitable career paths and make informed professional decisions. Start by identifying subjects you enjoy and comparing them with available occupations."},
     {"keywords": ["discover talents", "personality career", "passion vs career", "strongest subjects", "career pays well", "don't know career"], "answer": "To discover your path, examine activities you learn quickly and problems you solve effectively. Income is important, but you should also consider your abilities, interests, and long-term satisfaction. If you don't know what career you want, explore different career families and complete a career assessment."},
-    
-    # Category 2: Tech & Engineering Careers
     {"keywords": ["software engineer", "software engineering", "developer"], "answer": "A software engineer designs, develops, tests, and maintains software applications and computer systems. They may work on websites, mobile applications, enterprise systems, and other digital products. Key subjects: Mathematics, Physics, Computer Studies."},
     {"keywords": ["data scientist", "data science"], "answer": "A data scientist analyses large datasets, identifies patterns, builds predictive models, and communicates findings that help organizations make decisions. Key subjects: Mathematics, Statistics, Computer Science."},
     {"keywords": ["cybersecurity", "cyber security"], "answer": "A cybersecurity specialist protects computer networks, systems, and information against cyberattacks, unauthorized access, and security vulnerabilities."},
@@ -383,28 +528,20 @@ CAREER_QA = [
     {"keywords": ["ai engineer", "artificial intelligence", "machine learning"], "answer": "AI engineering involves designing, developing, integrating, and maintaining systems that use artificial intelligence to perform tasks like prediction, language processing, and automation. Machine learning engineers develop models that learn patterns from data."},
     {"keywords": ["cloud engineering", "cloud computing"], "answer": "Cloud engineering involves designing, deploying, and managing computing infrastructure and services hosted on cloud platforms (like AWS, Azure, or Google Cloud)."},
     {"keywords": ["robotics", "mechatronics"], "answer": "Robotics and Mechatronics combine mechanical engineering, electronics, computer programming, and control systems to design and develop automated machines and robots."},
-
-    # Category 3: Medical & Health Careers
     {"keywords": ["medical doctor", "doctor", "medicine", "mbchb"], "answer": "A medical doctor assesses patients, diagnoses illnesses, recommends treatments, and supports disease prevention. The profession requires recognized medical education (MBChB), clinical training, and professional registration."},
     {"keywords": ["nurse", "nursing"], "answer": "Registered nurses provide patient care, support treatment, and promote health. Career pathways include clinical education, research, management, and community health. Requires strong Biology, Chemistry, and English."},
     {"keywords": ["pharmacist", "pharmacy"], "answer": "A pharmacist supports the safe preparation, supply, and appropriate use of medicines. Requires a Bachelor of Pharmacy (BPharm) and professional registration."},
     {"keywords": ["clinical officer", "clinical medicine"], "answer": "Clinical officers follow a separate clinical training pathway (Diploma or Degree) and have their own professional scope and registration requirements for diagnosing and treating patients."},
     {"keywords": ["radiographer", "radiography"], "answer": "A radiographer operates medical imaging equipment (like X-rays and MRIs) and produces diagnostic images, following radiation safety and professional practice requirements."},
-
-    # Category 4: Business & Finance Careers
     {"keywords": ["accountant", "accounting", "cpa"], "answer": "An accountant prepares financial records, analyses transactions, produces financial reports, and supports organizations with financial management and compliance. Certifications like CPA are highly recommended."},
     {"keywords": ["actuarial science", "actuary"], "answer": "Actuarial science applies mathematics, statistics, and financial theory to assess risk, particularly in insurance, pensions, and financial services. Highly math-intensive."},
     {"keywords": ["economist", "economics"], "answer": "An economist studies how resources, markets, businesses, and governments operate. They analyse economic information and advise on economic decisions and policies."},
     {"keywords": ["supply chain", "procurement"], "answer": "Supply chain management involves planning and coordinating the movement of goods, services, information, and resources from suppliers to customers."},
     {"keywords": ["entrepreneur", "entrepreneurship", "business"], "answer": "Entrepreneurship involves identifying business opportunities, developing products or services, managing operations, and building sustainable enterprises."},
-
-    # Category 5: Law, Creative & Social Sciences
     {"keywords": ["lawyer", "law", "llb"], "answer": "A lawyer provides legal advice, interprets legislation, prepares legal documents, and represents clients. Requires an LLB degree and completion of the Kenya School of Law (KSL)."},
     {"keywords": ["graphic designer", "graphic design"], "answer": "A graphic designer creates visual communication materials such as logos, advertisements, digital graphics, publications, and brand identities."},
     {"keywords": ["journalist", "journalism", "media"], "answer": "A journalist researches, verifies, and communicates information through newspapers, websites, television, radio, and other media. Requires strong English and communication skills."},
     {"keywords": ["architect", "architecture"], "answer": "An architect designs buildings and spaces, prepares architectural plans, considers safety and functionality, and coordinates with other construction professionals."},
-
-    # Category 6: KCSE & Subject Matching
     {"keywords": ["b plain", "b plain career"], "answer": "With a B plain, many careers are possible depending on your specific subject grades. You can pursue Education, Business, IT, or certain engineering/actuarial pathways if your Math and Sciences are strong. EduBot evaluates your full results rather than just the overall grade."},
     {"keywords": ["c plain", "c plain career"], "answer": "With a C plain, you can pursue diploma-level professional training, technical occupations, business, ICT, hospitality, creative fields, and other skills-based careers."},
     {"keywords": ["good at mathematics", "math careers", "love math"], "answer": "If you are good at Mathematics, consider Actuarial Science, Statistics, Economics, Accounting, Data Science, Engineering, Computer Science, and Quantitative Research."},
@@ -412,19 +549,15 @@ CAREER_QA = [
     {"keywords": ["good at physics", "physics careers"], "answer": "If you are good at Physics, consider Engineering, Physical Sciences, Electronics, Renewable Energy, Astronomy, and Medical Physics."},
     {"keywords": ["good at english", "english careers"], "answer": "If you are good at English, consider Journalism, Communication, Public Relations, Law, Education, Editing, Writing, and Publishing."},
     {"keywords": ["programmer without computer studies", "coding without cs"], "answer": "Yes, you can become a programmer without taking Computer Studies in high school. You can learn through Mathematics, independent learning (bootcamps, online courses), practical projects, and recognized academic programmes. Degree admissions may still require Math."},
-    
-    # Category 7: Course-to-Career Mapping
     {"keywords": ["computer science career", "careers with computer science", "cs jobs"], "answer": "A degree in Computer Science can lead to careers as a Software Engineer, Systems Developer, Data Scientist, Cybersecurity Specialist, Database Administrator, AI Engineer, or Research Scientist."},
     {"keywords": ["information technology career", "it jobs", "careers with it"], "answer": "IT graduates may pursue Systems Administration, IT Support, Network Administration, Cloud Operations, Database Management, Cybersecurity, and IT Consulting."},
     {"keywords": ["commerce career", "bcom jobs", "bachelor of commerce"], "answer": "Depending on specialization, BCom graduates can become Accountants, Financial Analysts, Auditors, Marketing Specialists, Business Analysts, and Management Professionals."},
 ]
 
-# Fallback knowledge from previous categories
 GENERAL_QA = [
     {"keywords": ["kuccps", "what is kuccps"], "answer": "KUCCPS is the Kenya Universities and Colleges Central Placement Service. It coordinates the placement of eligible students into universities and colleges."},
     {"keywords": ["change university", "transfer", "change course"], "answer": "Course and programme changes may be possible through the official KUCCPS transfer process, subject to the applicable rules, deadlines, and programme requirements."},
     {"keywords": ["helb", "helb funding", "loan"], "answer": "HELB provides financing for government-sponsored students. Funding depends on the applicable student financing framework, eligibility criteria, and application process. Always verify via the official HELB portal."}
 ]
 
-# Combine them for the engine
-CHATBOT_QA = CAREER_QA + GENERAL_QA
+CHATBOT_QA = CHATBOT_QA + CAREER_QA + GENERAL_QA
