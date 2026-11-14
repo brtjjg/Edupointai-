@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS payments(
     message TEXT,
     redirect_url TEXT,
     calculation_data JSONB,
+    results_json JSONB,
     invoice_sent_at TIMESTAMPTZ,
     last_reminder_at TIMESTAMPTZ,
     reminder_count INTEGER NOT NULL DEFAULT 0,
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS payments(
 );
 CREATE INDEX IF NOT EXISTS payments_provider_ref ON payments(provider_reference);
 CREATE INDEX IF NOT EXISTS payments_status_idx ON payments(status);
+CREATE INDEX IF NOT EXISTS payments_user_status_idx ON payments(user_id, status);
 CREATE TABLE IF NOT EXISTS sessions(
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -93,9 +95,9 @@ def init_db():
     with connect() as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
-            # Migrate existing tables — add new columns if missing
             for col, col_type in [
                 ("calculation_data", "JSONB"),
+                ("results_json", "JSONB"),
                 ("invoice_sent_at", "TIMESTAMPTZ"),
                 ("last_reminder_at", "TIMESTAMPTZ"),
                 ("reminder_count", "INTEGER NOT NULL DEFAULT 0"),
