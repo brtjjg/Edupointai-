@@ -79,6 +79,15 @@ CREATE TABLE IF NOT EXISTS calculation_courses(
     difference NUMERIC(6,3),
     match_type TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS email_logs(
+    id SERIAL PRIMARY KEY,
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    email_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    error_message TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 """
 
 def connect():
@@ -96,10 +105,8 @@ def init_db():
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
             for col, col_type in [
-                ("calculation_data", "JSONB"),
-                ("results_json", "JSONB"),
-                ("invoice_sent_at", "TIMESTAMPTZ"),
-                ("last_reminder_at", "TIMESTAMPTZ"),
+                ("calculation_data", "JSONB"), ("results_json", "JSONB"),
+                ("invoice_sent_at", "TIMESTAMPTZ"), ("last_reminder_at", "TIMESTAMPTZ"),
                 ("reminder_count", "INTEGER NOT NULL DEFAULT 0"),
             ]:
                 cur.execute(f"""
