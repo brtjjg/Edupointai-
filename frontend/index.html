@@ -30,6 +30,14 @@
   .view.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+  /* WELCOME / LOADING SCREEN */
+  .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px; }
+  .spinner { border: 4px solid #1a1c33; border-top: 4px solid var(--cyan); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 30px; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .loading-title { color: var(--cyan); margin-bottom: 10px; font-size: 24px; }
+  .loading-text { color: var(--text-muted); font-size: 15px; height: 24px; animation: pulse 1.5s infinite alternate; font-weight: 500; }
+  @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
+
   /* LANDING */
   .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
   .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; }
@@ -100,7 +108,14 @@
   .modal-subjects td { padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
   .modal-subjects td:last-child { text-align: right; color: var(--cyan); font-weight: bold; }
   .modal-subjects tr:last-child td { border-bottom: none; }
-  .modal-price { background: linear-gradient(135deg,#0f172a,#1e293b); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .modal-price { background: linear-gradient(135deg,#0f172a,#1e293b); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  
+  /* RULES CHECKBOX */
+  .rules-box { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; padding: 0 5px; }
+  .rules-box input { width: 18px; min-height: 18px; margin-top: 2px; accent-color: var(--cyan); cursor: pointer; }
+  .rules-box label { color: var(--text-muted); font-size: 12px; line-height: 1.4; cursor: pointer; }
+  .rules-box a { color: var(--cyan); text-decoration: underline; }
+
   .modal-buttons { display: flex; gap: 10px; }
   .btn-edit { flex: 1; padding: 14px; background: transparent; border: 1px solid #2a324b; color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
   .btn-pay-confirm { flex: 2; padding: 14px; background: linear-gradient(90deg,#19c8ff,#9b59ff); border: none; color: #fff; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
@@ -125,6 +140,18 @@
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- ================================ -->
+<!-- WELCOME / LOADING SCREEN         -->
+<!-- ================================ -->
+<div id="view-loading" class="view">
+  <div class="loading-container">
+    <div class="brand-logo" style="font-size: 32px; margin-bottom: 20px;">🎓 EduPoint AI</div>
+    <div class="spinner"></div>
+    <h2 class="loading-title">Welcome Back!</h2>
+    <p class="loading-text" id="loadingMessages">Warming up the server...</p>
+  </div>
+</div>
+
+<!-- ================================ -->
 <!-- CONFIRMATION MODAL               -->
 <!-- ================================ -->
 <div id="confirmModal">
@@ -136,12 +163,14 @@
         Please review carefully. You will be charged <b style="color:var(--gold);">KES 100</b> for this calculation.
       </p>
     </div>
+    
     <div class="modal-subjects">
       <table>
         <thead><tr><th>Subject</th><th>Grade</th></tr></thead>
         <tbody id="confirmSubjectList"></tbody>
       </table>
     </div>
+
     <div class="modal-price">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="color:var(--text-muted); font-size:13px;">Total Cost</span>
@@ -151,9 +180,19 @@
         ⚠️ Every calculation requires a new payment
       </p>
     </div>
+
+    <!-- RULES & REGULATIONS CHECKBOX -->
+    <div class="rules-box">
+      <input type="checkbox" id="rulesCheck" onchange="document.getElementById('btnPayConfirm').disabled = !this.checked">
+      <label for="rulesCheck">
+        I confirm the subjects and grades above are correct. I agree to the 
+        <a href="#" onclick="event.preventDefault(); alert('Terms & Regulations:\n1. Ensure all grades entered are accurate.\n2. Payments are non-refundable once results are generated.\n3. Each calculation costs KES 100.\n4. Results are sent via email.');">Rules & Regulations</a>.
+      </label>
+    </div>
+
     <div class="modal-buttons">
       <button class="btn-edit" id="btnEdit" onclick="closeConfirm()">✏️ Edit</button>
-      <button class="btn-pay-confirm" id="btnPayConfirm" onclick="confirmAndPay()">✅ Pay KES 100</button>
+      <button class="btn-pay-confirm" id="btnPayConfirm" disabled onclick="confirmAndPay()">✅ Pay KES 100</button>
     </div>
   </div>
 </div>
@@ -320,6 +359,24 @@ const getToken = () => localStorage.getItem(TOKEN_KEY);
 const setToken = t => localStorage.setItem(TOKEN_KEY, t);
 const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
+// Rotating messages for the loading screen
+const loadingMessages = [
+  "Warming up the server...",
+  "Analyzing 200+ University Courses...",
+  "Matching your KCSE grades...",
+  "Checking latest KUCCPS cutoffs...",
+  "Finding scholarships for you...",
+  "Generating personalized guidance..."
+];
+let loadIdx = 0;
+setInterval(() => {
+  const el = document.getElementById('loadingMessages');
+  if (el) {
+    el.textContent = loadingMessages[loadIdx];
+    loadIdx = (loadIdx + 1) % loadingMessages.length;
+  }
+}, 2000);
+
 async function api(path, opts = {}) {
   const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
   const t = getToken();
@@ -345,11 +402,8 @@ async function api(path, opts = {}) {
 
 let me = null;
 let allResultsData = [];
-let pendingCalc = null;   // holds subjects/grades while user is confirming
+let pendingCalc = null;
 
-// ============================
-// AUTH
-// ============================
 function initAuth() {
   if (typeof google === 'undefined') return;
   google.accounts.id.initialize({
@@ -371,8 +425,13 @@ async function handleGoogleLogin(response) {
   } catch (err) { alert(err.message); }
 }
 
+// ==========================================
+// UPDATED INIT: Shows Loading screen while fetching
+// ==========================================
 async function init() {
   if (getToken()) {
+    // Show the beautiful loading screen instead of a blank page
+    showView("loading");
     try {
       const res = await api("/api/me");
       me = res.user;
@@ -404,9 +463,6 @@ function showView(viewId) {
 
 function logout() { clearToken(); location.reload(); }
 
-// ============================
-// CALCULATOR
-// ============================
 function setupCalculator() {
   const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
   const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
@@ -436,9 +492,9 @@ function preventDuplicates() {
   });
 }
 
-// ============================
+// ==========================================
 // STEP 1: Validate → open confirmation modal
-// ============================
+// ==========================================
 document.getElementById("btnCalculate").onclick = () => {
   const subjects = {}, grades = {}, displayList = [];
   let count = 0;
@@ -458,28 +514,26 @@ document.getElementById("btnCalculate").onclick = () => {
   openConfirmModal();
 };
 
-// ============================
+// ==========================================
 // STEP 2: Confirmation modal
-// ============================
+// ==========================================
 function openConfirmModal() {
   const tbody = document.getElementById('confirmSubjectList');
   tbody.innerHTML = pendingCalc.displayList.map(d =>
     `<tr><td>${d.subject}</td><td>${d.grade}</td></tr>`
   ).join('');
 
-  document.getElementById('btnPayConfirm').disabled = false;
+  // Reset the checkbox and disable pay button
+  document.getElementById('rulesCheck').checked = false;
+  document.getElementById('btnPayConfirm').disabled = true;
   document.getElementById('btnEdit').disabled = false;
   document.getElementById('btnPayConfirm').textContent = "✅ Pay KES 100";
+  
   document.getElementById('confirmModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
 
-  // GTM analytics: user opened confirmation modal
   if (window.dataLayer) {
-    window.dataLayer.push({
-      event: 'confirm_modal_opened',
-      subjects_count: pendingCalc.displayList.length,
-      amount_kes: 100
-    });
+    window.dataLayer.push({ event: 'confirm_modal_opened', subjects_count: pendingCalc.displayList.length, amount_kes: 100 });
   }
 }
 
@@ -489,9 +543,9 @@ function closeConfirm() {
   document.body.style.overflow = '';
 }
 
-// ============================
+// ==========================================
 // STEP 3: Pay → run payment flow
-// ============================
+// ==========================================
 async function confirmAndPay() {
   if (!pendingCalc) return;
   const { subjects, grades } = pendingCalc;
@@ -529,22 +583,13 @@ async function confirmAndPay() {
   try {
     const phone = me.phone || "0700000000";
 
-    // GTM analytics: user clicked pay
     if (window.dataLayer) {
-      window.dataLayer.push({
-        event: 'begin_checkout',
-        currency: 'KES',
-        value: 100,
-        items: [{ item_name: 'KCSE Cluster Calculation', price: 100, quantity: 1 }]
-      });
+      window.dataLayer.push({ event: 'begin_checkout', currency: 'KES', value: 100, items: [{ item_name: 'KCSE Cluster Calculation', price: 100, quantity: 1 }] });
     }
 
     const j = await api("/api/payment/initiate", {
       method: "POST",
-      body: JSON.stringify({
-        plan: "standard", provider: "pesapal", phone: phone,
-        subjects: subjects, grades: grades
-      })
+      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone, subjects: subjects, grades: grades })
     });
 
     if (j.redirect_url) {
@@ -565,14 +610,8 @@ async function confirmAndPay() {
             clearInterval(t);
             if (payWindow) payWindow.close();
 
-            // GTM analytics: payment succeeded
             if (window.dataLayer) {
-              window.dataLayer.push({
-                event: 'purchase',
-                transaction_id: j.transaction_id,
-                currency: 'KES',
-                value: 100
-              });
+              window.dataLayer.push({ event: 'purchase', transaction_id: j.transaction_id, currency: 'KES', value: 100 });
             }
 
             if (x.calculation_results) {
@@ -602,9 +641,9 @@ async function confirmAndPay() {
   }
 }
 
-// ============================
+// ==========================================
 // RESULTS
-// ============================
+// ==========================================
 function renderResults(data) {
   allResultsData = data.results;
   document.getElementById("resultsSection").style.display = "block";
@@ -626,7 +665,6 @@ function renderResults(data) {
   renderAllCourses(allResultsData);
   document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
 
-  // Reset Calculate button so a further calculation can be started (requires new payment)
   const btn = document.getElementById("btnCalculate");
   btn.disabled = false;
   btn.textContent = "⚡ Calculate Again — KES 100";
@@ -689,10 +727,7 @@ async function sendChat(msgText = null) {
   messages.scrollTop = messages.scrollHeight;
 
   try {
-    const res = await api("/api/chat", {
-      method: "POST",
-      body: JSON.stringify({ question: msg })
-    });
+    const res = await api("/api/chat", { method: "POST", body: JSON.stringify({ question: msg }) });
     const typingEl = document.getElementById(typingId);
     if (typingEl) typingEl.remove();
     messages.innerHTML += `<div style="color: #4ade80; margin-bottom: 5px; margin-top: 10px;"><b>EduBot:</b> ${res.answer}</div>`;
