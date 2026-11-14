@@ -363,10 +363,38 @@ document.getElementById("btnCalculate").onclick = async () => {
   const btn = document.getElementById("btnCalculate");
   const msg = document.getElementById("calcMessage");
   
+  // 1. Instantly open a blank tab
   const payWindow = window.open('', '_blank');
   
+  // 2. IMMEDIATELY write a loading screen into the blank tab
+  if (payWindow) {
+    payWindow.document.write(`
+      <!doctype html>
+      <html>
+      <head>
+        <title>Connecting to Pesapal...</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>
+          body { background: #05081c; color: #fff; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+          .loader { border: 4px solid #1a1c33; border-top: 4px solid #00d4ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          h2 { color: #00d4ff; }
+          p { color: #94a3b8; }
+        </style>
+      </head>
+      <body>
+        <div>
+          <div class="loader"></div>
+          <h2>Connecting to Pesapal...</h2>
+          <p>Please wait while we generate your secure payment link.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+  
   btn.disabled = true;
-  btn.textContent = "Connecting to Pesapal...";
+  btn.textContent = "Connecting...";
   msg.innerHTML = '<span style="color:#fbbf24;">Opening secure payment window...</span>';
 
   try {
@@ -381,10 +409,11 @@ document.getElementById("btnCalculate").onclick = async () => {
     });
 
     if (j.redirect_url) {
+      // 3. Redirect the blank tab to the actual Pesapal URL
       if (payWindow) {
         payWindow.location.href = j.redirect_url;
       } else {
-        window.location.href = j.redirect_url; 
+        window.location.href = j.redirect_url; // Fallback
       }
       
       msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal window. Waiting for confirmation...</span>';
@@ -407,15 +436,16 @@ document.getElementById("btnCalculate").onclick = async () => {
               btn.textContent = "⚡ Calculate My Cluster Points"; 
             }
         } catch(e) {
-            // Ignore polling errors, just try again next time
             console.log("Polling error, retrying...", e.message);
         }
         n++;
       }, 3000);
+      
+    } else {
+        throw new Error("Failed to get payment link from server.");
     }
   } catch (err) {
     if (payWindow) payWindow.close();
-    // Display the clean, friendly error message
     msg.innerHTML = `<span style="color:#ff7b7b;">${err.message}</span>`; 
     btn.disabled = false; 
     btn.textContent = "⚡ Calculate My Cluster Points";
