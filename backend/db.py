@@ -37,10 +37,14 @@ CREATE TABLE IF NOT EXISTS payments(
     message TEXT,
     redirect_url TEXT,
     calculation_data JSONB,
+    invoice_sent_at TIMESTAMPTZ,
+    last_reminder_at TIMESTAMPTZ,
+    reminder_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS payments_provider_ref ON payments(provider_reference);
+CREATE INDEX IF NOT EXISTS payments_status_idx ON payments(status);
 CREATE TABLE IF NOT EXISTS sessions(
     token TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -89,12 +93,20 @@ def init_db():
     with connect() as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
-            cur.execute("""
-                DO $$ 
-                BEGIN 
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                                   WHERE table_schema='edupoint' AND table_name='payments' AND column_name='calculation_data') THEN
-                        ALTER TABLE edupoint.payments ADD COLUMN calculation_data JSONB;
-                    END IF;
-                END $$;
-            """)
+            # Migrate existing tables — add new columns if missing
+            for col, col_type in [
+                ("calculation_data", "JSONB"),
+                ("invoice_sent_at", "TIMESTAMPTZ"),
+                ("last_reminder_at", "TIMESTAMPTZ"),
+                ("reminder_count", "INTEGER NOT NULL DEFAULT 0"),
+            ]:
+                cur.execute(f"""
+                    DO $$ 
+                    BEGIN 
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                       WHERE table_schema='edupoint' AND table_name='payments' 
+                                         AND column_name='{col}') THEN
+                            ALTER TABLE edupoint.payments ADD COLUMN {col} {col_type};
+                        END IF;
+                    END $$;
+                """)
