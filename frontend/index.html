@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080F25">
+<meta name="theme-color" content="#080916">
 
 <!-- Google Tag Manager -->
 <script>
@@ -29,9 +29,11 @@
   /* EDPOINTAI V11.0 DESIGN SYSTEM             */
   /* ========================================= */
   :root { 
-    --navy: #080F25;
+    --navy: #080916;
     --royal-blue: #2563EB;
     --electric-blue: #60A5FA;
+    --emerald-green: #10B981;
+    --purple: #8B5CF6;
     --soft-white: #F8FAFC;
     --white: #FFFFFF;
     --slate: #94A3B8;
@@ -42,7 +44,7 @@
     --border-grey: #E2E8F0;
     
     /* Footer Specific */
-    --ep-footer-bg: #080F25;
+    --ep-footer-bg: #080916;
     --ep-primary: #2563EB;
     --ep-accent: #60A5FA;
     --ep-white: #FFFFFF;
@@ -207,21 +209,43 @@
   /* ========================================= */
   /* INFO MODAL (About, Rules, Terms, Privacy) */
   /* ========================================= */
-  #infoModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; }
-  .info-modal-content { background: var(--navy); border: 1px solid var(--royal-blue); border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; margin: 20px auto; color: var(--soft-white); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.3s ease; }
+  #infoModal { display: none; position: fixed; inset: 0; background: rgba(8, 9, 22, 0.95); z-index: 9000; padding: 20px; overflow-y: auto; backdrop-filter: blur(8px); align-items: flex-start; justify-content: center; }
+  .info-modal-content { background: var(--navy); border: 1px solid #1e293b; border-radius: 16px; padding: 30px; max-width: 700px; width: 100%; margin: 20px auto; color: var(--soft-white); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.7); animation: fadeIn 0.3s ease; }
   
-  .info-modal-close { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--slate); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; }
+  .info-modal-close { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--slate); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; z-index: 10; }
   .info-modal-close:hover { color: var(--white); }
   
-  .info-modal-body h1 { color: var(--electric-blue); font-size: 24px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
-  .info-modal-body h2 { color: var(--white); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
-  .info-modal-body p, .info-modal-body ul { color: var(--slate); line-height: 1.6; font-size: 14px; margin-bottom: 15px; }
+  .info-modal-body h1 { color: var(--electric-blue); font-size: 28px; margin-top: 0; margin-bottom: 10px; text-align: center; }
+  .info-modal-body h2 { color: var(--white); font-size: 18px; margin-top: 30px; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
+  .info-modal-body h3 { color: var(--electric-blue); font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+  .info-modal-body p, .info-modal-body li { color: var(--slate); line-height: 1.7; font-size: 14px; margin-bottom: 15px; }
   .info-modal-body ul { padding-left: 20px; }
   .info-modal-body strong { color: var(--white); }
   
-  .info-box { background: rgba(37, 99, 235, 0.1); border-left: 4px solid var(--royal-blue); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); font-size: 14px; }
-  .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning-amber); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); font-size: 14px; }
-  .prohibited-box { background: rgba(220, 38, 38, 0.1); border-left: 4px solid var(--error-red); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); font-size: 14px; }
+  /* About Us Specific Styles */
+  .about-hero { text-align: center; margin-bottom: 30px; }
+  .about-hero h1 { font-size: 32px; color: var(--white); margin-bottom: 10px; }
+  .about-hero p { color: var(--electric-blue); font-size: 16px; font-weight: 500; }
+  
+  .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+  .about-card { background: #0f1430; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; }
+  .about-card h4 { color: var(--white); font-size: 15px; margin-top: 0; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .about-card p { font-size: 13px; margin: 0; color: var(--slate); line-height: 1.5; }
+
+  .independence-box { background: rgba(139, 92, 246, 0.1); border-left: 4px solid var(--purple); padding: 20px; border-radius: 8px; margin: 30px 0; }
+  .independence-box h3 { color: var(--purple); margin-top: 0; font-size: 16px; }
+  .independence-box p { color: var(--soft-white); font-size: 14px; margin-bottom: 10px; }
+  .independence-box p:last-child { margin-bottom: 0; }
+
+  .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+  .value-card { background: #0f1430; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; text-align: center; }
+  .value-card .icon { font-size: 24px; margin-bottom: 10px; display: inline-block; }
+  .value-card h5 { color: var(--emerald-green); font-size: 14px; margin: 0 0 5px; }
+  .value-card p { font-size: 12px; margin: 0; color: var(--slate); line-height: 1.4; }
+
+  .about-footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }
+  .about-footer h4 { color: var(--white); font-size: 18px; margin-bottom: 5px; }
+  .about-footer p { color: var(--electric-blue); font-size: 14px; margin: 0; }
 
   .return-btn { display: block; width: 100%; padding: 14px; background: var(--royal-blue); color: var(--white); text-align: center; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 30px; text-decoration: none; transition: background 0.2s; }
   .return-btn:hover { background: #1d4ed8; }
@@ -258,6 +282,8 @@
     .logo-icon svg { width: 24px; height: 24px; }
     .edupoint-footer__links { gap: 6px; }
     .edupoint-footer__links a { font-size: 13px; }
+    .info-modal-content { padding: 20px; }
+    .about-grid { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
     .edupoint-footer__links a { transition: none; }
@@ -468,29 +494,160 @@
   <div class="info-modal-content">
     <button class="info-modal-close" onclick="closeInfoModal()">✕</button>
     
-    <!-- About Us Content -->
+    <!-- About Us Content (Expanded) -->
     <div id="info-content-about" class="info-modal-body" style="display: none;">
-      <h1>About EduPointAI</h1>
-      <p>EduPointAI is an independent academic guidance platform designed to help students understand their academic qualifications and explore potential university courses.</p>
       
-      <h2>Our Mission</h2>
-      <p>To make academic information more accessible and help students make informed educational decisions using technology.</p>
+      <div class="about-hero">
+        <h1>About EduPointAI</h1>
+        <p>Independent Academic Guidance</p>
+      </div>
 
-      <h2>Our Vision</h2>
-      <p>To become a trusted digital academic guidance platform that empowers students to discover educational opportunities and plan their future.</p>
+      <h2>1. Who We Are</h2>
+      <p>EduPointAI is an independent, technology-driven academic guidance platform developed to help students understand their academic qualifications, explore university courses and discover educational opportunities that align with their academic performance, interests and career aspirations.</p>
+      <p>Choosing a university course is one of the most important decisions in a student's educational journey. However, many students find it challenging to interpret their KCSE results, understand university course requirements, compare available programmes or identify alternative academic pathways.</p>
+      <p>EduPointAI seeks to make this process easier by bringing academic guidance, course exploration, qualification calculations and educational information together in one accessible digital platform.</p>
+      <p>Through technology, structured academic information and intelligent guidance tools, we help students make sense of their results and explore possibilities for their future.</p>
+      <p>Our goal is not simply to show students courses they may qualify for, but also to help them understand their options and make more informed educational decisions.</p>
 
-      <h2>Who We Serve</h2>
+      <h2>2. Our Mission</h2>
+      <p>Our mission is to make academic information more accessible, understandable and useful to every student.</p>
+      <p>We aim to simplify the process of interpreting academic qualifications, exploring university programmes and identifying educational opportunities through reliable information and innovative technology.</p>
+      <p>We believe that students should have access to the information they need before making important decisions about their education.</p>
+
+      <h2>3. Our Vision</h2>
+      <p>To become a trusted digital academic guidance platform that empowers students to discover educational opportunities, understand their potential and confidently plan their academic and professional futures.</p>
+      <p>We envision a future where access to academic guidance is not limited by geographical location, financial background or access to traditional career counselling services.</p>
+
+      <h2>4. Who We Serve</h2>
+      <p>EduPointAI is designed for individuals at different stages of their educational journey.</p>
+      
+      <div class="about-grid">
+        <div class="about-card">
+          <h4>🎓 KCSE Candidates</h4>
+          <p>Students preparing for their future after completing secondary education can explore possible academic pathways and understand how their performance relates to university course requirements.</p>
+        </div>
+        <div class="about-card">
+          <h4>⏳ Students Awaiting Placement</h4>
+          <p>Students waiting for placement can explore available courses, review historical admission requirements and prepare for their next academic steps.</p>
+        </div>
+        <div class="about-card">
+          <h4>🔍 Students Exploring Courses</h4>
+          <p>Students who are uncertain about which programme to pursue can compare different courses, examine qualification requirements and discover alternative options.</p>
+        </div>
+        <div class="about-card">
+          <h4>👨‍👩‍👧 Parents and Guardians</h4>
+          <p>Parents and guardians can use EduPointAI as an information resource to better understand their children's academic options and participate in educational planning.</p>
+        </div>
+      </div>
+
+      <h2>5. What We Do</h2>
+      <p>EduPointAI brings several academic guidance services together to simplify educational decision-making.</p>
+      
+      <div class="about-grid">
+        <div class="about-card">
+          <h4>🧮 Academic Calculations</h4>
+          <p>We help students interpret their academic results and calculate relevant qualification indicators to understand their academic standing.</p>
+        </div>
+        <div class="about-card">
+          <h4>🎓 University Course Exploration</h4>
+          <p>Students can explore university programmes, review course requirements and identify programmes that may align with their qualifications.</p>
+        </div>
+        <div class="about-card">
+          <h4>🤖 AI-Powered Guidance</h4>
+          <p>Our AI-assisted guidance tools help students explore career interests, understand academic pathways and discover related programmes.</p>
+        </div>
+        <div class="about-card">
+          <h4>💰 Scholarships & Opportunities</h4>
+          <p>We aim to help students discover scholarship opportunities and other forms of educational support that may assist them in pursuing their studies.</p>
+        </div>
+      </div>
+
+      <h2>6. Our Approach to Academic Guidance</h2>
+      <p>We believe academic guidance should be understandable, accessible and practical. Our approach is built around five principles:</p>
       <ul>
-        <li>KCSE candidates.</li>
-        <li>Students awaiting university placement.</li>
-        <li>Students exploring university courses.</li>
-        <li>Parents and guardians.</li>
-        <li>Students seeking alternative academic pathways.</li>
+        <li><strong>Accessibility:</strong> Making academic information easier to find and understand.</li>
+        <li><strong>Clarity:</strong> Presenting academic calculations and course information in a straightforward manner.</li>
+        <li><strong>Technology:</strong> Using digital tools and AI-assisted systems to improve the guidance experience.</li>
+        <li><strong>Informed decisions:</strong> Helping students understand their options rather than making educational decisions on their behalf.</li>
+        <li><strong>Continuous improvement:</strong> Improving our platform, information resources and tools as educational requirements and student needs evolve.</li>
       </ul>
 
-      <div class="info-box">
-        <strong>Our Independence:</strong> EduPointAI is not KUCCPS, a university or a government admission authority. We provide guidance and calculations, not official admission decisions.
+      <h2>7. Our Commitment to Students</h2>
+      <p>Every student's academic journey is different. A student's KCSE performance should be a starting point for exploring opportunities, not a reason to stop pursuing their ambitions.</p>
+      <p>At EduPointAI, we are committed to helping students:</p>
+      <ul>
+        <li>Understand their academic qualifications.</li>
+        <li>Explore programmes beyond their initial choices.</li>
+        <li>Identify potential course alternatives.</li>
+        <li>Discover educational and scholarship opportunities.</li>
+        <li>Make decisions based on available academic information.</li>
+        <li>Approach their educational future with greater confidence.</li>
+      </ul>
+      <p>We aim to make academic guidance more approachable, particularly for students who may not have access to personalised educational counselling.</p>
+
+      <div class="independence-box">
+        <h3>8. Our Independence and Transparency</h3>
+        <p><strong>An Independent Academic Guidance Platform</strong></p>
+        <p>EduPointAI operates independently. It is not affiliated with, owned by, operated by or officially endorsed by the Kenya Universities and Colleges Central Placement Service (KUCCPS), any university, the Ministry of Education or any government admission authority.</p>
+        <p>Our platform provides academic guidance, calculations, educational information and course exploration tools.</p>
+        <p>Our calculations and course comparisons are intended for informational and guidance purposes. They do not constitute official admission decisions, placement confirmations or guarantees of university admission.</p>
+        <p>Official admission, placement, programme availability and eligibility decisions remain the responsibility of the relevant authorised institutions.</p>
+        <p>We encourage students to verify important admission information, programme requirements, application deadlines and placement decisions through the appropriate official channels before taking action.</p>
       </div>
+
+      <h2>9. Technology and Innovation</h2>
+      <p>EduPointAI uses technology to make academic guidance more accessible and efficient.</p>
+      <p>Our platform brings together digital academic tools, structured educational information and AI-assisted guidance to help students explore their options.</p>
+      <p>We believe technology can help simplify complicated academic information and make guidance more accessible to students regardless of where they are located.</p>
+      <p>As the platform develops, we intend to continue improving our tools, expanding our educational resources and introducing more ways to support students throughout their academic journeys.</p>
+
+      <h2>10. Our Core Values</h2>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="icon">🎓</div>
+          <h5>Student First</h5>
+          <p>Students' educational needs remain at the centre of our work.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">⚖️</div>
+          <h5>Integrity</h5>
+          <p>We value transparency and responsible presentation of academic information.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">💡</div>
+          <h5>Innovation</h5>
+          <p>We embrace technology to improve educational guidance.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">🤝</div>
+          <h5>Inclusivity</h5>
+          <p>We believe every student deserves access to useful academic information.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">🎯</div>
+          <h5>Accuracy</h5>
+          <p>We strive to provide clear, carefully structured and regularly reviewed information.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon">📈</div>
+          <h5>Growth</h5>
+          <p>We continuously seek better ways to serve students and educational communities.</p>
+        </div>
+      </div>
+
+      <h2>11. Looking Ahead</h2>
+      <p>EduPointAI is being developed with a long-term commitment to educational guidance and digital innovation.</p>
+      <p>Our ambition is to grow beyond basic academic calculations into a comprehensive digital environment where students can explore courses, receive career guidance, discover scholarships, understand educational pathways and access useful academic resources.</p>
+      <p>We recognise that educational needs change, and we are committed to evolving alongside the students and communities we serve.</p>
+
+      <div class="about-footer">
+        <h4>12. Our Promise</h4>
+        <p style="margin-bottom: 15px;">We believe every student deserves the opportunity to understand their academic potential and explore the possibilities available to them.</p>
+        <p style="color: var(--white); font-weight: bold; font-size: 16px;">Understand Your Results. Discover Your Possibilities.</p>
+        <p style="margin-top: 10px; font-size: 13px;">Explore your academic potential and take a more informed step towards your future.</p>
+        <p style="margin-top: 20px; font-size: 12px; color: var(--slate);">Independent Academic Guidance • Technology • Educational opportunities</p>
+      </div>
+
     </div>
 
     <!-- Rules Content -->
@@ -964,7 +1121,7 @@ async function confirmAndPay() {
       <html><head><title>Connecting to Pesapal...</title>
       <meta name="viewport" content="width=device-width,initial-scale=1">
       <style>
-        body { background: #080F25; color: #fff; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        body { background: #080916; color: #fff; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
         .loader { border: 4px solid #1a1c33; border-top: 4px solid #60A5FA; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         h2 { color: #60A5FA; } p { color: #94a3b8; }
