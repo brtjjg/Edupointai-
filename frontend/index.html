@@ -87,7 +87,7 @@
 </head>
 <body>
 
-<div id="view-public" class="view active">
+<div id="view-public" class="view">
   <header class="header">
     <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
   </header>
@@ -235,9 +235,6 @@
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
 <script>
-// ==========================================
-// ROBUST API WRAPPER (Prevents Raw Code Errors)
-// ==========================================
 window.EDUPOINT_API = window.EDUPOINT_API || (location.hostname === "localhost" ? "http://localhost:5000" : "https://edupoint-api.onrender.com");
 const TOKEN_KEY = "edupoint_token";
 const getToken = () => localStorage.getItem(TOKEN_KEY);
@@ -254,7 +251,7 @@ async function api(path, opts = {}) {
     
     const contentType = r.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("System error. The server returned an invalid response. Please try again.");
+        throw new Error("System error. The server returned an invalid response.");
     }
 
     let data = await r.json();
@@ -264,7 +261,7 @@ async function api(path, opts = {}) {
     
   } catch (err) {
     if (err.message === "Failed to fetch" || err.message.includes("NetworkError")) {
-        throw new Error("Failed to connect to server. Please check your internet or wait 50 seconds for the server to wake up.");
+        throw new Error("Failed to connect to server. Please wait 50 seconds and try again.");
     }
     throw err;
   }
@@ -294,6 +291,9 @@ async function handleGoogleLogin(response) {
   } catch (err) { alert(err.message); }
 }
 
+// ==========================================
+// CRITICAL FIX: PREVENTS REDIRECT TO LOGIN
+// ==========================================
 async function init() {
   if (getToken()) {
     try {
@@ -301,11 +301,24 @@ async function init() {
       me = res.user;
       showView("student");
       setupCalculator();
-      return;
-    } catch (e) { clearToken(); }
+    } catch (e) {
+      if (e.status === 401) {
+        // Only clear token if the server explicitly says Unauthorized
+        clearToken();
+        showView("public");
+        if (typeof google !== 'undefined') initAuth();
+      } else {
+        // If it's a network error (Render sleeping), keep the user on the dashboard
+        // and show them a warning instead of kicking them out.
+        showView("student");
+        setupCalculator();
+        document.getElementById("calcMessage").innerHTML = '<span style="color:#fbbf24;">Warning: Could not connect to server. The page may not work until the server wakes up.</span>';
+      }
+    }
+  } else {
+    showView("public");
+    if (typeof google !== 'undefined') initAuth();
   }
-  showView("public");
-  if (typeof google !== 'undefined') initAuth();
 }
 init();
 
@@ -346,9 +359,6 @@ function preventDuplicates() {
   });
 }
 
-// ==========================================
-// CALCULATE LOGIC (Robust Error Handling)
-// ==========================================
 document.getElementById("btnCalculate").onclick = async () => {
   const subjects = {}, grades = {};
   let count = 0;
@@ -363,10 +373,8 @@ document.getElementById("btnCalculate").onclick = async () => {
   const btn = document.getElementById("btnCalculate");
   const msg = document.getElementById("calcMessage");
   
-  // 1. Instantly open a blank tab
   const payWindow = window.open('', '_blank');
   
-  // 2. IMMEDIATELY write a loading screen into the blank tab
   if (payWindow) {
     payWindow.document.write(`
       <!doctype html>
@@ -409,11 +417,10 @@ document.getElementById("btnCalculate").onclick = async () => {
     });
 
     if (j.redirect_url) {
-      // 3. Redirect the blank tab to the actual Pesapal URL
       if (payWindow) {
         payWindow.location.href = j.redirect_url;
       } else {
-        window.location.href = j.redirect_url; // Fallback
+        window.location.href = j.redirect_url; 
       }
       
       msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment in the Pesapal window. Waiting for confirmation...</span>';
@@ -440,9 +447,6 @@ document.getElementById("btnCalculate").onclick = async () => {
         }
         n++;
       }, 3000);
-      
-    } else {
-        throw new Error("Failed to get payment link from server.");
     }
   } catch (err) {
     if (payWindow) payWindow.close();
@@ -517,11 +521,9 @@ async function sendChat(msgText = null) {
   
   const messages = document.getElementById("chatMessages");
   
-  // Add user message to UI
   messages.innerHTML += `<div style="color: #73e8ff; text-align: right; margin-bottom: 5px; margin-top: 10px;"><b>You:</b> ${msg}</div>`;
   messages.scrollTop = messages.scrollHeight;
 
-  // Show typing indicator
   const typingId = "typing-" + Date.now();
   messages.innerHTML += `<div id="${typingId}" style="color: var(--text-muted); font-style: italic; margin-top: 5px;">EduBot is typing...</div>`;
   messages.scrollTop = messages.scrollHeight;
@@ -532,11 +534,9 @@ async function sendChat(msgText = null) {
       body: JSON.stringify({ question: msg }) 
     });
 
-    // Remove typing indicator
     const typingEl = document.getElementById(typingId);
     if (typingEl) typingEl.remove();
 
-    // Add bot response
     messages.innerHTML += `<div style="color: #4ade80; margin-bottom: 5px; margin-top: 10px;"><b>EduBot:</b> ${res.answer}</div>`;
     messages.scrollTop = messages.scrollHeight;
 
