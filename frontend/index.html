@@ -64,6 +64,32 @@
   .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
   .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
+  /* WELCOME BANNER */
+  .welcome-banner { background: linear-gradient(145deg, #0a1128, #0f1430); border: 1px solid #2a324b; border-radius: 16px; padding: 24px; margin-bottom: 25px; animation: fadeIn 0.6s ease; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  .welcome-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; letter-spacing: 1px; color: #4ade80; margin-bottom: 15px; text-transform: uppercase; }
+  .welcome-aboard { color: var(--text-muted); }
+  .welcome-title { font-size: 24px; margin: 0 0 10px; color: #fff; }
+  .welcome-subtitle { font-size: 18px; color: var(--cyan); margin: 0 0 15px; }
+  .welcome-text { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+  
+  .benefits-title { color: #fff; font-size: 14px; margin-bottom: 15px; font-weight: 700; }
+  .benefit-card { display: flex; gap: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 12px; opacity: 0; transform: translateY(20px); animation: slideUp 0.5s ease forwards; }
+  .benefit-icon { font-size: 24px; animation: float 3s ease-in-out infinite; }
+  .benefit-card h5 { margin: 0 0 5px; color: #fff; font-size: 15px; }
+  .benefit-card p { margin: 0; color: var(--text-muted); font-size: 13px; }
+  
+  .welcome-footer { text-align: center; margin-top: 30px; }
+  .welcome-footer h4 { color: var(--cyan); font-size: 18px; margin: 0 0 5px; }
+  .welcome-footer p { color: var(--text-muted); font-size: 13px; margin: 0; }
+  
+  .close-welcome { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .close-welcome:hover { color: #fff; background: rgba(255,255,255,0.1); }
+  
+  @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .cursor-blink { animation: blink 1s step-end infinite; color: var(--cyan); font-weight: 300; }
+  @keyframes blink { 50% { opacity: 0; } }
+
   /* RESULTS */
   .summary-banner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
   .summary-banner h2 { font-size: 42px; color: var(--cyan); margin: 0 0 5px 0; }
@@ -227,6 +253,59 @@
     <div class="app-header">
       <h1>🎓 EduPoint AI</h1>
       <a href="#" class="logout" onclick="logout()">Logout</a>
+    </div>
+
+    <!-- WELCOME BANNER (Personalized) -->
+    <div id="welcomeBanner" class="welcome-banner" style="display: none;">
+      <button class="close-welcome" onclick="dismissWelcome()" title="Dismiss">×</button>
+      <div class="welcome-header">
+        <span>STUDENT DASHBOARD</span>
+        <span class="welcome-aboard">Welcome aboard 🎓</span>
+      </div>
+      <h2 class="welcome-title">Welcome back, <span id="welcomeName"></span>! 👋</h2>
+      <h3 class="welcome-subtitle">Your future starts here.</h3>
+      <p class="welcome-text">We're excited to be part of your academic journey. EduPointAI gives you the tools and guidance to make smarter decisions about your education and career.</p>
+
+      <div class="benefits-section">
+        <h4 class="benefits-title">Explore what EduPointAI offers</h4>
+        
+        <div class="benefit-card" style="animation-delay: 0.4s;">
+          <div class="benefit-icon">🧮</div>
+          <div>
+            <h5>1. Calculate Your KCSE Cluster Points</h5>
+            <p>Understand your academic performance and calculate your cluster points accurately.</p>
+          </div>
+        </div>
+
+        <div class="benefit-card" style="animation-delay: 0.6s;">
+          <div class="benefit-icon">🎓</div>
+          <div>
+            <h5>2. Discover University Courses</h5>
+            <p>Explore courses and universities that match your qualifications.</p>
+          </div>
+        </div>
+
+        <div class="benefit-card" style="animation-delay: 0.8s;">
+          <div class="benefit-icon">🏆</div>
+          <div>
+            <h5>3. Find Scholarship Opportunities</h5>
+            <p>Discover potential funding opportunities to support your education.</p>
+          </div>
+        </div>
+
+        <div class="benefit-card" style="animation-delay: 1.0s;">
+          <div class="benefit-icon">💡</div>
+          <div>
+            <h5>4. Get Career Guidance</h5>
+            <p>Explore career pathways, understand qualifications and make informed career choices.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-footer">
+        <h4>Dream Big. Plan Smart. Achieve More.</h4>
+        <p>Your journey is unique. Let's make every step count!</p>
+      </div>
     </div>
 
     <div class="card">
@@ -426,17 +505,22 @@ async function handleGoogleLogin(response) {
 }
 
 // ==========================================
-// UPDATED INIT: Shows Loading screen while fetching
+// UPDATED INIT: Welcome Banner Logic
 // ==========================================
 async function init() {
   if (getToken()) {
-    // Show the beautiful loading screen instead of a blank page
     showView("loading");
     try {
       const res = await api("/api/me");
       me = res.user;
       showView("student");
       setupCalculator();
+      
+      // Check if we should show the welcome banner
+      if (!sessionStorage.getItem('edupoint_welcome_shown')) {
+        triggerWelcome(me.name);
+      }
+      
     } catch (e) {
       if (e.status === 401) {
         clearToken();
@@ -455,13 +539,58 @@ async function init() {
 }
 init();
 
+// ==========================================
+// WELCOME BANNER ANIMATIONS
+// ==========================================
+function triggerWelcome(name) {
+  const banner = document.getElementById('welcomeBanner');
+  banner.style.display = 'block';
+  
+  const nameEl = document.getElementById('welcomeName');
+  let i = 0;
+  nameEl.innerHTML = '';
+  
+  // Gentle typing effect for the name
+  function typeWriter() {
+    if (i < name.length) {
+      nameEl.innerHTML += name.charAt(i);
+      i++;
+      setTimeout(typeWriter, 60); // 60ms per character
+    } else {
+      // Add blinking cursor at the end, then remove after 1s
+      nameEl.innerHTML += '<span class="cursor-blink">|</span>';
+      setTimeout(() => {
+        const cursor = nameEl.querySelector('.cursor-blink');
+        if (cursor) cursor.remove();
+      }, 1000);
+    }
+  }
+  
+  // Start typing after a 400ms delay (lets the banner fade in first)
+  setTimeout(typeWriter, 400);
+  
+  // Mark as shown for this session
+  sessionStorage.setItem('edupoint_welcome_shown', 'true');
+}
+
+function dismissWelcome() {
+  document.getElementById('welcomeBanner').style.display = 'none';
+}
+
+// ==========================================
+// DASHBOARD LOGIC
+// ==========================================
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(`view-${viewId}`).classList.add('active');
   window.scrollTo(0,0);
 }
 
-function logout() { clearToken(); location.reload(); }
+function logout() { 
+  clearToken(); 
+  sessionStorage.removeItem('edupoint_welcome_shown');
+  location.reload(); 
+}
 
 function setupCalculator() {
   const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
@@ -523,7 +652,6 @@ function openConfirmModal() {
     `<tr><td>${d.subject}</td><td>${d.grade}</td></tr>`
   ).join('');
 
-  // Reset the checkbox and disable pay button
   document.getElementById('rulesCheck').checked = false;
   document.getElementById('btnPayConfirm').disabled = true;
   document.getElementById('btnEdit').disabled = false;
