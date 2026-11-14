@@ -459,7 +459,7 @@ let pendingCalc = null;
 function initAuth() {
   if (typeof google === 'undefined') return;
   
-  // STRICTLY POPUP MODE. No login_uri, no redirect.
+  // POPUP MODE. Using the new Client ID.
   google.accounts.id.initialize({
     client_id: "124164127578-2qhjodmcu98cvm9hl70jcqhuid945dh4.apps.googleusercontent.com",
     callback: handleGoogleLogin,
