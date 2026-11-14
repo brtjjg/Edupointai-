@@ -32,7 +32,8 @@
     --gold: #ffd700; 
     --text-light: #e2e8f0; 
     --text-muted: #94a3b8; 
-    /* New Modal Colors */
+    
+    /* Premium Modal Colors */
     --modal-navy: #080F25;
     --modal-blue: #2563EB;
     --modal-green: #16A34A;
@@ -67,7 +68,7 @@
   .card { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
   .card-title { color: var(--cyan); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
   
-  /* FIXED SUBJECT ALIGNMENT FOR MOBILE */
+  /* FIXED SUBJECT ALIGNMENT */
   .subject-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; margin-bottom: 10px; }
   .subject-row select { width: 100%; box-sizing: border-box; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
   .btn-primary { width: 100%; box-sizing: border-box; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
@@ -157,11 +158,11 @@
   .fee-card h3 { font-size: 28px; color: var(--modal-white); margin: 5px 0; }
   .fee-card small { font-size: 12px; color: #94a3b8; }
 
-  .subject-list-preview { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; }
-  .subject-list-preview table { width: 100%; border-collapse: collapse; }
-  .subject-list-preview td { padding: 6px 0; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
-  .subject-list-preview tr:last-child td { border-bottom: none; }
-  .subject-list-preview td:last-child { text-align: right; color: var(--modal-blue); font-weight: bold; }
+  /* FIXED SUBJECT PREVIEW FLEXBOX */
+  .subject-list-preview { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; }
+  .preview-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-grade { color: var(--modal-blue); font-weight: bold; text-transform: uppercase; }
 
   .terms-summary { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
   .term-item { display: flex; gap: 12px; align-items: flex-start; }
@@ -276,10 +277,9 @@
       <small>Per new calculation request</small>
     </div>
 
-    <div class="subject-list-preview">
-      <table>
-        <tbody id="confirmSubjectList"></tbody>
-      </table>
+    <!-- Flexbox container for subjects & grades -->
+    <div class="subject-list-preview" id="confirmSubjectList">
+      <!-- Populated by JS -->
     </div>
 
     <div class="terms-summary">
@@ -690,9 +690,10 @@ document.getElementById("btnCalculate").onclick = () => {
 // STEP 2: Modal
 // ==========================================
 function openConfirmModal() {
-  const tbody = document.getElementById('confirmSubjectList');
-  tbody.innerHTML = pendingCalc.displayList.map(d =>
-    `<tr><td>${d.subject}</td><td>${d.grade}</td></tr>`
+  const preview = document.getElementById('confirmSubjectList');
+  // Populating using flexbox rows instead of table
+  preview.innerHTML = pendingCalc.displayList.map(d =>
+    `<div class="preview-row"><span>${d.subject}</span><span class="preview-grade">${d.grade}</span></div>`
   ).join('');
 
   document.getElementById('rulesCheck').checked = false;
