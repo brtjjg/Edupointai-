@@ -208,19 +208,23 @@
   /* INFO MODAL (About, Rules, Terms, Privacy) */
   /* ========================================= */
   #infoModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; }
-  .info-modal-content { background: var(--navy); border: 1px solid var(--royal-blue); border-radius: 16px; padding: 30px; max-width: 650px; width: 100%; margin: 40px auto; color: var(--soft-white); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.3s ease; }
+  .info-modal-content { background: var(--navy); border: 1px solid var(--royal-blue); border-radius: 16px; padding: 30px; max-width: 600px; width: 100%; margin: 20px auto; color: var(--soft-white); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.3s ease; }
+  
   .info-modal-close { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--slate); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; }
   .info-modal-close:hover { color: var(--white); }
   
-  .info-modal-body h1 { color: var(--electric-blue); font-size: 26px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
+  .info-modal-body h1 { color: var(--electric-blue); font-size: 24px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
   .info-modal-body h2 { color: var(--white); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
   .info-modal-body p, .info-modal-body ul { color: var(--slate); line-height: 1.6; font-size: 14px; margin-bottom: 15px; }
   .info-modal-body ul { padding-left: 20px; }
   .info-modal-body strong { color: var(--white); }
   
-  .info-box { background: rgba(37, 99, 235, 0.1); border-left: 4px solid var(--royal-blue); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); }
-  .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning-amber); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); }
-  .prohibited-box { background: rgba(220, 38, 38, 0.1); border-left: 4px solid var(--error-red); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); }
+  .info-box { background: rgba(37, 99, 235, 0.1); border-left: 4px solid var(--royal-blue); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); font-size: 14px; }
+  .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning-amber); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); font-size: 14px; }
+  .prohibited-box { background: rgba(220, 38, 38, 0.1); border-left: 4px solid var(--error-red); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); font-size: 14px; }
+
+  .return-btn { display: block; width: 100%; padding: 14px; background: var(--royal-blue); color: var(--white); text-align: center; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 30px; text-decoration: none; transition: background 0.2s; }
+  .return-btn:hover { background: #1d4ed8; }
 
   /* ========================================= */
   /* EDPOINTAI V11.0 MINIMAL FOOTER            */
@@ -462,7 +466,7 @@
 <!-- ========================================= -->
 <div id="infoModal">
   <div class="info-modal-content">
-    <button class="info-modal-close" onclick="closeInfoModal()">×</button>
+    <button class="info-modal-close" onclick="closeInfoModal()">✕</button>
     
     <!-- About Us Content -->
     <div id="info-content-about" class="info-modal-body" style="display: none;">
@@ -575,6 +579,7 @@
       <p>Under Kenya's Data Protection Act (2019), you have the right to access, correct, or request deletion of your data, and the right to lodge a complaint with the ODPC.</p>
     </div>
 
+    <button class="return-btn" onclick="closeInfoModal()">← Return to EduPointAI</button>
   </div>
 </div>
 
