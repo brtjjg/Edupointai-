@@ -24,7 +24,21 @@
 <script src="https://accounts.google.com/gsi/client" onload="initAuth()" async defer></script>
 
 <style>
-  :root { --navy: #05081c; --card-bg: #0f1430; --cyan: #00d4ff; --purple: #8a2be2; --gold: #ffd700; --text-light: #e2e8f0; --text-muted: #94a3b8; }
+  :root { 
+    --navy: #05081c; 
+    --card-bg: #0f1430; 
+    --cyan: #00d4ff; 
+    --purple: #8a2be2; 
+    --gold: #ffd700; 
+    --text-light: #e2e8f0; 
+    --text-muted: #94a3b8; 
+    /* New Modal Colors */
+    --modal-navy: #080F25;
+    --modal-blue: #2563EB;
+    --modal-green: #16A34A;
+    --modal-amber: #F59E0B;
+    --modal-white: #F8FAFC;
+  }
   body { background: var(--navy); color: var(--text-light); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
   .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; }
   .view.active { display: block; }
@@ -52,9 +66,11 @@
   .app-header .logout { color: var(--text-muted); text-decoration: none; font-size: 14px; }
   .card { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
   .card-title { color: var(--cyan); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
-  .subject-row { display: flex; gap: 10px; margin-bottom: 10px; }
-  .subject-row select { flex: 1; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
-  .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+  
+  /* FIXED SUBJECT ALIGNMENT FOR MOBILE */
+  .subject-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; margin-bottom: 10px; }
+  .subject-row select { width: 100%; box-sizing: border-box; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
+  .btn-primary { width: 100%; box-sizing: border-box; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
   /* WELCOME / ONBOARDING VIEW */
   .welcome-container { max-width: 600px; margin: 0 auto; padding: 40px 20px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; }
@@ -101,7 +117,7 @@
   .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .badge-yellow { background: rgba(251,191,36,0.1); color: #fbbf24; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .badge-red { background: rgba(255,123,123,0.1); color: #ff7b7b; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
+  .filter-input { width: 100%; box-sizing: border-box; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
 
   /* OTHER TOOLS */
   .chips { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -119,35 +135,57 @@
   .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
   .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
 
-  /* CONFIRMATION MODAL */
-  #confirmModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); }
-  .modal-content { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 24px; max-width: 440px; margin: 40px auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; }
-  .modal-subjects { background: #080a18; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  .modal-subjects table { width: 100%; border-collapse: collapse; }
-  .modal-subjects th { text-align: left; padding: 8px 0; color: var(--cyan); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #2a324b; }
-  .modal-subjects td { padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
-  .modal-subjects td:last-child { text-align: right; color: var(--cyan); font-weight: bold; }
-  .modal-subjects tr:last-child td { border-bottom: none; }
-  .modal-price { background: linear-gradient(135deg,#0f172a,#1e293b); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  
-  /* RULES CHECKBOX */
-  .rules-box { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; padding: 0 5px; }
-  .rules-box input { width: 18px; min-height: 18px; margin-top: 2px; accent-color: var(--cyan); cursor: pointer; }
-  .rules-box label { color: var(--text-muted); font-size: 12px; line-height: 1.4; cursor: pointer; }
-  .rules-box a { color: var(--cyan); text-decoration: underline; }
-
-  .modal-buttons { display: flex; gap: 10px; }
-  .btn-edit { flex: 1; padding: 14px; background: transparent; border: 1px solid #2a324b; color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
-  .btn-pay-confirm { flex: 2; padding: 14px; background: linear-gradient(90deg,#19c8ff,#9b59ff); border: none; color: #fff; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
-  .btn-pay-confirm:disabled, .btn-edit:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  /* SOCIALS & FOUNDER */
+  /* SOCIALS */
   .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
   .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; text-decoration: none; }
   .bg-wa { background: #25D366; } .bg-li { background: #0077B5; } .bg-ig { background: #E1306C; } .bg-tt { background: #000; border: 1px solid #fff; } .bg-mail { background: #EA4335; }
-  .founder-card { border: 1px solid #8a2be2; text-align: center; }
-  .btn-founder { background: transparent; border: 1px solid var(--text-muted); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 13px; text-decoration: none; display: inline-block; margin: 5px; }
   .floating-chat { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 999; }
+
+  /* ========================================= */
+  /* PREMIUM PAYMENT MODAL                     */
+  /* ========================================= */
+  #confirmModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); }
+  .secure-modal { background: var(--modal-navy); border: 1px solid var(--modal-blue); border-radius: 16px; padding: 24px; max-width: 440px; margin: 20px auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; color: var(--modal-white); }
+  
+  .secure-header { text-align: center; margin-bottom: 20px; }
+  .secure-header .lock-icon { font-size: 11px; font-weight: bold; letter-spacing: 1px; color: var(--modal-green); text-transform: uppercase; }
+  .secure-header h2 { color: var(--modal-blue); font-size: 22px; margin: 8px 0 5px; }
+  .secure-header p { color: #94a3b8; font-size: 13px; margin: 0; }
+
+  .fee-card { background: rgba(37,99,235,0.1); border: 1px solid var(--modal-blue); border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 20px; }
+  .fee-card span { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+  .fee-card h3 { font-size: 28px; color: var(--modal-white); margin: 5px 0; }
+  .fee-card small { font-size: 12px; color: #94a3b8; }
+
+  .subject-list-preview { background: #0f172a; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; }
+  .subject-list-preview table { width: 100%; border-collapse: collapse; }
+  .subject-list-preview td { padding: 6px 0; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .subject-list-preview tr:last-child td { border-bottom: none; }
+  .subject-list-preview td:last-child { text-align: right; color: var(--modal-blue); font-weight: bold; }
+
+  .terms-summary { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .term-item { display: flex; gap: 12px; align-items: flex-start; }
+  .term-item .num { color: var(--modal-blue); font-weight: 900; font-size: 14px; opacity: 0.8; }
+  .term-item b { display: block; font-size: 13px; color: var(--modal-white); margin-bottom: 2px; }
+  .term-item p { margin: 0; font-size: 12px; color: #94a3b8; line-height: 1.4; }
+
+  .full-terms-toggle { text-align: center; margin-bottom: 15px; }
+  .full-terms-toggle a { color: var(--modal-blue); font-size: 12px; text-decoration: none; cursor: pointer; font-weight: bold; }
+  
+  .full-terms-box { display: none; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; font-size: 11px; color: #94a3b8; line-height: 1.5; }
+  .full-terms-box b { color: var(--modal-white); }
+
+  .modal-checkbox-box { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+  .modal-checkbox-box input { width: 18px; min-height: 18px; margin-top: 2px; accent-color: var(--modal-blue); cursor: pointer; }
+  .modal-checkbox-box label { color: #cbd5e1; font-size: 12px; line-height: 1.5; cursor: pointer; }
+
+  .modal-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+  .btn-edit { flex: 1; padding: 14px; background: transparent; border: 1px solid #334155; color: var(--modal-white); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn-pay-confirm { flex: 2; padding: 14px; background: var(--modal-blue); border: none; color: #fff; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
+  .btn-pay-confirm:disabled, .btn-edit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-pay-confirm:not(:disabled):hover { background: #1d4ed8; }
+
+  .secure-footer { text-align: center; font-size: 10px; color: #64748B; letter-spacing: 0.5px; }
 </style>
 </head>
 <body>
@@ -222,47 +260,67 @@
 </div>
 
 <!-- ================================ -->
-<!-- CONFIRMATION MODAL               -->
+<!-- PREMIUM CONFIRMATION MODAL       -->
 <!-- ================================ -->
 <div id="confirmModal">
-  <div class="modal-content">
-    <div style="text-align:center; margin-bottom:20px;">
-      <div style="font-size:48px; margin-bottom:8px;">📋</div>
-      <h2 style="color:var(--cyan); margin:0 0 6px; font-size:22px;">Confirm Your Subjects</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin:0;">
-        Please review carefully. You will be charged <b style="color:var(--gold);">KES 100</b> for this calculation.
-      </p>
+  <div class="secure-modal">
+    <div class="secure-header">
+      <span class="lock-icon">🔒 SECURE CHECKOUT</span>
+      <h2>Payment Terms & Regulations</h2>
+      <p>Please review these conditions before proceeding with your calculation.</p>
     </div>
     
-    <div class="modal-subjects">
+    <div class="fee-card">
+      <span>CALCULATION FEE</span>
+      <h3>KES 100</h3>
+      <small>Per new calculation request</small>
+    </div>
+
+    <div class="subject-list-preview">
       <table>
-        <thead><tr><th>Subject</th><th>Grade</th></tr></thead>
         <tbody id="confirmSubjectList"></tbody>
       </table>
     </div>
 
-    <div class="modal-price">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:var(--text-muted); font-size:13px;">Total Cost</span>
-        <span style="color:var(--gold); font-weight:bold; font-size:22px;">KES 100</span>
-      </div>
-      <p style="color:var(--text-muted); font-size:11px; margin:8px 0 0 0;">
-        ⚠️ Every calculation requires a new payment
-      </p>
+    <div class="terms-summary">
+      <div class="term-item"><span class="num">01</span> <div><b>Payment Authorization</b><p>Authorize payment for your selected calculation.</p></div></div>
+      <div class="term-item"><span class="num">02</span> <div><b>Refund Policy</b><p>Payments are subject to the stated refund conditions.</p></div></div>
+      <div class="term-item"><span class="num">03</span> <div><b>Payment Verification</b><p>Your payment must be verified before processing.</p></div></div>
+      <div class="term-item"><span class="num">04</span> <div><b>Results Delivery</b><p>Receive your completed report by email and dashboard.</p></div></div>
+      <div class="term-item"><span class="num">05</span> <div><b>Transaction Security</b><p>Keep your payment details and transaction references secure.</p></div></div>
     </div>
 
-    <!-- RULES & REGULATIONS CHECKBOX -->
-    <div class="rules-box">
+    <div class="full-terms-toggle">
+      <a onclick="document.getElementById('fullTerms').style.display = document.getElementById('fullTerms').style.display === 'block' ? 'none' : 'block'">View Full Terms & Conditions</a>
+    </div>
+
+    <div class="full-terms-box" id="fullTerms">
+      <b>1. Payment Amount</b><br>Each KCSE course eligibility calculation costs KES 100. The fee is charged per new calculation request.<br><br>
+      <b>2. Payment Authorization</b><br>You authorize EduPointAI to process your payment for the selected service. Only use the payment methods officially provided.<br><br>
+      <b>3. Non-Refundable Payments</b><br>Payments are non-refundable once the calculation has been successfully generated. Incorrect grades submitted by the student do not automatically qualify for a refund.<br><br>
+      <b>4. Payment Verification</b><br>Your payment must be successfully verified before calculation begins. A pending transaction does not count as a completed payment.<br><br>
+      <b>5. Calculation Processing</b><br>Results are generated using the information submitted. Once processing begins, the calculation request cannot be cancelled.<br><br>
+      <b>6. Results Delivery</b><br>Completed results will be delivered to your registered email address and dashboard.<br><br>
+      <b>7. Duplicate Transactions</b><br>Do not repeatedly initiate payment while an earlier transaction is pending. If charged more than once, contact support.<br><br>
+      <b>8. Payment Security</b><br>Never share your payment PIN or banking credentials. EduPointAI will not ask you to disclose your payment PIN.<br><br>
+      <b>9. Payment Confirmation</b><br>Successful payment verification authorizes the selected calculation. Keep your transaction confirmation for future reference.<br><br>
+      <b>10. Agreement and Consent</b><br>By proceeding, you confirm that you understand the KES 100 charge, acknowledge the refund conditions, and authorize processing.
+    </div>
+
+    <div class="modal-checkbox-box">
       <input type="checkbox" id="rulesCheck" onchange="document.getElementById('btnPayConfirm').disabled = !this.checked">
       <label for="rulesCheck">
-        I confirm the subjects and grades above are correct. I agree to the 
-        <a href="#" onclick="event.preventDefault(); alert('Terms & Regulations:\n1. Ensure all grades entered are accurate.\n2. Payments are non-refundable once results are generated.\n3. Each calculation costs KES 100.\n4. Results are sent via email.');">Rules & Regulations</a>.
+        I have reviewed and confirmed my subjects and grades. I understand that each calculation costs KES 100, have read the payment and refund regulations, and authorize EduPointAI to process my payment.
       </label>
     </div>
 
     <div class="modal-buttons">
       <button class="btn-edit" id="btnEdit" onclick="closeConfirm()">✏️ Edit</button>
-      <button class="btn-pay-confirm" id="btnPayConfirm" disabled onclick="confirmAndPay()">✅ Pay KES 100</button>
+      <button class="btn-pay-confirm" id="btnPayConfirm" disabled onclick="confirmAndPay()">Pay KES 100 →</button>
+    </div>
+    
+    <div class="secure-footer">
+      Powered by EduPointAI • Secure Payment
     </div>
   </div>
 </div>
@@ -396,18 +454,6 @@
       <p style="font-size: 12px; color: var(--text-muted); margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
     </div>
 
-    <div class="card founder-card">
-      <div style="font-size: 40px; margin-bottom: 10px;">👨‍💻</div>
-      <h3 style="color: var(--cyan); margin: 0 0 5px;">Founder & CEO</h3>
-      <h2 style="color: #fff; margin: 0 0 5px; font-size: 22px;">Mr. Nex</h2>
-      <p style="color: var(--text-muted); font-size: 13px; margin-top: 0; margin-bottom: 15px;">Full Stack Developer • AI Systems Engineer</p>
-      <div style="display: flex; justify-content: center; gap: 10px;">
-        <a href="tel:0114812308" class="btn-founder">📞 Call</a>
-        <a href="mailto:academichelpdesk1@gmail.com" class="btn-founder">📧 Email</a>
-        <a href="https://wa.me/254114812308" target="_blank" class="btn-founder" style="background: #25D366; border: none;">💬 WhatsApp</a>
-      </div>
-    </div>
-
     <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 30px;">
       <p>© 2026 EduPoint AI v11.0 · All Rights Reserved</p>
       <p>
@@ -459,7 +505,6 @@ let pendingCalc = null;
 function initAuth() {
   if (typeof google === 'undefined') return;
   
-  // POPUP MODE. Using the new Client ID.
   google.accounts.id.initialize({
     client_id: "124164127578-2qhjodmcu98cvm9hl70jcqhuid945dh4.apps.googleusercontent.com",
     callback: handleGoogleLogin,
@@ -488,10 +533,7 @@ async function handleGoogleLogin(response) {
     });
     setToken(res.token);
     
-    // Force the welcome screen to show upon successful sign in
     sessionStorage.removeItem('edupoint_welcome_shown');
-    
-    // Refresh the page to trigger the welcome flow
     window.location.reload();
   } catch (err) { 
     alert("Login failed: " + err.message); 
@@ -499,50 +541,40 @@ async function handleGoogleLogin(response) {
 }
 
 // ==========================================
-// INIT: Instantly show Welcome or Dashboard
+// INIT
 // ==========================================
 async function init() {
   if (getToken()) {
     const hasSeenWelcome = sessionStorage.getItem('edupoint_welcome_shown');
     
     if (!hasSeenWelcome) {
-      // 1. Immediately show the welcome screen (prevents blank screen while API loads)
       showView("welcome");
-      
-      // 2. Start the 10-second timer for the progress bar and redirect
       setTimeout(() => {
         const pb = document.getElementById('welcomeProgress');
-        if (pb) pb.style.width = '100%'; // Triggers the CSS transition
-      }, 100); // Tiny delay to ensure DOM is ready
+        if (pb) pb.style.width = '100%'; 
+      }, 100); 
 
-      // 3. Automatically redirect after exactly 10 seconds
       setTimeout(() => {
         goToDashboard();
       }, 10000);
 
     } else {
-      // If they already saw it this session, go straight to the dashboard
       showView("student");
       setupCalculator();
     }
 
-    // 4. Fetch user data in the background
     try {
       const res = await api("/api/me");
       me = res.user;
-      
-      // Once we have the name, type it out on the welcome screen
       if (!hasSeenWelcome) {
         triggerWelcomeAnimation(me.name);
       }
-      
     } catch (e) {
       if (e.status === 401) {
         clearToken();
         showView("public");
         if (typeof google !== 'undefined') initAuth();
       } else {
-        // If network fails and they are supposed to be on dashboard, show warning
         if (hasSeenWelcome) {
           document.getElementById("calcMessage").innerHTML = '<span style="color:#fbbf24;">Warning: Could not connect to server. The page may not work until the server wakes up.</span>';
         }
@@ -565,14 +597,12 @@ function triggerWelcomeAnimation(name) {
   let i = 0;
   nameEl.innerHTML = '';
   
-  // Gentle typing effect for the name
   function typeWriter() {
     if (i < name.length) {
       nameEl.innerHTML += name.charAt(i);
       i++;
-      setTimeout(typeWriter, 60); // 60ms per character
+      setTimeout(typeWriter, 60);
     } else {
-      // Add blinking cursor at the end, then remove after 1s
       nameEl.innerHTML += '<span class="cursor-blink">|</span>';
       setTimeout(() => {
         const cursor = nameEl.querySelector('.cursor-blink');
@@ -581,12 +611,10 @@ function triggerWelcomeAnimation(name) {
     }
   }
   
-  // Start typing after a short delay
   setTimeout(typeWriter, 400);
 }
 
 function goToDashboard() {
-  // Mark that they have seen the welcome screen for this session
   sessionStorage.setItem('edupoint_welcome_shown', 'true');
   showView("student");
   setupCalculator();
@@ -616,7 +644,7 @@ function setupCalculator() {
       <select class="sub-select" onchange="preventDuplicates()">
         <option value="">Subject ${i+1}</option>${subjects.map(s => `<option value="${s}">${s}</option>`).join("")}
       </select>
-      <select class="grade-select" style="width:100px;">
+      <select class="grade-select">
         <option value="">Grade</option>${grades.map(g => `<option value="${g}">${g}</option>`).join("")}
       </select>
     </div>`;
@@ -637,7 +665,7 @@ function preventDuplicates() {
 }
 
 // ==========================================
-// STEP 1: Validate → open confirmation modal
+// STEP 1: Validate → open modal
 // ==========================================
 document.getElementById("btnCalculate").onclick = () => {
   const subjects = {}, grades = {}, displayList = [];
@@ -659,7 +687,7 @@ document.getElementById("btnCalculate").onclick = () => {
 };
 
 // ==========================================
-// STEP 2: Confirmation modal
+// STEP 2: Modal
 // ==========================================
 function openConfirmModal() {
   const tbody = document.getElementById('confirmSubjectList');
@@ -670,7 +698,7 @@ function openConfirmModal() {
   document.getElementById('rulesCheck').checked = false;
   document.getElementById('btnPayConfirm').disabled = true;
   document.getElementById('btnEdit').disabled = false;
-  document.getElementById('btnPayConfirm').textContent = "✅ Pay KES 100";
+  document.getElementById('fullTerms').style.display = 'none'; // reset toggle
   
   document.getElementById('confirmModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
@@ -687,7 +715,7 @@ function closeConfirm() {
 }
 
 // ==========================================
-// STEP 3: Pay → run payment flow
+// STEP 3: Pay flow
 // ==========================================
 async function confirmAndPay() {
   if (!pendingCalc) return;
@@ -730,9 +758,14 @@ async function confirmAndPay() {
       window.dataLayer.push({ event: 'begin_checkout', currency: 'KES', value: 100, items: [{ item_name: 'KCSE Cluster Calculation', price: 100, quantity: 1 }] });
     }
 
+    // Note: Added accepted_terms flag for backend auditing
     const j = await api("/api/payment/initiate", {
       method: "POST",
-      body: JSON.stringify({ plan: "standard", provider: "pesapal", phone: phone, subjects: subjects, grades: grades })
+      body: JSON.stringify({ 
+        plan: "standard", provider: "pesapal", phone: phone, 
+        subjects: subjects, grades: grades,
+        accepted_terms: true, terms_version: "1.0"
+      })
     });
 
     if (j.redirect_url) {
