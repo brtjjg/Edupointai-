@@ -40,7 +40,22 @@
     --modal-amber: #F59E0B;
     --modal-white: #F8FAFC;
   }
-  body { background: var(--navy); color: var(--text-light); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+  
+  /* Prevent horizontal scrolling globally */
+  html, body { 
+    margin: 0; 
+    padding: 0; 
+    overflow-x: hidden; 
+    width: 100%; 
+    max-width: 100vw; 
+    box-sizing: border-box;
+    background: var(--navy); 
+    color: var(--text-light); 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+  }
+  
+  * { box-sizing: border-box; }
+
   .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; }
   .view.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -61,17 +76,17 @@
   .feature-card p { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0; }
 
   /* DASHBOARD */
-  .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+  .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; width: 100%; }
   .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
   .app-header h1 { font-size: 22px; margin: 0; }
   .app-header .logout { color: var(--text-muted); text-decoration: none; font-size: 14px; }
   .card { background: var(--card-bg); border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
   .card-title { color: var(--cyan); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
   
-  /* FIXED SUBJECT ALIGNMENT */
-  .subject-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; margin-bottom: 10px; }
-  .subject-row select { width: 100%; box-sizing: border-box; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; }
-  .btn-primary { width: 100%; box-sizing: border-box; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+  /* FIXED SUBJECT ALIGNMENT (minmax prevents overflow) */
+  .subject-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 10px; margin-bottom: 10px; }
+  .subject-row select { width: 100%; padding: 12px; background: #080a18; color: #fff; border: 1px solid #2a324b; border-radius: 8px; font-size: 14px; }
+  .btn-primary { width: 100%; padding: 15px; background: linear-gradient(90deg, #19c8ff, #9b59ff); color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
   /* WELCOME / ONBOARDING VIEW */
   .welcome-container { max-width: 600px; margin: 0 auto; padding: 40px 20px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; }
@@ -118,21 +133,24 @@
   .badge-green { background: rgba(74,222,128,0.1); color: #4ade80; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .badge-yellow { background: rgba(251,191,36,0.1); color: #fbbf24; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
   .badge-red { background: rgba(255,123,123,0.1); color: #ff7b7b; padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .filter-input { width: 100%; box-sizing: border-box; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
+  .filter-input { width: 100%; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; margin-bottom: 15px; }
 
   /* OTHER TOOLS */
   .chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .chip { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
-  .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-  .input-group input { flex: 1; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
+  
+  /* FIXED INPUT GROUP */
+  .input-group { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
+  .input-group input { flex: 1; min-width: 0; padding: 12px; background: #080a18; border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
+  
   .btn-orange { width: 100%; padding: 14px; background: #ea580c; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
   /* CHAT */
   .chat-box { background: #080a18; border: 1px solid #2a324b; border-radius: 12px; padding: 15px; }
   .chat-messages { height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
-  .chat-input-row { display: flex; gap: 10px; margin-top: 15px; }
-  .chat-input-row input { flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
-  .btn-send { background: linear-gradient(90deg, #19c8ff, #9b59ff); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .chat-input-row { display: flex; gap: 10px; margin-top: 15px; width: 100%; }
+  .chat-input-row input { flex: 1; min-width: 0; padding: 12px; background: var(--card-bg); border: 1px solid #2a324b; border-radius: 8px; color: #fff; }
+  .btn-send { background: linear-gradient(90deg, #19c8ff, #9b59ff); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex-shrink: 0; }
   .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
   .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--text-muted); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
 
@@ -145,8 +163,9 @@
   /* ========================================= */
   /* PREMIUM PAYMENT MODAL                     */
   /* ========================================= */
-  #confirmModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); }
-  .secure-modal { background: var(--modal-navy); border: 1px solid var(--modal-blue); border-radius: 16px; padding: 24px; max-width: 440px; margin: 20px auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; color: var(--modal-white); }
+  #confirmModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; }
+  
+  .secure-modal { background: var(--modal-navy); border: 1px solid var(--modal-blue); border-radius: 16px; padding: 24px; width: 100%; max-width: 440px; margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; color: var(--modal-white); }
   
   .secure-header { text-align: center; margin-bottom: 20px; }
   .secure-header .lock-icon { font-size: 11px; font-weight: bold; letter-spacing: 1px; color: var(--modal-green); text-transform: uppercase; }
@@ -158,11 +177,12 @@
   .fee-card h3 { font-size: 28px; color: var(--modal-white); margin: 5px 0; }
   .fee-card small { font-size: 12px; color: #94a3b8; }
 
-  /* FIXED SUBJECT PREVIEW FLEXBOX */
-  .subject-list-preview { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; }
-  .preview-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  /* FIXED MODAL PREVIEW FLEXBOX */
+  .subject-list-preview { background: #0f172a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; width: 100%; }
+  .preview-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; color: #cbd5e1; width: 100%; }
+  .preview-row span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .preview-row .preview-grade { flex-shrink: 0; margin-left: 10px; color: var(--modal-blue); font-weight: bold; text-transform: uppercase; }
   .preview-row:last-child { border-bottom: none; }
-  .preview-grade { color: var(--modal-blue); font-weight: bold; text-transform: uppercase; }
 
   .terms-summary { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
   .term-item { display: flex; gap: 12px; align-items: flex-start; }
@@ -177,7 +197,7 @@
   .full-terms-box b { color: var(--modal-white); }
 
   .modal-checkbox-box { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid #334155; }
-  .modal-checkbox-box input { width: 18px; min-height: 18px; margin-top: 2px; accent-color: var(--modal-blue); cursor: pointer; }
+  .modal-checkbox-box input { width: 18px; min-height: 18px; margin-top: 2px; accent-color: var(--modal-blue); cursor: pointer; flex-shrink: 0; }
   .modal-checkbox-box label { color: #cbd5e1; font-size: 12px; line-height: 1.5; cursor: pointer; }
 
   .modal-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -701,7 +721,7 @@ function openConfirmModal() {
   document.getElementById('btnEdit').disabled = false;
   document.getElementById('fullTerms').style.display = 'none'; // reset toggle
   
-  document.getElementById('confirmModal').style.display = 'block';
+  document.getElementById('confirmModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
   if (window.dataLayer) {
@@ -710,6 +730,8 @@ function openConfirmModal() {
 }
 
 function closeConfirm() {
+  // Instead of clearing pendingCalc entirely, we leave the DOM selections as they are.
+  // This way, if they click "Calculate" again, it grabs the same values.
   pendingCalc = null;
   document.getElementById('confirmModal').style.display = 'none';
   document.body.style.overflow = '';
@@ -781,6 +803,26 @@ async function confirmAndPay() {
 
       let n = 0;
       const t = setInterval(async () => {
+        // Detect if the user closed the Pesapal popup manually
+        if (payWindow && payWindow.closed) {
+            // One final check to see if they paid before closing
+            try {
+                const x = await api("/api/payment/status/" + j.transaction_id);
+                if (x.payment.status === "paid" || x.payment.status === "completed") {
+                    clearInterval(t);
+                    renderResults(x.calculation_results);
+                    return;
+                }
+            } catch(e) {}
+            
+            // If they didn't pay and closed the window, reset the button
+            clearInterval(t);
+            msg.innerHTML = '<span style="color:#fbbf24;">Payment cancelled. Your subjects are saved. Click above to try again.</span>';
+            btn.disabled = false;
+            btn.textContent = "⚡ Pay KES 100 for Confirmed Subjects";
+            return;
+        }
+
         try {
           const x = await api("/api/payment/status/" + j.transaction_id);
           if (x.payment.status === "paid" || x.payment.status === "completed") {
