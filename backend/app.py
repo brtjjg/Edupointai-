@@ -110,15 +110,9 @@ def process_calculation(u, subjects, grades):
 
 
 # ==========================================
-# ATOMIC CLAIM + PROCESS (pay-per-calculation)
+# ATOMIC CLAIM + PROCESS
 # ==========================================
-#
-# This is the ONLY code path that ever computes results.
-# It requires a payment row with status='paid', and atomically flips it to
-# 'completed' so no double-processing is possible. If a webhook and the frontend
-# race, only one wins. Results are then persisted to results_json so the loser
-# can still return them without recomputing.
-#
+
 def _claim_and_process(tx_id):
     with connect() as conn:
         claimed = conn.execute(
@@ -133,7 +127,7 @@ def _claim_and_process(tx_id):
     row = payments.get(tx_id)
     calc_data = row.get("calculation_data")
     if not calc_data:
-        logger.warning(f"Claimed {tx_id} but no calc_data")
+        logger.info(f"Claimed {tx_id} but no calc_data — nothing to process")
         return None
 
     with connect() as conn:
@@ -141,21 +135,16 @@ def _claim_and_process(tx_id):
 
     try:
         calc_results = process_calculation(u, calc_data["subjects"], calc_data["grades"])
-
-        # Persist results so the webhook-first / polling race doesn't lose them
-        with connect() as conn:
-            conn.execute(
-                "UPDATE payments SET results_json = %s WHERE transaction_id = %s",
-                (json.dumps(calc_results), tx_id)
-            )
-
+        add_credit(row["user_id"])
         send_paid_receipt_email(
             u["email"], u["name"],
             calc_results["cluster_points"], calc_results["results"],
             calc_data["subjects"], calc_data["grades"],
             SCHOLARSHIPS, row
         )
-        logger.info(f"Processed {tx_id} and emailed results to {u['email']}")
+        with connect() as conn:
+            conn.execute("UPDATE payments SET calculation_data = NULL WHERE transaction_id = %s", (tx_id,))
+        logger.info(f"Processed results for {tx_id} and sent email to {u['email']}")
         return calc_results
     except Exception as e:
         with connect() as conn:
@@ -165,7 +154,7 @@ def _claim_and_process(tx_id):
 
 
 # ==========================================
-# PDF GENERATION
+# PDF GENERATION (UNTOUCHED)
 # ==========================================
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
@@ -368,7 +357,7 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
 
 
 # ==========================================
-# EMAIL SENDERS
+# EMAIL SENDERS (UPDATED HTML TEMPLATES)
 # ==========================================
 
 def _get_brevo():
@@ -379,13 +368,14 @@ def _get_brevo():
     return Brevo(api_key=api_key), sender_email
 
 
-def send_invoice_email(user_email, user_name, payment):
+def send_pending_invoice_email(user_email, user_name, payment):
     try:
         client, sender_email = _get_brevo()
         if not client:
             logger.warning("Brevo not configured, skipping invoice email")
             return
 
+        # Note: Invoice PDF generation is untouched.
         inv_buffer = generate_invoice_pdf(
             {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
         )
@@ -395,39 +385,88 @@ def send_invoice_email(user_email, user_name, payment):
         amount = float(payment.get("amount", 0))
         inv_short = payment["transaction_id"][-8:].upper()
 
-        pay_button_html = ""
-        if pay_link:
-            pay_button_html = f"""
-            <p style="text-align:center;margin:32px 0;">
-              <a href="{pay_link}"
-                 style="display:inline-block;background:#2563EB;color:#ffffff;padding:16px 52px;
-                        text-decoration:none;border-radius:10px;font-weight:bold;font-size:16px;">
-                💳 PAY NOW — KES {amount:.0f}
-              </a>
-            </p>
-            <p style="text-align:center;font-size:12px;color:#64748B;">
-              You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.
-            </p>
-            """
-
         html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;line-height:1.6;color:#1F2937;">
-          <h2>Hi {user_name},</h2>
-          <p>Thank you for using <b>EduPointAI</b>! Your invoice is attached below.</p>
-          <div style="background:#F4F6FC;padding:16px;border-radius:8px;margin:20px 0;">
-            <p style="margin:0;"><b>Invoice:</b> INV-{inv_short}</p>
-            <p style="margin:6px 0 0;"><b>Amount:</b> KES {amount:.2f}</p>
-            <p style="margin:6px 0 0;"><b>Status:</b> Awaiting Payment</p>
-          </div>
-          <p>Complete the payment to unlock your <b>Comprehensive Results Report</b>:
-            all 200+ courses, their subject requirements, cutoffs, and scholarship opportunities.</p>
-          {pay_button_html}
-          <p style="font-size:13px;color:#64748B;">
-            Once paid you'll be returned to the EduPointAI website and your report will arrive by email.
-            We'll send a friendly reminder every 24 hours until your invoice is settled.
-          </p>
-          <p>Best regards,<br/><b>EduPointAI Team</b></p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Your EduPointAI Invoice</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                            
+                            <!-- Header -->
+                            <tr>
+                                <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
+                                </td>
+                            </tr>
+                            
+                            <!-- Body -->
+                            <tr>
+                                <td style="padding: 40px;">
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <span style="display: inline-block; background-color: #F2A93B; color: #101B3D; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">Awaiting Payment</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 15px;">
+                                                <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">Your invoice is ready!</h2>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">One step closer to unlocking your academic opportunities.</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Invoice Details -->
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Invoice INV-{inv_short}</p>
+                                                <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Pay Button -->
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <a href="{pay_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">PAY NOW — KES {amount:.0f}</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <p style="color: #64748B; margin: 0; font-size: 13px;">You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
+                                    <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
+                                    <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
         """
 
         client.transactional_emails.send_transac_email(
@@ -437,7 +476,7 @@ def send_invoice_email(user_email, user_name, payment):
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
             attachment=[{"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"}],
         )
-        logger.info(f"Sent invoice with Pay Now to {user_email}")
+        logger.info(f"Sent pending invoice with Pay Now to {user_email}")
     except Exception:
         logger.error(f"Failed to send invoice email: {traceback.format_exc()}")
 
@@ -452,6 +491,7 @@ def send_reminder_email(user_email, user_name, payment):
         if not pay_link:
             return
 
+        # Note: Invoice PDF generation is untouched.
         inv_buffer = generate_invoice_pdf(
             {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
         )
@@ -462,29 +502,87 @@ def send_reminder_email(user_email, user_name, payment):
         reminder_num = (payment.get("reminder_count") or 0) + 1
 
         html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;line-height:1.6;color:#1F2937;">
-          <h2>Hi {user_name},</h2>
-          <p>This is a friendly reminder — your <b>EduPointAI invoice is still awaiting payment</b>.</p>
-          <div style="background:#FEF6E0;border-left:4px solid #F59E0B;padding:16px;border-radius:4px;margin:22px 0;">
-            <p style="margin:0;"><b>Invoice:</b> INV-{inv_short}</p>
-            <p style="margin:6px 0 0;"><b>Amount Due:</b> KES {amount:.2f}</p>
-            <p style="margin:6px 0 0;"><b>Reminder:</b> #{reminder_num}</p>
-          </div>
-          <p style="text-align:center;margin:32px 0;">
-            <a href="{pay_link}"
-               style="display:inline-block;background:#2563EB;color:#ffffff;padding:16px 52px;
-                      text-decoration:none;border-radius:10px;font-weight:bold;font-size:16px;">
-              💳 PAY NOW — KES {amount:.0f}
-            </a>
-          </p>
-          <p style="text-align:center;font-size:12px;color:#64748B;">
-            You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.
-          </p>
-          <p style="font-size:13px;color:#64748B;">
-            If you have already paid, please ignore this email — your Results Report will arrive shortly.
-          </p>
-          <p>Best regards,<br/><b>EduPointAI Team</b></p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Payment Reminder</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                            
+                            <!-- Header -->
+                            <tr>
+                                <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
+                                </td>
+                            </tr>
+                            
+                            <!-- Body -->
+                            <tr>
+                                <td style="padding: 40px;">
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <span style="display: inline-block; background-color: #F2A93B; color: #101B3D; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">Payment Reminder</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 15px;">
+                                                <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">A friendly reminder!</h2>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">Your EduPointAI Comprehensive Results Report is waiting for you.</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Invoice Details -->
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Invoice INV-{inv_short} • Reminder #{reminder_num}</p>
+                                                <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Pay Button -->
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <a href="{pay_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">PAY NOW — KES {amount:.0f}</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <p style="color: #64748B; margin: 0; font-size: 13px;">If you have already paid, please ignore this email — your Results Report will arrive shortly.</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
+                                    <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
+                                    <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
         """
 
         client.transactional_emails.send_transac_email(
@@ -505,6 +603,7 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
         if not client:
             return
 
+        # Note: Report PDF and Receipt PDF generation are untouched.
         pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
         pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode("utf-8")
         attachments = [{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
@@ -515,22 +614,91 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
         inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
         attachments.append({"content": inv_base64, "name": f"Receipt_{payment['transaction_id']}.pdf"})
 
-        html = (
-            f"<div style='font-family: Arial; line-height: 1.6;'>"
-            f"<h2>Dear {user_name},</h2>"
-            f"<p>Your payment is confirmed and your comprehensive academic report is ready.</p>"
-            f"<p><b>Cluster Points:</b> {cluster_points}</p>"
-            f"<p>Your attached <b>Comprehensive Results Report</b> includes:</p>"
-            f"<ul>"
-            f"<li><b>Every course</b> in our database (200+)</li>"
-            f"<li>Courses grouped by: <b>Qualified</b> • <b>Close (±2 points)</b> • <b>Not Yet Qualified</b></li>"
-            f"<li>The <b>specific subjects each course requires</b></li>"
-            f"<li>Cutoffs, duration and how far you are from each course</li>"
-            f"</ul>"
-            f"<p>You will also find your <b>Payment Receipt</b> attached.</p>"
-            f"<p>EduPointAI Team</p>"
-            f"</div>"
-        )
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Your Report is Ready</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                            
+                            <!-- Header -->
+                            <tr>
+                                <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
+                                </td>
+                            </tr>
+                            
+                            <!-- Body -->
+                            <tr>
+                                <td style="padding: 40px;">
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <span style="display: inline-block; background-color: #0F9D91; color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">Payment Confirmation</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 15px;">
+                                                <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">Payment successful! <span style="color: #0F9D91; font-size: 28px;">✓</span></h2>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">Thank you! Your payment has been confirmed.</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Success Details -->
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <h3 style="color: #7047EB; margin: 0 0 10px 0; font-size: 22px; font-weight: 700;">Your report is ready! 🎓</h3>
+                                                <p style="color: #26324D; margin: 0; font-size: 15px;">Your next academic chapter starts here.</p>
+                                                <p style="color: #26324D; margin: 10px 0 0 0; font-size: 15px;"><strong>Cluster Points:</strong> {cluster_points}</p>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Action Button -->
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <a href="https://edupointai-frontend.vercel.app/" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">VIEW MY REPORT</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 20px;">
+                                                <p style="color: #64748B; margin: 0; font-size: 13px;">Your official Results Report and Payment Receipt are attached to this email.</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
+                                    <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
+                                    <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+
         client.transactional_emails.send_transac_email(
             subject="Your EduPointAI Results & Receipt",
             html_content=html,
@@ -589,7 +757,7 @@ def send_pending_reminders():
 # ==========================================
 
 @app.get("/health")
-def health(): return jsonify(ok=True, service="edupoint-api")
+def health(): return jsonify(ok=True, service="edupoint-api", price_per_calculation=100)
 
 @app.post("/api/auth/google")
 def google_login():
@@ -625,11 +793,8 @@ def logout():
 @login_required
 def me():
     u = current_user()
-    return jsonify(ok=True, user=public_user(u), credits=u.get("credits", 0))
+    return jsonify(ok=True, user=public_user(u), calculations_completed=int(u.get("credits", 0) or 0), price_per_calculation=100)
 
-# ==========================================
-# PAYMENT: every call creates a NEW Pesapal order + invoice (pay-per-calculation)
-# ==========================================
 @app.post("/api/payment/initiate")
 @login_required
 def initiate_payment():
@@ -673,7 +838,7 @@ def initiate_payment():
 
         pending_payment = payments.get(tx)
         threading.Thread(
-            target=send_invoice_email,
+            target=send_pending_invoice_email,
             args=(u["email"], u["name"], pending_payment),
             daemon=True
         ).start()
@@ -750,7 +915,6 @@ def payment_status(transaction_id):
     if not row or (row.get("user_id") and row["user_id"] != u["id"] and u["role"] != "admin"):
         return jsonify(ok=False, error="Transaction not found."), 404
 
-    # Poll Pesapal if still pending
     if row["status"] == "pending":
         try:
             rr = payments.check_status(row)
@@ -760,13 +924,11 @@ def payment_status(transaction_id):
         except Exception:
             logger.exception("Status check failed")
 
-    # If the payment has just become 'paid', try to claim & process.
+    calc_results = None
     if row["status"] == "paid":
         _claim_and_process(transaction_id)
         row = payments.get(transaction_id)
 
-    # Return stored results (whether we just processed them or webhook already did).
-    calc_results = None
     if row["status"] == "completed" and row.get("results_json"):
         calc_results = row["results_json"]
 
@@ -780,7 +942,6 @@ def trigger_reminders():
     if secret != expected:
         return "Unauthorized", 401
 
-    # 1. Retry any stuck 'paid' payments (webhook ran but processing crashed)
     with connect() as conn:
         stuck = conn.execute("""
             SELECT transaction_id FROM payments 
@@ -790,7 +951,6 @@ def trigger_reminders():
     for s in stuck:
         _claim_and_process(s["transaction_id"])
 
-    # 2. Send daily reminders
     sent = send_pending_reminders()
     return jsonify(ok=True, reminders_sent=sent, stuck_retried=len(stuck)), 200
 
@@ -865,6 +1025,16 @@ def admin_payments():
             FROM payments ORDER BY id DESC LIMIT 100
         """).fetchall()
     return jsonify(ok=True, payments=[dict(r) for r in rows])
+
+@app.post("/api/admin/access/<int:user_id>")
+@admin_required
+def admin_access(user_id):
+    d = request.get_json(silent=True) or {}
+    credits_to_add = int(d.get("credits", 1))
+    if credits_to_add > 0:
+        with connect() as conn:
+            conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
+    return jsonify(ok=True, added=credits_to_add)
 
 
 @app.get("/api/cron/daily-reports")
