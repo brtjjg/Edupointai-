@@ -1050,7 +1050,8 @@ def admin_payments():
     with connect() as conn:
         rows = conn.execute("""
             SELECT id, transaction_id, user_id, amount, status,
-                   invoice_sent_at, last_reminder_at, reminder_count
+                   invoice_sent_at, last_reminder_at, reminder_count,
+                   (CASE WHEN status IN ('completed', 'paid') THEN true ELSE false END) as report_sent
             FROM payments ORDER BY id DESC LIMIT 100
         """).fetchall()
     return jsonify(ok=True, payments=[dict(r) for r in rows])
@@ -1076,6 +1077,53 @@ def admin_retry_payment(transaction_id):
             return jsonify(ok=True, message="Payment confirmed and processed.")
             
     return jsonify(ok=False, error="Cannot retry. Payment is not marked as paid."), 400
+
+@app.post("/api/admin/calculate/free")
+@admin_required
+def admin_free_calculation():
+    d = request.get_json(silent=True) or {}
+    email = d.get("email")
+    subjects = d.get("subjects")
+    grades = d.get("grades")
+    
+    if not email or not subjects or not grades:
+        return jsonify(ok=False, error="Missing email, subjects, or grades."), 400
+        
+    with connect() as conn:
+        # Find user or create a placeholder user so the calculation can link to them
+        u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
+        if not u:
+            u = conn.execute(
+                "INSERT INTO users(name, email, phone, password_hash, role) "
+                "VALUES(%s, %s, %s, %s, 'student') RETURNING *", 
+                ("Student (Admin Generated)", email, "0700000000", "ADMIN_GENERATED")
+            ).fetchone()
+
+    try:
+        # 1. Process the calculation
+        calc_results = process_calculation(u, subjects, grades)
+        
+        # 2. Create a fake payment object for the receipt
+        fake_payment = {
+            "transaction_id": "ADMIN-" + uuid.uuid4().hex[:8].upper(),
+            "user_id": u["id"],
+            "amount": 0.0,
+            "status": "completed",
+            "created_at": datetime.now()
+        }
+
+        # 3. Send the email with the PDF Report and Receipt
+        send_paid_receipt_email(
+            email, u["name"],
+            calc_results["cluster_points"], calc_results["results"],
+            subjects, grades, SCHOLARSHIPS, fake_payment
+        )
+        
+        return jsonify(ok=True, calculation_results=calc_results)
+        
+    except Exception as e:
+        logger.error(f"Admin free calculation failed: {traceback.format_exc()}")
+        return jsonify(ok=False, error=str(e)), 500
 
 @app.get("/api/admin/payments/export")
 @admin_required
