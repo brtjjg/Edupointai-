@@ -29,7 +29,6 @@
   /* EDPOINTAI V11.0 DESIGN SYSTEM             */
   /* ========================================= */
   :root { 
-    /* Brand Colors */
     --navy: #080F25;
     --royal-blue: #2563EB;
     --electric-blue: #60A5FA;
@@ -42,7 +41,7 @@
     --error-red: #DC2626;
     --border-grey: #E2E8F0;
     
-    /* Footer Specific Variables */
+    /* Footer Specific */
     --ep-footer-bg: #080F25;
     --ep-primary: #2563EB;
     --ep-accent: #60A5FA;
@@ -58,48 +57,16 @@
   * { box-sizing: border-box; }
 
   html, body { 
-    margin: 0; 
-    padding: 0; 
-    width: 100%; 
-    overflow-x: hidden; 
-    background: var(--navy); 
-    color: var(--soft-white); 
+    margin: 0; padding: 0; width: 100%; overflow-x: hidden; 
+    background: var(--navy); color: var(--soft-white); 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    display: flex; flex-direction: column; min-height: 100vh;
   }
   
-  /* View Container Logic */
-  .view-container { flex: 1; display: flex; flex-direction: column; }
   .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; flex: 1; flex-direction: column; }
   .view.active { display: flex; }
-  
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ========================================= */
-  /* PUBLIC PAGES (Light Mode)                 */
-  /* ========================================= */
-  .page-content { background: var(--soft-white); color: var(--text-dark); padding: 40px 20px; display: flex; flex-direction: column; align-items: center; flex: 1; }
-  .page-inner { max-width: 800px; width: 100%; background: var(--white); padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px; }
-  .page-inner h1 { color: var(--navy); font-size: 32px; margin-top: 0; margin-bottom: 20px; }
-  .page-inner h2 { color: var(--navy); font-size: 24px; margin-top: 30px; margin-bottom: 15px; }
-  .page-inner h3 { color: var(--royal-blue); font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
-  .page-inner p { line-height: 1.6; margin-bottom: 15px; color: var(--text-dark); }
-  .page-inner ul { line-height: 1.6; margin-bottom: 15px; color: var(--text-dark); padding-left: 20px; }
-  .page-inner a { color: var(--royal-blue); text-decoration: none; font-weight: 500; }
-  .page-inner a:hover { text-decoration: underline; }
-  .back-btn { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--border-grey); padding: 10px 20px; border-radius: 8px; color: var(--navy); font-weight: 600; cursor: pointer; text-decoration: none; margin-bottom: 20px; transition: 0.2s; }
-  .back-btn:hover { background: var(--soft-white); }
-  
-  .info-box { background: #EFF6FF; padding: 20px; border-radius: 12px; border-left: 4px solid var(--royal-blue); margin-bottom: 20px; }
-  .warning-box { background: #FFFBEB; padding: 20px; border-radius: 12px; border-left: 4px solid var(--warning-amber); margin-bottom: 20px; }
-  .prohibited-box { background: #FEF2F2; padding: 20px; border-radius: 12px; border-left: 4px solid var(--error-red); margin-bottom: 20px; }
-  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
-  .feature-card { background: #EFF6FF; padding: 20px; border-radius: 12px; text-align: center; }
-  .feature-card h4 { color: var(--navy); margin: 10px 0 5px; }
-  .feature-card p { font-size: 14px; color: var(--text-dark); margin: 0; }
-  
   /* ========================================= */
   /* LANDING & DASHBOARD (Dark Mode)           */
   /* ========================================= */
@@ -238,6 +205,24 @@
   .secure-footer { text-align: center; font-size: 10px; color: #64748B; letter-spacing: 0.5px; }
 
   /* ========================================= */
+  /* INFO MODAL (About, Rules, Terms, Privacy) */
+  /* ========================================= */
+  #infoModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9000; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; }
+  .info-modal-content { background: var(--navy); border: 1px solid var(--royal-blue); border-radius: 16px; padding: 30px; max-width: 650px; width: 100%; margin: 40px auto; color: var(--soft-white); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.3s ease; }
+  .info-modal-close { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--slate); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; }
+  .info-modal-close:hover { color: var(--white); }
+  
+  .info-modal-body h1 { color: var(--electric-blue); font-size: 26px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
+  .info-modal-body h2 { color: var(--white); font-size: 18px; margin-top: 25px; margin-bottom: 10px; }
+  .info-modal-body p, .info-modal-body ul { color: var(--slate); line-height: 1.6; font-size: 14px; margin-bottom: 15px; }
+  .info-modal-body ul { padding-left: 20px; }
+  .info-modal-body strong { color: var(--white); }
+  
+  .info-box { background: rgba(37, 99, 235, 0.1); border-left: 4px solid var(--royal-blue); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); }
+  .warning-box { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning-amber); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); }
+  .prohibited-box { background: rgba(220, 38, 38, 0.1); border-left: 4px solid var(--error-red); padding: 15px; border-radius: 6px; margin: 15px 0; color: var(--soft-white); }
+
+  /* ========================================= */
   /* EDPOINTAI V11.0 MINIMAL FOOTER            */
   /* ========================================= */
   .edupoint-footer {
@@ -249,129 +234,29 @@
     border-top: 1px solid var(--ep-separator);
     margin-top: auto;
   }
-  
-  .edupoint-footer__brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .logo-icon {
-    width: 56px;
-    height: 56px;
-    background: var(--ep-primary);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
-  }
-  
-  .logo-icon svg {
-    width: 32px;
-    height: 32px;
-    fill: none;
-    stroke: var(--ep-white);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  
-  .edupoint-footer__brand h2 {
-    font-size: 26px;
-    font-weight: 700;
-    margin: 0 0 4px 0;
-    color: var(--ep-white);
-  }
-  
-  .tagline {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ep-accent);
-  }
-  
-  .edupoint-footer__description {
-    color: var(--ep-description);
-    max-width: 600px;
-    margin: 14px auto 24px;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  
-  .edupoint-footer__divider {
-    width: 100%;
-    max-width: 900px;
-    height: 1px;
-    background: var(--ep-separator);
-    border: 0;
-    margin: 0 auto 20px;
-  }
-  
-  .edupoint-footer__links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    color: var(--ep-separator-muted);
-    font-size: 14px;
-  }
-  
-  .edupoint-footer__links a {
-    color: var(--ep-accent);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 220ms ease;
-    cursor: pointer;
-  }
-  
-  .edupoint-footer__links a:hover {
-    color: var(--ep-white);
-    text-decoration: underline;
-  }
-  
-  .edupoint-footer__copyright {
-    color: var(--ep-muted);
-    font-size: 13px;
-    margin-top: 18px;
-    margin-bottom: 8px;
-  }
-  
-  .edupoint-footer__tagline {
-    color: var(--ep-accent);
-    font-size: 13px;
-    margin: 0;
-  }
+  .edupoint-footer__brand { display: flex; flex-direction: column; align-items: center; }
+  .logo-icon { width: 56px; height: 56px; background: var(--ep-primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .logo-icon svg { width: 32px; height: 32px; fill: none; stroke: var(--ep-white); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .edupoint-footer__brand h2 { font-size: 26px; font-weight: 700; margin: 0 0 4px 0; color: var(--ep-white); }
+  .tagline { font-size: 14px; font-weight: 500; color: var(--ep-accent); }
+  .edupoint-footer__description { color: var(--ep-description); max-width: 600px; margin: 14px auto 24px; font-size: 14px; line-height: 1.6; }
+  .edupoint-footer__divider { width: 100%; max-width: 900px; height: 1px; background: var(--ep-separator); border: 0; margin: 0 auto 20px; }
+  .edupoint-footer__links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; color: var(--ep-separator-muted); font-size: 14px; }
+  .edupoint-footer__links a { color: var(--ep-accent); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 220ms ease; cursor: pointer; }
+  .edupoint-footer__links a:hover { color: var(--ep-white); text-decoration: underline; }
+  .edupoint-footer__copyright { color: var(--ep-muted); font-size: 13px; margin-top: 18px; margin-bottom: 8px; }
+  .edupoint-footer__tagline { color: var(--ep-accent); font-size: 13px; margin: 0; }
   
   @media (max-width: 600px) {
-    .edupoint-footer {
-      padding: var(--ep-footer-padding-mobile) 16px 24px;
-    }
-    .edupoint-footer__brand h2 {
-      font-size: 23px;
-    }
-    .logo-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-    }
-    .logo-icon svg {
-      width: 24px;
-      height: 24px;
-    }
-    .edupoint-footer__links {
-      gap: 6px;
-    }
-    .edupoint-footer__links a {
-      font-size: 13px;
-    }
+    .edupoint-footer { padding: var(--ep-footer-padding-mobile) 16px 24px; }
+    .edupoint-footer__brand h2 { font-size: 23px; }
+    .logo-icon { width: 48px; height: 48px; border-radius: 12px; }
+    .logo-icon svg { width: 24px; height: 24px; }
+    .edupoint-footer__links { gap: 6px; }
+    .edupoint-footer__links a { font-size: 13px; }
   }
-  
   @media (prefers-reduced-motion: reduce) {
-    .edupoint-footer__links a {
-      transition: none;
-    }
+    .edupoint-footer__links a { transition: none; }
   }
 </style>
 </head>
@@ -384,202 +269,203 @@
 </noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<div class="view-container">
-  
-  <!-- ================================ -->
-  <!-- PUBLIC LANDING VIEW              -->
-  <!-- ================================ -->
-  <div id="view-public" class="view">
-    <header class="header">
-      <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
-    </header>
-    <main class="hero-section">
-      <div class="hero-content">
-        <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
-        <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
-        <div id="google-btn-landing" class="google-wrapper"></div>
-        <p style="margin-top: 15px; font-size: 13px; color: var(--slate);">Sign in or create your account easily.</p>
+<!-- ================================ -->
+<!-- PUBLIC LANDING VIEW              -->
+<!-- ================================ -->
+<div id="view-public" class="view">
+  <header class="header">
+    <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
+  </header>
+  <main class="hero-section">
+    <div class="hero-content">
+      <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
+      <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
+      <div id="google-btn-landing" class="google-wrapper"></div>
+      <p style="margin-top: 15px; font-size: 13px; color: var(--slate);">Sign in or create your account easily.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ================================ -->
+<!-- ONBOARDING / WELCOME VIEW        -->
+<!-- ================================ -->
+<div id="view-welcome" class="view">
+  <div class="welcome-container">
+    <div class="welcome-card">
+      <div class="welcome-header">
+        <span>STUDENT DASHBOARD</span>
+        <span class="welcome-aboard">WELCOME ABOARD 🎓</span>
       </div>
-    </main>
-  </div>
+      <h2 class="welcome-title">Welcome, <span id="welcomeName">Student</span>! 👋</h2>
+      <h3 class="welcome-subtitle">Your future starts here.</h3>
+      <p class="welcome-text">We're excited to be part of your academic journey. EduPointAI gives you the tools and guidance to make smarter decisions about your education and career.</p>
 
-  <!-- ================================ -->
-  <!-- ONBOARDING / WELCOME VIEW        -->
-  <!-- ================================ -->
-  <div id="view-welcome" class="view">
-    <div class="welcome-container">
-      <div class="welcome-card">
-        <div class="welcome-header">
-          <span>STUDENT DASHBOARD</span>
-          <span class="welcome-aboard">WELCOME ABOARD 🎓</span>
-        </div>
-        <h2 class="welcome-title">Welcome, <span id="welcomeName">Student</span>! 👋</h2>
-        <h3 class="welcome-subtitle">Your future starts here.</h3>
-        <p class="welcome-text">We're excited to be part of your academic journey. EduPointAI gives you the tools and guidance to make smarter decisions about your education and career.</p>
-
-        <div class="benefits-section">
-          <h4 class="benefits-title">Explore what EduPointAI offers</h4>
-          
-          <div class="benefit-card" style="animation-delay: 0.4s;">
-            <div class="benefit-icon">🧮</div>
-            <div>
-              <h5>1. Calculate Your KCSE Cluster Points</h5>
-              <p>Understand your academic performance and calculate your cluster points accurately.</p>
-            </div>
-          </div>
-
-          <div class="benefit-card" style="animation-delay: 0.6s;">
-            <div class="benefit-icon">🎓</div>
-            <div>
-              <h5>2. Discover University Courses</h5>
-              <p>Explore courses and universities that match your qualifications.</p>
-            </div>
-          </div>
-
-          <div class="benefit-card" style="animation-delay: 0.8s;">
-            <div class="benefit-icon">🏆</div>
-            <div>
-              <h5>3. Find Scholarship Opportunities</h5>
-              <p>Discover potential funding opportunities to support your education.</p>
-            </div>
-          </div>
-
-          <div class="benefit-card" style="animation-delay: 1.0s;">
-            <div class="benefit-icon">💡</div>
-            <div>
-              <h5>4. Get Career Guidance</h5>
-              <p>Explore career pathways, understand qualifications and make informed career choices.</p>
-            </div>
+      <div class="benefits-section">
+        <h4 class="benefits-title">Explore what EduPointAI offers</h4>
+        
+        <div class="benefit-card" style="animation-delay: 0.4s;">
+          <div class="benefit-icon">🧮</div>
+          <div>
+            <h5>1. Calculate Your KCSE Cluster Points</h5>
+            <p>Understand your academic performance and calculate your cluster points accurately.</p>
           </div>
         </div>
 
-        <div class="welcome-footer">
-          <h4>Dream Big. Plan Smart. Achieve More.</h4>
-          <p>Your journey is unique. Let's make every step count!</p>
+        <div class="benefit-card" style="animation-delay: 0.6s;">
+          <div class="benefit-icon">🎓</div>
+          <div>
+            <h5>2. Discover University Courses</h5>
+            <p>Explore courses and universities that match your qualifications.</p>
+          </div>
         </div>
 
-        <div class="progress-bar-container">
-          <div class="progress-bar" id="welcomeProgress"></div>
+        <div class="benefit-card" style="animation-delay: 0.8s;">
+          <div class="benefit-icon">🏆</div>
+          <div>
+            <h5>3. Find Scholarship Opportunities</h5>
+            <p>Discover potential funding opportunities to support your education.</p>
+          </div>
         </div>
+
+        <div class="benefit-card" style="animation-delay: 1.0s;">
+          <div class="benefit-icon">💡</div>
+          <div>
+            <h5>4. Get Career Guidance</h5>
+            <p>Explore career pathways, understand qualifications and make informed career choices.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="welcome-footer">
+        <h4>Dream Big. Plan Smart. Achieve More.</h4>
+        <p>Your journey is unique. Let's make every step count!</p>
+      </div>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="welcomeProgress"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ================================ -->
-  <!-- MAIN STUDENT DASHBOARD           -->
-  <!-- ================================ -->
-  <div id="view-student" class="view">
-    <div class="app-container">
-      <div class="app-header">
-        <h1>🎓 EduPoint AI</h1>
-        <a href="#" class="logout" onclick="logout()">Logout</a>
+<!-- ================================ -->
+<!-- MAIN STUDENT DASHBOARD           -->
+<!-- ================================ -->
+<div id="view-student" class="view">
+  <div class="app-container">
+    <div class="app-header">
+      <h1>🎓 EduPoint AI</h1>
+      <a href="#" class="logout" onclick="logout()">Logout</a>
+    </div>
+
+    <div class="card" id="calculatorCard">
+      <div class="card-title">📋 Enter Your 7 KCSE Subjects</div>
+      <div id="subjectList"></div>
+      <button class="btn-primary" id="btnCalculate">⚡ Calculate My Cluster Points — KES 100</button>
+      <div id="calcMessage" style="text-align: center; margin-top: 10px; font-size: 13px; color: var(--warning-amber);"></div>
+    </div>
+
+    <div id="resultsSection" style="display: none;">
+      <div class="summary-banner">
+        <h2 id="resPoints">0.000</h2>
+        <p>Your Cluster Points</p>
       </div>
-
-      <div class="card" id="calculatorCard">
-        <div class="card-title">📋 Enter Your 7 KCSE Subjects</div>
-        <div id="subjectList"></div>
-        <button class="btn-primary" id="btnCalculate">⚡ Calculate My Cluster Points — KES 100</button>
-        <div id="calcMessage" style="text-align: center; margin-top: 10px; font-size: 13px; color: var(--warning-amber);"></div>
+      <div class="stats-mini-grid">
+        <div class="stat-box"><h3 class="stat-qual" id="resQualified">0</h3><p>✅ Qualified</p></div>
+        <div class="stat-box"><h3 class="stat-close" id="resClose">0</h3><p>⚠️ Close</p></div>
+        <div class="stat-box"><h3 class="stat-not" id="resNot">0</h3><p>❌ Not</p></div>
+        <div class="stat-box"><h3 class="stat-rate" id="resRate">0%</h3><p>Rate</p></div>
       </div>
-
-      <div id="resultsSection" style="display: none;">
-        <div class="summary-banner">
-          <h2 id="resPoints">0.000</h2>
-          <p>Your Cluster Points</p>
-        </div>
-        <div class="stats-mini-grid">
-          <div class="stat-box"><h3 class="stat-qual" id="resQualified">0</h3><p>✅ Qualified</p></div>
-          <div class="stat-box"><h3 class="stat-close" id="resClose">0</h3><p>⚠️ Close</p></div>
-          <div class="stat-box"><h3 class="stat-not" id="resNot">0</h3><p>❌ Not</p></div>
-          <div class="stat-box"><h3 class="stat-rate" id="resRate">0%</h3><p>Rate</p></div>
-        </div>
-        <div class="card">
-          <div class="card-title" style="color: var(--success-green);">✅ <span id="qualCountTitle">0</span> Courses You Qualify For</div>
-          <div class="table-wrap"><table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="qualifiedTableBody"></tbody></table></div>
-        </div>
-        <div class="card">
-          <div class="card-title" style="color: var(--warning-amber);">⚠️ <span id="closeCountTitle">0</span> Close Matches</div>
-          <div class="table-wrap"><table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="closeTableBody"></tbody></table></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📚 All Courses Matching Your Points</div>
-          <input type="text" class="filter-input" id="courseFilter" placeholder="🔍 Filter courses..." oninput="filterCourses()">
-          <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
-            <table><thead><tr><th>#</th><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead><tbody id="allCoursesBody"></tbody></table>
-          </div>
-        </div>
-      </div>
-
       <div class="card">
-        <div class="card-title">👨‍🏫 AI Career Advisor</div>
-        <p style="font-size: 13px; color: var(--slate); margin-top: -10px; margin-bottom: 15px;">Select your interests to get personalised career guidance.</p>
-        <div class="chips">
-          <div class="chip" onclick="showCareer('Medicine')">🏥 Medicine</div>
-          <div class="chip" onclick="showCareer('Technology')">💻 Technology</div>
-          <div class="chip" onclick="showCareer('Engineering')">⚙️ Engineering</div>
-          <div class="chip" onclick="showCareer('Business')">💼 Business</div>
-          <div class="chip" onclick="showCareer('Education')">📚 Education</div>
-          <div class="chip" onclick="showCareer('Arts')">🎨 Arts</div>
-        </div>
-        <div id="careerResult" style="margin-top: 15px; font-size: 13px; color: var(--success-green);"></div>
+        <div class="card-title" style="color: var(--success-green);">✅ <span id="qualCountTitle">0</span> Courses You Qualify For</div>
+        <div class="table-wrap"><table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="qualifiedTableBody"></tbody></table></div>
       </div>
-
       <div class="card">
-        <div class="card-title">💰 Scholarship Finder</div>
-        <p style="font-size: 13px; color: var(--slate); margin-top: -10px; margin-bottom: 15px;">Find scholarships that match your GPA and intended major.</p>
-        <div class="input-group">
-          <input type="text" id="schMajor" placeholder="Intended major (e.g., Computer Science)">
-          <input type="number" id="schGPA" placeholder="GPA (0-4.0)" step="0.1">
-        </div>
-        <button class="btn-orange" onclick="findScholarships()">🔍 Find Scholarships</button>
-        <div id="scholarshipResults" style="margin-top: 15px;"></div>
+        <div class="card-title" style="color: var(--warning-amber);">⚠️ <span id="closeCountTitle">0</span> Close Matches</div>
+        <div class="table-wrap"><table><thead><tr><th>Course</th><th>University</th></tr></thead><tbody id="closeTableBody"></tbody></table></div>
       </div>
-
       <div class="card">
-        <div class="card-title">🧑‍💼 EduBot Career Advisor</div>
-        <div class="chat-box">
-          <p style="font-size: 13px; color: var(--slate); margin-top: 0;">
-            👋 Hi! I'm EduBot. Ask me anything about career pathways, university courses, KCSE requirements, or job opportunities.
-          </p>
-          <div class="chat-messages" id="chatMessages">
-            <div style="color: var(--success-green);"><b>EduBot:</b> What career would you like to explore today?</div>
-          </div>
-          <div class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="E.g., What does a civil engineer do?">
-            <button class="btn-send" onclick="sendChat()">Send</button>
-          </div>
-          <div class="quick-buttons">
-            <div class="quick-btn" onclick="sendChat('Software Engineer')">💻 Tech Careers</div>
-            <div class="quick-btn" onclick="sendChat('Medical doctor requirements')">🏥 Medical Careers</div>
-            <div class="quick-btn" onclick="sendChat('B plain courses')">📊 B Plain Courses</div>
-            <div class="quick-btn" onclick="sendChat('Good at mathematics')">📐 Math Careers</div>
-            <div class="quick-btn" onclick="sendChat('Difference between civil and mechanical engineering')">⚙️ Engineering</div>
-            <div class="quick-btn" onclick="sendChat('Actuarial Science')">📈 Business</div>
-          </div>
+        <div class="card-title">📚 All Courses Matching Your Points</div>
+        <input type="text" class="filter-input" id="courseFilter" placeholder="🔍 Filter courses..." oninput="filterCourses()">
+        <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
+          <table><thead><tr><th>#</th><th>Course</th><th>University</th><th>Cutoff</th><th>Gap</th><th>Status</th></tr></thead><tbody id="allCoursesBody"></tbody></table>
         </div>
-      </div>
-
-      <div class="card" style="text-align: center;">
-        <div class="card-title" style="justify-content: center;">📢 Follow Us For More Information</div>
-        <p style="font-size: 12px; color: var(--slate); margin-top: -10px; margin-bottom: 15px;">Get KUCCPS updates, course tips & career guidance</p>
-        <div class="social-row">
-          <a href="https://wa.me/254114812308" target="_blank" class="social-icon bg-wa">💬</a>
-          <a href="#" class="social-icon bg-li">in</a>
-          <a href="#" class="social-icon bg-ig">📷</a>
-          <a href="#" class="social-icon bg-tt">🎵</a>
-          <a href="mailto:academichelpdesk1@gmail.com" class="social-icon bg-mail">✉️</a>
-        </div>
-        <p style="font-size: 12px; color: var(--slate); margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
       </div>
     </div>
-  </div>
 
-  <!-- ================================ -->
-  <!-- LEGAL & INFO PAGES               -->
-  <!-- ================================ -->
-  <div id="view-about" class="view page-content">
-    <div class="page-inner">
-      <a href="#home" class="back-btn">← Back to Home</a>
+    <div class="card">
+      <div class="card-title">👨‍🏫 AI Career Advisor</div>
+      <p style="font-size: 13px; color: var(--slate); margin-top: -10px; margin-bottom: 15px;">Select your interests to get personalised career guidance.</p>
+      <div class="chips">
+        <div class="chip" onclick="showCareer('Medicine')">🏥 Medicine</div>
+        <div class="chip" onclick="showCareer('Technology')">💻 Technology</div>
+        <div class="chip" onclick="showCareer('Engineering')">⚙️ Engineering</div>
+        <div class="chip" onclick="showCareer('Business')">💼 Business</div>
+        <div class="chip" onclick="showCareer('Education')">📚 Education</div>
+        <div class="chip" onclick="showCareer('Arts')">🎨 Arts</div>
+      </div>
+      <div id="careerResult" style="margin-top: 15px; font-size: 13px; color: var(--success-green);"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 Scholarship Finder</div>
+      <p style="font-size: 13px; color: var(--slate); margin-top: -10px; margin-bottom: 15px;">Find scholarships that match your GPA and intended major.</p>
+      <div class="input-group">
+        <input type="text" id="schMajor" placeholder="Intended major (e.g., Computer Science)">
+        <input type="number" id="schGPA" placeholder="GPA (0-4.0)" step="0.1">
+      </div>
+      <button class="btn-orange" onclick="findScholarships()">🔍 Find Scholarships</button>
+      <div id="scholarshipResults" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧑‍💼 EduBot Career Advisor</div>
+      <div class="chat-box">
+        <p style="font-size: 13px; color: var(--slate); margin-top: 0;">
+          👋 Hi! I'm EduBot. Ask me anything about career pathways, university courses, KCSE requirements, or job opportunities.
+        </p>
+        <div class="chat-messages" id="chatMessages">
+          <div style="color: var(--success-green);"><b>EduBot:</b> What career would you like to explore today?</div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="E.g., What does a civil engineer do?">
+          <button class="btn-send" onclick="sendChat()">Send</button>
+        </div>
+        <div class="quick-buttons">
+          <div class="quick-btn" onclick="sendChat('Software Engineer')">💻 Tech Careers</div>
+          <div class="quick-btn" onclick="sendChat('Medical doctor requirements')">🏥 Medical Careers</div>
+          <div class="quick-btn" onclick="sendChat('B plain courses')">📊 B Plain Courses</div>
+          <div class="quick-btn" onclick="sendChat('Good at mathematics')">📐 Math Careers</div>
+          <div class="quick-btn" onclick="sendChat('Difference between civil and mechanical engineering')">⚙️ Engineering</div>
+          <div class="quick-btn" onclick="sendChat('Actuarial Science')">📈 Business</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align: center;">
+      <div class="card-title" style="justify-content: center;">📢 Follow Us For More Information</div>
+      <p style="font-size: 12px; color: var(--slate); margin-top: -10px; margin-bottom: 15px;">Get KUCCPS updates, course tips & career guidance</p>
+      <div class="social-row">
+        <a href="https://wa.me/254114812308" target="_blank" class="social-icon bg-wa">💬</a>
+        <a href="#" class="social-icon bg-li">in</a>
+        <a href="#" class="social-icon bg-ig">📷</a>
+        <a href="#" class="social-icon bg-tt">🎵</a>
+        <a href="mailto:academichelpdesk1@gmail.com" class="social-icon bg-mail">✉️</a>
+      </div>
+      <p style="font-size: 12px; color: var(--slate); margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================= -->
+<!-- INFO MODAL (About, Rules, Terms, Privacy) -->
+<!-- ========================================= -->
+<div id="infoModal">
+  <div class="info-modal-content">
+    <button class="info-modal-close" onclick="closeInfoModal()">×</button>
+    
+    <!-- About Us Content -->
+    <div id="info-content-about" class="info-modal-body" style="display: none;">
       <h1>About EduPointAI</h1>
       <p>EduPointAI is an independent academic guidance platform designed to help students understand their academic qualifications and explore potential university courses.</p>
       
@@ -601,36 +487,10 @@
       <div class="info-box">
         <strong>Our Independence:</strong> EduPointAI is not KUCCPS, a university or a government admission authority. We provide guidance and calculations, not official admission decisions.
       </div>
-
-      <h2>Why Students Use EduPointAI</h2>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div style="font-size: 32px;">🧮</div>
-          <h4>Smart Calculations</h4>
-          <p>Understand your academic qualifications instantly.</p>
-        </div>
-        <div class="feature-card">
-          <div style="font-size: 32px;">🎓</div>
-          <h4>Course Discovery</h4>
-          <p>Explore possible university courses matching your grades.</p>
-        </div>
-        <div class="feature-card">
-          <div style="font-size: 32px;">📄</div>
-          <h4>Detailed Reports</h4>
-          <p>Access organized and emailed academic results.</p>
-        </div>
-        <div class="feature-card">
-          <div style="font-size: 32px;">💡</div>
-          <h4>Academic Direction</h4>
-          <p>Make more informed educational choices.</p>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div id="view-rules" class="view page-content">
-    <div class="page-inner">
-      <a href="#home" class="back-btn">← Back to Home</a>
+    <!-- Rules Content -->
+    <div id="info-content-rules" class="info-modal-body" style="display: none;">
       <h1>Rules & Regulations</h1>
       <p>These rules govern the general use of the EduPointAI platform.</p>
 
@@ -662,15 +522,10 @@
         <strong>Prohibited Activities:</strong> Unauthorized access, fraudulent activity, and system disruption are strictly prohibited.
       </div>
       <p>Users must not attempt unauthorized access, interfere with functionality, exploit vulnerabilities, or submit fraudulent payment confirmations.</p>
-
-      <h2>Intellectual Property</h2>
-      <p>EduPointAI's software, original designs, branding, written materials, and proprietary calculation implementations are protected by applicable intellectual property laws.</p>
     </div>
-  </div>
 
-  <div id="view-terms" class="view page-content">
-    <div class="page-inner">
-      <a href="#home" class="back-btn">← Back to Home</a>
+    <!-- Terms Content -->
+    <div id="info-content-terms" class="info-modal-body" style="display: none;">
       <h1>Terms & Conditions</h1>
       <p><strong>Last Updated:</strong> November 2026 | <strong>Version:</strong> 1.0</p>
       
@@ -688,15 +543,10 @@
 
       <h2>5. Limitation of Liability</h2>
       <p>We strive for accuracy but are not responsible for interruptions, inaccurate third-party information (such as university cutoff changes), or circumstances outside our control.</p>
-
-      <h2>6. Complaints and Disputes</h2>
-      <p>Please contact our support team for any issues. Disputes are governed by the applicable laws of Kenya.</p>
     </div>
-  </div>
 
-  <div id="view-privacy" class="view page-content">
-    <div class="page-inner">
-      <a href="#home" class="back-btn">← Back to Home</a>
+    <!-- Privacy Content -->
+    <div id="info-content-privacy" class="info-modal-body" style="display: none;">
       <h1>Privacy Policy</h1>
       <p><strong>Last Updated:</strong> November 2026</p>
 
@@ -724,9 +574,9 @@
       <h2>5. Your Rights</h2>
       <p>Under Kenya's Data Protection Act (2019), you have the right to access, correct, or request deletion of your data, and the right to lodge a complaint with the ODPC.</p>
     </div>
-  </div>
 
-</div> <!-- End View Container -->
+  </div>
+</div>
 
 <!-- ========================================= -->
 <!-- PREMIUM PAYMENT MODAL                     -->
@@ -812,13 +662,13 @@
   <hr class="edupoint-footer__divider">
   
   <div class="edupoint-footer__links">
-    <a onclick="navigate('about')">About Us</a>
+    <a onclick="openInfoModal('about')">About Us</a>
     <span>|</span>
-    <a onclick="navigate('rules')">Rules</a>
+    <a onclick="openInfoModal('rules')">Rules</a>
     <span>|</span>
-    <a onclick="navigate('terms')">Terms</a>
+    <a onclick="openInfoModal('terms')">Terms</a>
     <span>|</span>
-    <a onclick="navigate('privacy')">Privacy</a>
+    <a onclick="openInfoModal('privacy')">Privacy</a>
   </div>
   
   <hr class="edupoint-footer__divider">
@@ -898,7 +748,6 @@ async function handleGoogleLogin(response) {
     });
     setToken(res.token);
     sessionStorage.removeItem('edupoint_welcome_shown');
-    window.location.hash = 'home';
     window.location.reload();
   } catch (err) { 
     alert("Login failed: " + err.message); 
@@ -906,60 +755,70 @@ async function handleGoogleLogin(response) {
 }
 
 // ==========================================
-// HASH ROUTING
+// INFO MODAL LOGIC
 // ==========================================
-function navigate(route) {
-  window.location.hash = route;
+function openInfoModal(section) {
+  document.querySelectorAll('.info-modal-body').forEach(el => el.style.display = 'none');
+  
+  const target = document.getElementById('info-content-' + section);
+  if (target) target.style.display = 'block';
+  
+  document.getElementById('infoModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
-function handleRouting() {
-  const hash = window.location.hash.replace('#', '') || 'home';
-  const publicRoutes = ['about', 'rules', 'terms', 'privacy'];
+function closeInfoModal() {
+  document.getElementById('infoModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
 
-  if (publicRoutes.includes(hash)) {
-    showView(hash);
-  } 
-  else if (hash === 'calculator') {
-    if (getToken()) {
-      showView('student');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      showView('public');
-      alert('Please sign in to calculate your grades.');
-    }
-  } 
-  else {
-    // Default 'home'
-    if (getToken()) {
-      checkWelcome();
-    } else {
-      showView('public');
-    }
+// Close modal if user clicks outside the content
+document.getElementById('infoModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeInfoModal();
   }
-}
+});
 
 // ==========================================
 // INIT & VIEW LOGIC
 // ==========================================
 async function init() {
-  handleRouting();
-  window.addEventListener('hashchange', handleRouting);
-
   if (getToken()) {
     try {
       const res = await api("/api/me");
       me = res.user;
+      
+      if (!sessionStorage.getItem('edupoint_welcome_shown')) {
+        showView("welcome");
+        triggerWelcomeAnimation(me.name);
+        
+        setTimeout(() => {
+          const pb = document.getElementById('welcomeProgress');
+          if (pb) pb.style.width = '100%'; 
+        }, 100); 
+
+        setTimeout(() => {
+          goToDashboard();
+        }, 10000);
+      } else {
+        showView("student");
+        setupCalculator();
+      }
+      
     } catch (e) {
       if (e.status === 401) {
         clearToken();
-        if(!window.location.hash || window.location.hash === '#home') showView("public");
+        showView("public");
         if (typeof google !== 'undefined') initAuth();
       } else {
-        if (window.location.hash === '#home' || !window.location.hash) {
-          document.getElementById("calcMessage").innerHTML = '<span style="color:var(--warning-amber);">Warning: Could not connect to server.</span>';
-        }
+        showView("student");
+        setupCalculator();
+        document.getElementById("calcMessage").innerHTML = '<span style="color:var(--warning-amber);">Warning: Could not connect to server.</span>';
       }
     }
+  } else {
+    showView("public");
+    if (typeof google !== 'undefined') initAuth();
   }
 }
 init();
@@ -969,25 +828,6 @@ function showView(viewId) {
   const target = document.getElementById(`view-${viewId}`);
   if (target) target.classList.add('active');
   window.scrollTo(0,0);
-}
-
-function checkWelcome() {
-  if (!sessionStorage.getItem('edupoint_welcome_shown')) {
-    showView("welcome");
-    if (me) triggerWelcomeAnimation(me.name);
-    
-    setTimeout(() => {
-      const pb = document.getElementById('welcomeProgress');
-      if (pb) pb.style.width = '100%'; 
-    }, 100); 
-
-    setTimeout(() => {
-      goToDashboard();
-    }, 10000);
-  } else {
-    showView("student");
-    setupCalculator();
-  }
 }
 
 function triggerWelcomeAnimation(name) {
@@ -1015,13 +855,13 @@ function triggerWelcomeAnimation(name) {
 
 function goToDashboard() {
   sessionStorage.setItem('edupoint_welcome_shown', 'true');
-  window.location.hash = 'calculator';
+  showView("student");
+  setupCalculator();
 }
 
 function logout() { 
   clearToken(); 
   sessionStorage.removeItem('edupoint_welcome_shown');
-  window.location.hash = 'home';
   location.reload(); 
 }
 
