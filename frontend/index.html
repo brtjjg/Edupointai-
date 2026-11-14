@@ -459,32 +459,40 @@ let pendingCalc = null;
 function initAuth() {
   if (typeof google === 'undefined') return;
   
-  // ⚠️ YOUR NEW CLIENT ID IS APPLIED HERE ⚠️
+  // STRICTLY POPUP MODE. No login_uri, no redirect.
   google.accounts.id.initialize({
     client_id: "124164127578-2qhjodmcu98cvm9hl70jcqhuid945dh4.apps.googleusercontent.com",
     callback: handleGoogleLogin,
-    ux_mode: 'redirect',
-    login_uri: window.location.origin, 
+    ux_mode: 'popup',
     auto_select: false
   });
   
   const container = document.getElementById('google-btn-landing');
   if (container) {
     container.innerHTML = '';
-    google.accounts.id.renderButton(container, { theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill" });
+    google.accounts.id.renderButton(container, { 
+      theme: "outline", 
+      size: "large", 
+      width: "300", 
+      text: "continue_with", 
+      shape: "pill" 
+    });
   }
 }
 
 async function handleGoogleLogin(response) {
   try {
-    const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
+    const res = await api("/api/auth/google", { 
+      method: "POST", 
+      body: JSON.stringify({ credential: response.credential }) 
+    });
     setToken(res.token);
     
     // Force the welcome screen to show upon successful sign in
     sessionStorage.removeItem('edupoint_welcome_shown');
     
-    // Redirect cleanly
-    window.location.href = window.location.origin;
+    // Refresh the page to trigger the welcome flow
+    window.location.reload();
   } catch (err) { 
     alert("Login failed: " + err.message); 
   }
