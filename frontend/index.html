@@ -459,12 +459,12 @@ let pendingCalc = null;
 function initAuth() {
   if (typeof google === 'undefined') return;
   
-  // FIXED: Added login_uri to prevent the blank "transform" screen
+  // ⚠️ YOUR NEW CLIENT ID IS APPLIED HERE ⚠️
   google.accounts.id.initialize({
-    client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
+    client_id: "124164127578-2qhjodmcu98cvm9hl70jcqhuid945dh4.apps.googleusercontent.com",
     callback: handleGoogleLogin,
     ux_mode: 'redirect',
-    login_uri: window.location.origin + window.location.pathname, 
+    login_uri: window.location.origin, 
     auto_select: false
   });
   
