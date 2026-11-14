@@ -54,6 +54,15 @@
     --ep-separator-muted: #64748B;
     --ep-footer-padding-desktop: 44px;
     --ep-footer-padding-mobile: 30px;
+
+    /* Admin Dashboard Specific */
+    --adm-navy: #101B3D;
+    --adm-purple: #7047EB;
+    --adm-teal: #0F9D91;
+    --adm-bg: #F3F5FC;
+    --adm-text: #26324D;
+    --adm-amber: #F2A93B;
+    --adm-red: #D64545;
   }
   
   * { box-sizing: border-box; }
@@ -259,13 +268,39 @@
   /* ========================================= */
   /* ADMIN DASHBOARD                           */
   /* ========================================= */
-  .admin-stat-card { background: var(--white); border: 1px solid var(--border-grey); border-radius: 12px; padding: 20px; text-align: center; }
-  .admin-stat-card h3 { font-size: 28px; margin: 0 0 5px; }
-  .admin-stat-card p { margin: 0; font-size: 13px; color: var(--text-dark); text-transform: uppercase; }
-  .admin-table th { color: var(--navy); border-bottom: 1px solid var(--border-grey); }
-  .admin-table td { color: var(--text-dark); border-bottom: 1px solid var(--border-grey); }
-  .small-btn { padding: 6px 12px; border: 1px solid #3a4065; border-radius: 6px; background: var(--soft-white); color: var(--text-dark); cursor: pointer; font-size: 12px; font-weight: 600; }
-  .small-btn:hover { background: var(--border-grey); }
+  #view-admin {
+      background-color: var(--adm-bg);
+      color: var(--adm-text);
+  }
+  
+  .admin-stat-card { 
+      background: #ffffff; 
+      border: 1px solid #E2E8F0; 
+      border-radius: 12px; 
+      padding: 20px; 
+      text-align: center; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  .admin-stat-card h3 { font-size: 28px; margin: 0 0 5px; font-weight: 800; }
+  .admin-stat-card p { margin: 0; font-size: 12px; color: #64748B; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  
+  .admin-table th { background: #F8FAFC; color: var(--adm-navy); border-bottom: 2px solid #E2E8F0; font-weight: 700; }
+  .admin-table td { color: var(--adm-text); border-bottom: 1px solid #E2E8F0; }
+  .admin-table tr:hover { background-color: #F8FAFC; }
+  
+  .admin-btn { 
+      padding: 8px 16px; 
+      border-radius: 6px; 
+      font-weight: 600; 
+      font-size: 13px; 
+      cursor: pointer; 
+      border: none; 
+      transition: 0.2s;
+  }
+  .admin-btn-primary { background: var(--adm-purple); color: #fff; }
+  .admin-btn-primary:hover { background: #5a35d6; }
+  .admin-btn-outline { background: transparent; border: 1px solid var(--adm-navy); color: var(--adm-navy); }
+  .admin-btn-outline:hover { background: var(--adm-navy); color: #fff; }
 
   /* ========================================= */
   /* EDPOINTAI V11.0 MINIMAL FOOTER            */
@@ -510,51 +545,53 @@
 <!-- ================================ -->
 <!-- ADMIN DASHBOARD                  -->
 <!-- ================================ -->
-<div id="view-admin" class="view" style="background: var(--soft-white); color: var(--text-dark);">
+<div id="view-admin" class="view">
   <div class="app-container" style="max-width: 1000px; padding-top: 40px;">
     <div class="app-header">
-      <h1 style="color: var(--navy);">👑 Admin Dashboard</h1>
+      <h1 style="color: var(--adm-navy);">👑 Admin Dashboard</h1>
       <div style="display: flex; gap: 15px;">
-        <a href="#" class="small-btn" style="color: var(--navy); text-decoration: none; padding: 8px 16px;" onclick="showView('student'); event.preventDefault();">← Back to Dashboard</a>
-        <a href="#" class="logout" style="color: var(--error-red);" onclick="logout()">Logout</a>
+        <a href="#" class="admin-btn admin-btn-outline" onclick="showView('student'); event.preventDefault();">← Back to Dashboard</a>
+        <a href="#" class="logout" style="color: var(--adm-red);" onclick="logout()">Logout</a>
       </div>
     </div>
 
     <!-- Metrics -->
     <div class="stats-mini-grid" style="grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
       <div class="admin-stat-card">
-        <h3 style="color: var(--success-green);">KES <span id="admRevenue">0</span></h3>
+        <h3 style="color: var(--adm-teal);">KES <span id="admRevenue">0</span></h3>
         <p>Total Revenue</p>
       </div>
       <div class="admin-stat-card">
-        <h3 style="color: var(--royal-blue);" id="admUsers">0</h3>
+        <h3 style="color: var(--adm-purple);" id="admUsers">0</h3>
         <p>Total Students</p>
       </div>
       <div class="admin-stat-card">
-        <h3 style="color: var(--purple);" id="admCalcs">0</h3>
+        <h3 style="color: #8B5CF6;" id="admCalcs">0</h3>
         <p>Calculations</p>
       </div>
       <div class="admin-stat-card">
-        <h3 style="color: var(--warning-amber);" id="admPending">0</h3>
+        <h3 style="color: var(--adm-amber);" id="admPending">0</h3>
         <p>Pending Payments</p>
       </div>
     </div>
 
     <!-- Payments Table -->
-    <div class="card" style="background: var(--white); border-color: var(--border-grey);">
-      <div class="card-title" style="color: var(--navy); display: flex; justify-content: space-between; align-items: center;">
+    <div class="card" style="background: #ffffff; border-color: #E2E8F0;">
+      <div class="card-title" style="color: var(--adm-navy); display: flex; justify-content: space-between; align-items: center;">
         <span>Recent Payments</span>
-        <button class="small-btn" style="background: var(--royal-blue); color: var(--white); border: none;" onclick="downloadPaymentsSheet()">⬇️ Download Excel Sheet</button>
+        <button class="admin-btn admin-btn-primary" onclick="downloadPaymentsSheet()">⬇️ Download Excel Sheet</button>
       </div>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
+              <th>Date</th>
               <th>TxID</th>
               <th>User ID</th>
               <th>Amount</th>
               <th>Status</th>
-              <th>Date</th>
+              <th>Invoice Sent</th>
+              <th>Report Sent</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -564,8 +601,8 @@
     </div>
 
     <!-- Calculations Table -->
-    <div class="card" style="background: var(--white); border-color: var(--border-grey);">
-      <div class="card-title" style="color: var(--navy);">Recent Calculations</div>
+    <div class="card" style="background: #ffffff; border-color: #E2E8F0;">
+      <div class="card-title" style="color: var(--adm-navy);">Recent Calculations</div>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
@@ -593,72 +630,39 @@
     
     <!-- About Us Content -->
     <div id="info-content-about" class="info-modal-body" style="display: none;">
-      
       <div class="about-hero">
         <h1>About EduPointAI</h1>
         <p>Independent Academic Guidance</p>
       </div>
-
       <h2>1. Who We Are</h2>
       <p>EduPointAI is an independent, technology-driven academic guidance platform developed to help students understand their academic qualifications, explore university courses and discover educational opportunities that align with their academic performance, interests and career aspirations.</p>
       <p>Choosing a university course is one of the most important decisions in a student's educational journey. However, many students find it challenging to interpret their KCSE results, understand university course requirements, compare available programmes or identify alternative academic pathways.</p>
       <p>EduPointAI seeks to make this process easier by bringing academic guidance, course exploration, qualification calculations and educational information together in one accessible digital platform.</p>
       <p>Through technology, structured academic information and intelligent guidance tools, we help students make sense of their results and explore possibilities for their future.</p>
       <p>Our goal is not simply to show students courses they may qualify for, but also to help them understand their options and make more informed educational decisions.</p>
-
       <h2>2. Our Mission</h2>
       <p>Our mission is to make academic information more accessible, understandable and useful to every student.</p>
       <p>We aim to simplify the process of interpreting academic qualifications, exploring university programmes and identifying educational opportunities through reliable information and innovative technology.</p>
       <p>We believe that students should have access to the information they need before making important decisions about their education.</p>
-
       <h2>3. Our Vision</h2>
       <p>To become a trusted digital academic guidance platform that empowers students to discover educational opportunities, understand their potential and confidently plan their academic and professional futures.</p>
       <p>We envision a future where access to academic guidance is not limited by geographical location, financial background or access to traditional career counselling services.</p>
-
       <h2>4. Who We Serve</h2>
       <p>EduPointAI is designed for individuals at different stages of their educational journey.</p>
-      
       <div class="about-grid">
-        <div class="about-card">
-          <h4>🎓 KCSE Candidates</h4>
-          <p>Students preparing for their future after completing secondary education can explore possible academic pathways and understand how their performance relates to university course requirements.</p>
-        </div>
-        <div class="about-card">
-          <h4>⏳ Students Awaiting Placement</h4>
-          <p>Students waiting for placement can explore available courses, review historical admission requirements and prepare for their next academic steps.</p>
-        </div>
-        <div class="about-card">
-          <h4>🔍 Students Exploring Courses</h4>
-          <p>Students who are uncertain about which programme to pursue can compare different courses, examine qualification requirements and discover alternative options.</p>
-        </div>
-        <div class="about-card">
-          <h4>👨‍👩‍👧 Parents and Guardians</h4>
-          <p>Parents and guardians can use EduPointAI as an information resource to better understand their children's academic options and participate in educational planning.</p>
-        </div>
+        <div class="about-card"><h4>🎓 KCSE Candidates</h4><p>Students preparing for their future after completing secondary education can explore possible academic pathways and understand how their performance relates to university course requirements.</p></div>
+        <div class="about-card"><h4>⏳ Students Awaiting Placement</h4><p>Students waiting for placement can explore available courses, review historical admission requirements and prepare for their next academic steps.</p></div>
+        <div class="about-card"><h4>🔍 Students Exploring Courses</h4><p>Students who are uncertain about which programme to pursue can compare different courses, examine qualification requirements and discover alternative options.</p></div>
+        <div class="about-card"><h4>👨‍👩‍👧 Parents and Guardians</h4><p>Parents and guardians can use EduPointAI as an information resource to better understand their children's academic options and participate in educational planning.</p></div>
       </div>
-
       <h2>5. What We Do</h2>
       <p>EduPointAI brings several academic guidance services together to simplify educational decision-making.</p>
-      
       <div class="about-grid">
-        <div class="about-card">
-          <h4>🧮 Academic Calculations</h4>
-          <p>We help students interpret their academic results and calculate relevant qualification indicators to understand their academic standing.</p>
-        </div>
-        <div class="about-card">
-          <h4>🎓 University Course Exploration</h4>
-          <p>Students can explore university programmes, review course requirements and identify programmes that may align with their qualifications.</p>
-        </div>
-        <div class="about-card">
-          <h4>🤖 AI-Powered Guidance</h4>
-          <p>Our AI-assisted guidance tools help students explore career interests, understand academic pathways and discover related programmes.</p>
-        </div>
-        <div class="about-card">
-          <h4>💰 Scholarships & Opportunities</h4>
-          <p>We aim to help students discover scholarship opportunities and other forms of educational support that may assist them in pursuing their studies.</p>
-        </div>
+        <div class="about-card"><h4>🧮 Academic Calculations</h4><p>We help students interpret their academic results and calculate relevant qualification indicators to understand their academic standing.</p></div>
+        <div class="about-card"><h4>🎓 University Course Exploration</h4><p>Students can explore university programmes, review course requirements and identify programmes that may align with their qualifications.</p></div>
+        <div class="about-card"><h4>🤖 AI-Powered Guidance</h4><p>Our AI-assisted guidance tools help students explore career interests, understand academic pathways and discover related programmes.</p></div>
+        <div class="about-card"><h4>💰 Scholarships & Opportunities</h4><p>We aim to help students discover scholarship opportunities and other forms of educational support that may assist them in pursuing their studies.</p></div>
       </div>
-
       <h2>6. Our Approach to Academic Guidance</h2>
       <p>We believe academic guidance should be understandable, accessible and practical. Our approach is built around five principles:</p>
       <ul>
@@ -668,7 +672,6 @@
         <li><strong>Informed decisions:</strong> Helping students understand their options rather than making educational decisions on their behalf.</li>
         <li><strong>Continuous improvement:</strong> Improving our platform, information resources and tools as educational requirements and student needs evolve.</li>
       </ul>
-
       <h2>7. Our Commitment to Students</h2>
       <p>Every student's academic journey is different. A student's KCSE performance should be a starting point for exploring opportunities, not a reason to stop pursuing their ambitions.</p>
       <p>At EduPointAI, we are committed to helping students:</p>
@@ -681,7 +684,6 @@
         <li>Approach their educational future with greater confidence.</li>
       </ul>
       <p>We aim to make academic guidance more approachable, particularly for students who may not have access to personalised educational counselling.</p>
-
       <div class="independence-box">
         <h3>8. Our Independence and Transparency</h3>
         <p><strong>An Independent Academic Guidance Platform</strong></p>
@@ -691,52 +693,24 @@
         <p>Official admission, placement, programme availability and eligibility decisions remain the responsibility of the relevant authorised institutions.</p>
         <p>We encourage students to verify important admission information, programme requirements, application deadlines and placement decisions through the appropriate official channels before taking action.</p>
       </div>
-
       <h2>9. Technology and Innovation</h2>
       <p>EduPointAI uses technology to make academic guidance more accessible and efficient.</p>
       <p>Our platform brings together digital academic tools, structured educational information and AI-assisted guidance to help students explore their options.</p>
       <p>We believe technology can help simplify complicated academic information and make guidance more accessible to students regardless of where they are located.</p>
       <p>As the platform develops, we intend to continue improving our tools, expanding our educational resources and introducing more ways to support students throughout their academic journeys.</p>
-
       <h2>10. Our Core Values</h2>
       <div class="values-grid">
-        <div class="value-card">
-          <div class="icon">🎓</div>
-          <h5>Student First</h5>
-          <p>Students' educational needs remain at the centre of our work.</p>
-        </div>
-        <div class="value-card">
-          <div class="icon">⚖️</div>
-          <h5>Integrity</h5>
-          <p>We value transparency and responsible presentation of academic information.</p>
-        </div>
-        <div class="value-card">
-          <div class="icon">💡</div>
-          <h5>Innovation</h5>
-          <p>We embrace technology to improve educational guidance.</p>
-        </div>
-        <div class="value-card">
-          <div class="icon">🤝</div>
-          <h5>Inclusivity</h5>
-          <p>We believe every student deserves access to useful academic information.</p>
-        </div>
-        <div class="value-card">
-          <div class="icon">🎯</div>
-          <h5>Accuracy</h5>
-          <p>We strive to provide clear, carefully structured and regularly reviewed information.</p>
-        </div>
-        <div class="value-card">
-          <div class="icon">📈</div>
-          <h5>Growth</h5>
-          <p>We continuously seek better ways to serve students and educational communities.</p>
-        </div>
+        <div class="value-card"><div class="icon">🎓</div><h5>Student First</h5><p>Students' educational needs remain at the centre of our work.</p></div>
+        <div class="value-card"><div class="icon">⚖️</div><h5>Integrity</h5><p>We value transparency and responsible presentation of academic information.</p></div>
+        <div class="value-card"><div class="icon">💡</div><h5>Innovation</h5><p>We embrace technology to improve educational guidance.</p></div>
+        <div class="value-card"><div class="icon">🤝</div><h5>Inclusivity</h5><p>We believe every student deserves access to useful academic information.</p></div>
+        <div class="value-card"><div class="icon">🎯</div><h5>Accuracy</h5><p>We strive to provide clear, carefully structured and regularly reviewed information.</p></div>
+        <div class="value-card"><div class="icon">📈</div><h5>Growth</h5><p>We continuously seek better ways to serve students and educational communities.</p></div>
       </div>
-
       <h2>11. Looking Ahead</h2>
       <p>EduPointAI is being developed with a long-term commitment to educational guidance and digital innovation.</p>
       <p>Our ambition is to grow beyond basic academic calculations into a comprehensive digital environment where students can explore courses, receive career guidance, discover scholarships, understand educational pathways and access useful academic resources.</p>
       <p>We recognise that educational needs change, and we are committed to evolving alongside the students and communities we serve.</p>
-
       <div class="about-footer">
         <h4>12. Our Promise</h4>
         <p style="margin-bottom: 15px;">We believe every student deserves the opportunity to understand their academic potential and explore the possibilities available to them.</p>
@@ -744,7 +718,6 @@
         <p style="margin-top: 10px; font-size: 13px;">Explore your academic potential and take a more informed step towards your future.</p>
         <p style="margin-top: 20px; font-size: 12px; color: var(--slate);">Independent Academic Guidance • Technology • Educational opportunities</p>
       </div>
-
     </div>
 
     <!-- Rules Content -->
@@ -754,7 +727,6 @@
       <p>These Rules & Regulations govern access to and use of EduPointAI, including its academic calculation tools, course exploration services, AI Career Advisor, EduBot, Scholarship Finder, reports, user accounts and other educational resources.</p>
       <p>By registering, signing in, accessing or using EduPointAI, users agree to comply with these rules.</p>
       <p>The purpose of these regulations is to promote responsible platform usage, protect users, maintain the integrity of academic information and establish clear expectations between EduPointAI and its users.</p>
-
       <h2>1. Platform Governance and General Responsibilities</h2>
       <p>EduPointAI is an independent academic guidance platform designed to assist students in understanding their academic qualifications and exploring educational opportunities.</p>
       <ul>
@@ -766,7 +738,6 @@
         <li>EduPointAI reserves the right to improve, modify, restrict or discontinue platform features when necessary.</li>
         <li>These rules apply to all users, regardless of whether they use free or paid services.</li>
       </ul>
-
       <h2>2. Account Registration and User Responsibilities</h2>
       <p>Users may be required to create an account before accessing certain EduPointAI services.</p>
       <h3>Account requirements</h3>
@@ -786,7 +757,6 @@
         <li>Users must not attempt to access another user's account.</li>
       </ul>
       <p>EduPointAI may restrict accounts involved in suspicious, fraudulent or unauthorised activities.</p>
-
       <h2>3. KCSE Subject Entry and Academic Information</h2>
       <p>EduPointAI allows students to enter their seven KCSE subjects and corresponding grades for academic calculations.</p>
       <p>Users are responsible for ensuring that the information submitted is accurate.</p>
@@ -807,7 +777,6 @@
         <li>Users should compare important results with official academic records and applicable admission requirements.</li>
       </ul>
       <p>EduPointAI does not guarantee that every calculated result will correspond to an official placement outcome.</p>
-
       <h2>4. Cluster Points Calculation and Payments</h2>
       <p>EduPointAI provides a cluster-point calculation service at the displayed price of KES 100.</p>
       <h3>Payment requirements</h3>
@@ -830,7 +799,6 @@
       <p>EduPointAI may investigate payment-related complaints and request reasonable supporting evidence.</p>
       <h3>Refunds</h3>
       <p>Refund requests will be assessed according to the applicable refund policy, the nature of the transaction and whether the purchased service has already been delivered. A successful payment does not automatically guarantee a refund.</p>
-
       <h2>5. University Course Exploration and Eligibility Information</h2>
       <p>EduPointAI provides course exploration features to help students identify university programmes that may correspond to their academic qualifications.</p>
       <p>Users should understand the following:</p>
@@ -852,7 +820,6 @@
         <li>Courses requiring additional academic consideration.</li>
       </ul>
       <p>These categories are guidance classifications generated from the platform's available data and calculation rules. They are not official KUCCPS eligibility classifications unless explicitly confirmed by the relevant authority.</p>
-
       <h2>6. AI Career Advisor</h2>
       <p>The AI Career Advisor is designed to help students explore careers based on their interests, academic backgrounds and future ambitions.</p>
       <p>Users may select interests such as:</p>
@@ -875,7 +842,6 @@
         <li>Users must not use the AI Career Advisor to generate harmful, fraudulent or unlawful content.</li>
       </ul>
       <p>EduPointAI aims to provide useful guidance while recognising that final educational and career decisions belong to the individual.</p>
-
       <h2>7. Scholarship Finder</h2>
       <p>The Scholarship Finder helps students discover potential scholarship opportunities using information such as their intended major and GPA.</p>
       <h3>User responsibilities</h3>
@@ -899,7 +865,6 @@
       <h3>Fraud prevention</h3>
       <p>Users must not submit forged academic documents, falsified financial information or misleading personal details when pursuing scholarship opportunities.</p>
       <p>EduPointAI may remove or restrict access to scholarship information that is found to be misleading or unreliable.</p>
-
       <h2>8. EduBot Career Advisor</h2>
       <p>EduBot is an AI-assisted educational guidance tool designed to answer questions about career pathways, university courses, KCSE requirements and job opportunities.</p>
       <p>Users may ask questions such as:</p>
@@ -923,7 +888,6 @@
       <h3>Accuracy and limitations</h3>
       <p>EduBot provides informational guidance. It does not replace official academic authorities, university admissions offices, qualified career counsellors or professional licensing bodies.</p>
       <p>EduPointAI does not guarantee that every response generated by EduBot will be completely accurate or suitable for every student's circumstances.</p>
-
       <h2>9. Academic Resources and Career Information</h2>
       <p>EduPointAI may provide educational resources, course information, career explanations, academic tips and other materials.</p>
       <p>Users agree to:</p>
@@ -935,7 +899,6 @@
         <li>Avoid presenting EduPointAI materials as official government or university publications.</li>
       </ul>
       <p>Educational resources may be updated, corrected, replaced or withdrawn as necessary.</p>
-
       <h2>10. Acceptable Use Policy</h2>
       <p>EduPointAI must be used responsibly and in a manner that protects the platform and its users.</p>
       <h3>Permitted Activities</h3>
@@ -963,7 +926,6 @@
         <li>Attempting to steal, expose or misuse user information.</li>
         <li>Using EduPointAI to facilitate unlawful activities.</li>
       </ul>
-
       <h2>11. Platform Security and Technical Restrictions</h2>
       <p>Users must respect the technical security measures implemented by EduPointAI.</p>
       <p>The following activities are prohibited:</p>
@@ -979,7 +941,6 @@
       </ul>
       <p>Users who identify security vulnerabilities should report them responsibly rather than exploit them.</p>
       <p>EduPointAI may investigate suspicious activity and take reasonable protective measures.</p>
-
       <h2>12. User Privacy and Personal Information</h2>
       <p>EduPointAI recognises the importance of protecting users' personal information.</p>
       <p>Users may provide information such as:</p>
@@ -1006,7 +967,6 @@
       <p>Personal information may be processed where necessary to provide services, maintain accounts, process payments, improve platform functionality, respond to enquiries and meet applicable legal obligations.</p>
       <p>Where external service providers are involved, relevant information may be processed by those providers in accordance with their applicable arrangements and privacy practices.</p>
       <p>For further details about personal information collection, processing, retention, disclosure and user rights, users should consult the EduPointAI Privacy Policy.</p>
-
       <h2>13. Platform Availability and Maintenance</h2>
       <p>EduPointAI strives to maintain reliable access to its services. However, uninterrupted availability cannot be guaranteed.</p>
       <p>Services may occasionally become unavailable because of:</p>
@@ -1021,7 +981,6 @@
       </ul>
       <p>EduPointAI may temporarily suspend specific features when maintenance, investigation or security measures are necessary.</p>
       <p>Where reasonably possible, important service interruptions will be communicated to affected users.</p>
-
       <h2>14. Third-Party Information and External Services</h2>
       <p>EduPointAI may rely on or reference information provided by universities, scholarship organisations, educational institutions and other external sources.</p>
       <p>Users acknowledge that:</p>
@@ -1033,7 +992,6 @@
         <li>Users should verify important information directly with the relevant organisation.</li>
       </ul>
       <p>The presence of an institution, scholarship or external resource on EduPointAI does not automatically indicate an official partnership, endorsement or affiliation.</p>
-
       <h2>15. Intellectual Property and Ownership</h2>
       <p>The EduPointAI name, branding, platform design, original software, website content, graphics, interfaces, documentation and other original materials are protected by applicable intellectual property laws.</p>
       <p>Unless otherwise stated, these materials belong to their respective owners.</p>
@@ -1046,7 +1004,6 @@
         <li>Republish protected materials in a misleading manner.</li>
       </ul>
       <p>Users retain any rights they hold in information and materials they independently provide, subject to the rights and permissions necessary to operate the services.</p>
-
       <h2>16. Misuse, Violations and Account Restrictions</h2>
       <p>EduPointAI reserves the right to investigate activities that may violate these regulations.</p>
       <p>Depending on the nature and seriousness of a violation, appropriate measures may include:</p>
@@ -1061,7 +1018,6 @@
       </ul>
       <p>Serious violations, including fraud, unauthorised access and deliberate security attacks, may result in immediate protective action.</p>
       <p>Where appropriate, users may be given an opportunity to explain or challenge an account restriction.</p>
-
       <h2>17. Limitation of Responsibility</h2>
       <p>EduPointAI provides academic guidance, educational information and technology-assisted services.</p>
       <p>Users acknowledge that:</p>
@@ -1075,7 +1031,6 @@
       </ul>
       <p>To the extent permitted by applicable law, EduPointAI does not guarantee uninterrupted service, error-free calculations or specific educational outcomes.</p>
       <p>Nothing in these regulations excludes liability that cannot legally be excluded under applicable law, including rights that users are entitled to retain under consumer protection and data protection legislation.</p>
-
       <h2>18. Complaints, Feedback and Support</h2>
       <p>EduPointAI encourages users to report problems, provide suggestions and request assistance whenever necessary.</p>
       <p>Users may contact the platform regarding:</p>
@@ -1096,7 +1051,6 @@
         Email: <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a>
       </div>
       <p>Users should provide sufficient information to help the support team understand and investigate their enquiries. Users should never send passwords or confidential authentication credentials.</p>
-
       <h2>19. Amendments to These Regulations</h2>
       <p>EduPointAI may update these Rules & Regulations when necessary to reflect:</p>
       <ul>
@@ -1110,7 +1064,6 @@
       <p>Updated regulations will be published on the platform.</p>
       <p>Users are encouraged to review this page periodically to remain informed about their responsibilities.</p>
       <p>Where a material change requires additional notice or consent under applicable law, EduPointAI will take appropriate steps.</p>
-
       <h2>20. Applicable Laws and Regulatory Compliance</h2>
       <p>These Rules & Regulations are governed by and construed in accordance with the applicable laws of the Republic of Kenya.</p>
       <p>EduPointAI aims to comply with relevant legislation, including data protection and consumer protection laws, where applicable to its operations.</p>
@@ -1126,11 +1079,9 @@
       <h2>1. Introduction</h2>
       <p>Welcome to EduPoint AI. These Terms & Conditions govern your access to and use of the EduPoint AI website, platform, academic calculation services, career guidance tools, scholarship discovery features, educational resources, and related services.</p>
       <p>By accessing, registering for, or using EduPoint AI, you acknowledge that you have read, understood, and agreed to these Terms & Conditions. If you do not agree with any part of these Terms, you should discontinue using the platform. These Terms apply to students, parents, guardians, visitors, and any other individuals accessing the platform.</p>
-
       <h2>2. About EduPoint AI</h2>
       <p>EduPoint AI is an independent digital academic guidance platform designed to help students understand their academic qualifications, explore possible university courses, discover career pathways, and identify potential educational opportunities. Our services are intended to support informed academic decision-making through technology and educational information.</p>
       <p>EduPoint AI is not KUCCPS, a university, the Ministry of Education, or a government admission authority. We do not make official university admission, course placement, scholarship award, or government funding decisions.</p>
-
       <h2>3. Definitions</h2>
       <p>For the purposes of these Terms:</p>
       <ul>
@@ -1144,7 +1095,6 @@
         <li><strong>Payment Provider:</strong> The third-party payment service provider used to process payments, including Pesapal.</li>
         <li><strong>Academic Information:</strong> KCSE subjects, grades, examination results, intended courses, and other educational information submitted by users.</li>
       </ul>
-
       <h2>4. Description of Services</h2>
       <p>EduPoint AI may provide the following services:</p>
       <ul>
@@ -1159,7 +1109,6 @@
         <li>General educational guidance and updates.</li>
       </ul>
       <p>The availability of particular services may change as the platform develops. We reserve the right to improve, modify, suspend, or discontinue features where reasonably necessary.</p>
-
       <h2>5. User Registration and Account Responsibilities</h2>
       <p>Certain platform services may require users to create an account or sign in.</p>
       <p>When creating or accessing an account, users agree to:</p>
@@ -1172,7 +1121,6 @@
         <li>Ensure that information submitted through their account is accurate.</li>
       </ul>
       <p>Users are responsible for activities performed through their accounts, subject to applicable law and our security responsibilities. We may restrict access where we reasonably suspect account misuse, fraud, unauthorized access, or violation of these Terms.</p>
-
       <h2>6. KCSE Subject and Grade Submission</h2>
       <p>EduPoint AI allows users to enter seven KCSE subjects and their corresponding grades for academic calculations.</p>
       <p>Users are responsible for ensuring that:</p>
@@ -1183,7 +1131,6 @@
         <li>No false, misleading, or fabricated academic information is submitted.</li>
       </ul>
       <p>Incorrect information may produce inaccurate calculations and course recommendations. EduPoint AI is not responsible for errors arising from incorrect information deliberately or unintentionally submitted by a user. Where available, users should compare their entries with their official KCSE result documents.</p>
-
       <h2>7. Cluster-Point Calculation Service</h2>
       <p>EduPoint AI provides an academic calculation service intended to help users understand their estimated academic performance and potential course eligibility. The calculation service may use the seven subjects and grades entered by the user together with the applicable calculation methodology and available academic reference information.</p>
       <h3>7.1 Calculation Fee</h3>
@@ -1201,7 +1148,6 @@
       </ul>
       <h3>7.4 Accuracy and Limitations</h3>
       <p>Calculations are guidance estimates and should not be treated as official placement decisions. Actual course eligibility and placement may depend on official KUCCPS requirements, applicable subject combinations, university-specific requirements, available programme capacity, annual cutoff changes, government admission policies, and other requirements established by relevant authorities. Users should always verify important admission information through official sources.</p>
-
       <h2>8. Course Eligibility and University Information</h2>
       <p>EduPoint AI may display courses and universities that appear relevant to a user's academic qualifications. Course recommendations are intended to assist exploration and academic planning.</p>
       <p>A course displayed as a possible match does not guarantee:</p>
@@ -1213,12 +1159,10 @@
         <li>A particular university cutoff in a future admission cycle.</li>
       </ul>
       <p>Universities and relevant admission authorities retain responsibility for their official requirements and decisions. Users should independently verify current programme information before making academic decisions.</p>
-
       <h2>9. AI Career Advisor</h2>
       <p>The AI Career Advisor allows users to select areas of interest, including Medicine, Technology, Engineering, Business, Education, and Arts.</p>
       <p>Based on the interests selected, the platform may provide career suggestions, possible academic pathways, and related guidance.</p>
       <p>The AI Career Advisor is an informational tool. Its recommendations do not constitute professional career counselling, official academic assessment, employment guarantees, or admission decisions. Users should consider their abilities, interests, qualifications, financial circumstances, and available opportunities before choosing a career pathway.</p>
-
       <h2>10. EduBot Career Advisor</h2>
       <p>EduBot is an AI-powered educational guidance assistant designed to answer questions relating to career pathways, university courses, KCSE subject requirements, academic qualifications, professional occupations, job opportunities, and general career exploration. Users may submit questions through the EduBot chat interface.</p>
       <h3>10.1 Responsible Use</h3>
@@ -1232,7 +1176,6 @@
       </ul>
       <h3>10.2 AI Response Limitations</h3>
       <p>EduBot responses may contain incomplete, outdated, or inaccurate information. AI-generated responses should be treated as general educational guidance rather than verified official information. Users should confirm important academic, professional, financial, and admission-related information with the relevant institutions. EduPoint AI does not guarantee that every AI-generated response will be accurate, complete, or suitable for every individual.</p>
-
       <h2>11. Scholarship Finder</h2>
       <p>The Scholarship Finder is intended to help users discover scholarship opportunities that may match their educational interests and academic profile.</p>
       <p>Users may be asked to provide information such as intended major, GPA, academic interests, and other eligibility-related information.</p>
@@ -1240,20 +1183,16 @@
       <p>A scholarship displayed through the platform does not guarantee that the user qualifies for the opportunity. Actual eligibility may depend on academic performance, nationality or residency requirements, financial circumstances, intended course of study, age restrictions, application deadlines, supporting documents, and requirements established by the scholarship provider.</p>
       <h3>11.2 Scholarship Applications</h3>
       <p>Unless a specific application service is expressly provided, the Scholarship Finder should be understood as a discovery and guidance feature rather than an automatic scholarship application or award service. Scholarship providers retain authority over their application processes and final decisions. EduPoint AI does not guarantee scholarship approval, funding, or financial assistance.</p>
-
       <h2>12. Academic Reports and Results</h2>
       <p>Where available, EduPoint AI may generate academic calculation reports or display results within the user's account.</p>
       <p>Reports may contain submitted academic information, estimated cluster points, potential course matches, close course matches, university information, and general academic recommendations.</p>
       <p>Users are responsible for reviewing their reports and identifying any incorrect information. A report generated by EduPoint AI is not an official KCSE certificate, university admission letter, KUCCPS placement letter, or government-issued academic document.</p>
-
       <h2>13. Payment Terms</h2>
       <p>Certain services on EduPoint AI may require payment. The calculation service currently carries a stated fee of KES 100 per calculation.</p>
       <p>Before initiating payment, users should review the amount displayed on the platform. Users agree to submit genuine payment information, use an authorized payment method, avoid fraudulent payment confirmations, avoid manipulating payment references, and cooperate with reasonable payment verification procedures. The platform may delay processing while a payment is being verified.</p>
-
       <h2>14. Third-Party Payment Processing</h2>
       <p>Payments are processed through the designated third-party payment provider, including Pesapal.</p>
       <p>By initiating payment, users acknowledge that payment processing may be subject to the payment provider's own terms, conditions, privacy policy, and security procedures. EduPoint AI may receive transaction information necessary to verify payment status and provide the requested service. EduPoint AI does not control the internal operations, availability, or independent policies of third-party payment providers. Users should contact the relevant payment provider where a payment-related issue requires investigation by that provider.</p>
-
       <h2>15. Refunds, Failed Transactions, and Payment Disputes</h2>
       <p>Payments for successfully delivered and generated calculations are generally non-refundable. However, payment issues will be considered individually.</p>
       <h3>15.1 Duplicate Payments</h3>
@@ -1264,7 +1203,6 @@
       <p>A pending transaction is not automatically treated as a completed payment. The user may need to allow the payment provider and platform sufficient time to verify the transaction.</p>
       <h3>15.4 Refund Requests</h3>
       <p>Refund requests should include relevant transaction details and a clear explanation of the issue. EduPoint AI will review legitimate complaints and communicate the available resolution. Nothing in this section removes any consumer rights that cannot lawfully be excluded.</p>
-
       <h2>16. Acceptable Use of the Platform</h2>
       <p>Users agree to use EduPoint AI responsibly and lawfully.</p>
       <p>Users must not:</p>
@@ -1281,76 +1219,57 @@
         <li>Misrepresent EduPoint AI as an official government or university service.</li>
       </ul>
       <p>We may investigate suspected misuse and take appropriate action.</p>
-
       <h2>17. Academic Integrity</h2>
       <p>EduPoint AI is designed to support students in making informed educational decisions.</p>
       <p>Users must not present generated estimates, recommendations, or reports as official documents issued by KUCCPS, universities, examination authorities, or government institutions. The platform must not be used to fabricate academic qualifications, admission letters, examination results, or scholarship awards.</p>
-
       <h2>18. Privacy and Personal Information</h2>
       <p>EduPoint AI may process personal and academic information to provide its services.</p>
       <p>Information may include account details, KCSE subject entries, grades, career interests, scholarship search details, payment references, and communications submitted through the platform. Personal information is handled in accordance with the EduPoint AI Privacy Policy and applicable data protection requirements. Users should read the Privacy Policy to understand how their information is collected, used, stored, and shared.</p>
-
       <h2>19. Data Protection and User Rights</h2>
       <p>EduPoint AI aims to handle personal information responsibly and in accordance with applicable Kenyan data protection laws, including the Data Protection Act, 2019.</p>
       <p>Subject to applicable law, users may have rights relating to access to personal information, correction of inaccurate information, deletion of personal information, objection to certain processing, withdrawal of consent where consent is the legal basis, and other applicable data protection rights. Requests relating to personal information may be submitted through the platform's designated support contact.</p>
-
       <h2>20. Intellectual Property Rights</h2>
       <p>The EduPoint AI platform, including its branding, logos, interface design, original written content, software, graphics, and other protected materials, may be owned by or licensed to EduPoint AI.</p>
       <p>Users are granted limited permission to access and use the platform for personal, lawful, and educational purposes. Unless expressly authorized, users must not copy or reproduce substantial protected platform content, redistribute platform software, sell access to platform services without authorization, remove ownership notices, reverse engineer or attempt to extract protected software components, or use the EduPoint AI name or branding in a misleading way. Nothing in these Terms transfers ownership of the platform's intellectual property to users.</p>
-
       <h2>21. Third-Party Websites and Information</h2>
       <p>EduPoint AI may display information originating from external institutions, universities, scholarship providers, government websites, and other third parties. Such information may change without notice.</p>
       <p>External websites are governed by their own terms and privacy policies. EduPoint AI is not responsible for the independent operation, availability, content, or policies of external websites. Users should verify important information directly with the relevant organization.</p>
-
       <h2>22. Platform Availability and Maintenance</h2>
       <p>EduPoint AI aims to provide reliable access to its services. However, uninterrupted availability cannot be guaranteed.</p>
       <p>The platform may temporarily become unavailable because of scheduled maintenance, software updates, hosting interruptions, network failures, security incidents, third-party service interruptions, or circumstances beyond reasonable control. Where reasonably possible, important maintenance or service interruptions may be communicated to users.</p>
-
       <h2>23. Changes to Platform Services</h2>
       <p>EduPoint AI may introduce new features, modify existing services, update calculation methodologies, or discontinue certain features.</p>
       <p>Where a change materially affects a paid service, the platform should communicate relevant information where reasonably practicable. Any applicable service fee should be displayed before the user commits to a new paid transaction.</p>
-
       <h2>24. Account Suspension and Termination</h2>
       <p>EduPoint AI may restrict, suspend, or terminate access where there are reasonable grounds to believe that a user has violated these Terms, engaged in fraudulent activity, attempted unauthorized access, abused platform services, interfered with platform security, or used the platform for unlawful purposes.</p>
       <p>Where appropriate, users may be informed of the reason for a restriction and given an opportunity to seek clarification. Suspension or termination does not remove rights or obligations that arose before the suspension or termination.</p>
-
       <h2>25. Disclaimer of Warranties</h2>
       <p>EduPoint AI provides academic guidance and digital tools on an informational basis. To the extent permitted by applicable law, the platform does not guarantee that every calculation will be free from error, every course recommendation will result in admission, scholarship opportunities will remain available, AI responses will always be accurate, the platform will operate without interruption, or third-party academic information will always be current.</p>
       <p>The platform will make reasonable efforts to maintain and improve its services. Nothing in these Terms excludes warranties or consumer rights that cannot legally be excluded.</p>
-
       <h2>26. Limitation of Liability</h2>
       <p>To the extent permitted by applicable law, EduPoint AI will not be responsible for indirect or consequential losses arising from the use of informational guidance, reliance on outdated third-party information, or temporary service interruptions. Users remain responsible for independently verifying important academic and admission information. Nothing in these Terms limits liability where doing so would be unlawful, including liability that cannot legally be excluded.</p>
-
       <h2>27. Indemnification</h2>
       <p>Where permitted by law, users may be responsible for losses, claims, or reasonable costs arising directly from their unlawful conduct, fraudulent activities, or material violation of these Terms. This section does not remove any rights or protections available to users under applicable law.</p>
-
       <h2>28. Force Majeure</h2>
       <p>EduPoint AI will not be considered in breach of these Terms solely because of a delay or interruption caused by circumstances beyond reasonable control. Such circumstances may include natural disasters, major network failures, government restrictions, widespread infrastructure interruptions, and other comparable events.</p>
-
       <h2>29. Complaints and Customer Support</h2>
       <p>Users may contact EduPoint AI regarding incorrect calculations, payment verification, duplicate transactions, technical problems, account access, academic guidance concerns, privacy-related requests, and other platform complaints.</p>
       <div class="info-box" style="margin: 20px 0;">
         <strong>Support Email:</strong> <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a>
       </div>
       <p>When submitting a complaint, users should provide sufficient information to help identify the issue. Users should avoid sending passwords or unnecessary sensitive personal information through ordinary email.</p>
-
       <h2>30. Applicable Law</h2>
       <p>These Terms are governed by the laws of Kenya, subject to applicable legal requirements.</p>
       <p>Disputes should first be raised through the designated support channel for an opportunity to resolve the matter. Where a dispute cannot be resolved informally, the parties may pursue remedies through the appropriate legal or regulatory processes in accordance with applicable law.</p>
-
       <h2>31. Amendments to These Terms</h2>
       <p>EduPoint AI may update these Terms from time to time to reflect changes in platform features, changes in payment arrangements, changes in applicable laws, improvements to platform operations, or new services or user requirements.</p>
       <p>The latest version will be made available through the platform. The updated document will display its revision date and version number. Users should review the Terms periodically. Where required by law, material changes will be communicated or consent will be obtained.</p>
-
       <h2>32. Severability</h2>
       <p>If any provision of these Terms is found to be unlawful, invalid, or unenforceable, the remaining provisions will continue to apply to the extent permitted by law.</p>
-
       <h2>33. No Waiver</h2>
       <p>A failure by EduPoint AI to enforce a provision of these Terms immediately does not automatically mean that the provision has been waived. Any waiver must be consistent with applicable law.</p>
-
       <h2>34. Entire Agreement</h2>
       <p>These Terms, together with the EduPoint AI Privacy Policy and other applicable platform policies, describe the terms governing use of the platform. Where a specific service has additional terms, those terms will apply to that service alongside this document.</p>
-
       <h2>35. Contact Information</h2>
       <p>For questions, complaints, clarification, or support relating to these Terms:</p>
       <div class="info-box" style="margin: 20px 0;">
@@ -1358,7 +1277,6 @@
         <strong>Email:</strong> <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a><br>
         <strong>Website:</strong> <a href="https://edupointai-frontend.vercel.app/" target="_blank" style="color: var(--electric-blue); text-decoration: none;">https://edupointai-frontend.vercel.app/</a>
       </div>
-
       <h2>36. Acceptance of These Terms</h2>
       <p>By accessing or using EduPoint AI, users acknowledge that they have had an opportunity to review these Terms & Conditions. Users who do not agree with these Terms should discontinue use of the platform.</p>
       <p style="text-align: center; margin-top: 30px; color: var(--white); font-weight: bold;">EduPoint AI — Your Academic Guidance Partner.</p>
@@ -1701,6 +1619,30 @@
 </div>
 
 <!-- ========================================= -->
+<!-- ADMIN FREE CALCULATION MODAL              -->
+<!-- ========================================= -->
+<div id="adminCalculateModal" style="display: none; position: fixed; inset: 0; background: rgba(16, 27, 61, 0.85); z-index: 10000; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); align-items: center; justify-content: center;">
+  <div style="background: #ffffff; border-radius: 16px; padding: 30px; max-width: 450px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="font-size: 40px; margin-bottom: 10px;">🛠️</div>
+      <h2 style="color: var(--adm-navy); margin: 0 0 10px; font-size: 22px;">Admin Support Override</h2>
+      <p style="color: #64748B; font-size: 14px; margin: 0;">You are about to generate a report for <b>free</b>. It will be emailed directly to the student.</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-size: 13px; font-weight: 700; color: var(--adm-navy); margin-bottom: 8px;">Student Email Address</label>
+      <input type="email" id="adminTargetEmail" placeholder="student@example.com" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 15px; outline: none;">
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="admin-btn admin-btn-outline" style="flex: 1; padding: 12px;" onclick="document.getElementById('adminCalculateModal').style.display='none';">Cancel</button>
+      <button class="admin-btn admin-btn-primary" style="flex: 2; padding: 12px;" onclick="adminGenerateFreeReport()">Generate & Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================= -->
 <!-- PREMIUM PAYMENT MODAL                     -->
 <!-- ========================================= -->
 <div id="confirmModal">
@@ -1934,7 +1876,7 @@ async function init() {
             const btn = document.createElement('a');
             btn.id = 'adminBtn';
             btn.href = '#';
-            btn.className = 'logout'; // Using the same style as logout for consistency
+            btn.className = 'logout'; 
             btn.style.color = 'var(--electric-blue)';
             btn.textContent = '👑 Admin Panel';
             btn.onclick = (e) => {
@@ -2041,7 +1983,7 @@ function preventDuplicates() {
 }
 
 // ==========================================
-// PAYMENT FLOW
+// PAYMENT FLOW & ADMIN OVERRIDE
 // ==========================================
 document.getElementById("btnCalculate").onclick = () => {
   const subjects = {}, grades = {}, displayList = [];
@@ -2057,6 +1999,14 @@ document.getElementById("btnCalculate").onclick = () => {
   });
 
   if (count < 7) return alert("Please select all 7 subjects and grades.");
+
+  // Check if the user is an admin
+  if (me && me.role === 'admin') {
+    window.adminPendingCalc = { subjects, grades };
+    document.getElementById('adminTargetEmail').value = '';
+    document.getElementById('adminCalculateModal').style.display = 'flex';
+    return;
+  }
 
   pendingCalc = { subjects, grades, displayList };
   openConfirmModal();
@@ -2191,6 +2141,39 @@ async function confirmAndPay() {
   }
 }
 
+async function adminGenerateFreeReport() {
+    const email = document.getElementById('adminTargetEmail').value.trim();
+    if (!email) return alert("Please enter a valid email address.");
+
+    const btn = document.querySelector('#adminCalculateModal .admin-btn-primary');
+    btn.textContent = "Generating...";
+    btn.disabled = true;
+
+    try {
+        const res = await api("/api/admin/calculate/free", {
+            method: "POST",
+            body: JSON.stringify({
+                email: email,
+                subjects: window.adminPendingCalc.subjects,
+                grades: window.adminPendingCalc.grades
+            })
+        });
+
+        document.getElementById('adminCalculateModal').style.display = 'none';
+        btn.textContent = "Generate & Send";
+        btn.disabled = false;
+
+        // Render results on the admin screen
+        renderResults(res.calculation_results);
+        alert(`✅ Report successfully generated and emailed to ${email}`);
+
+    } catch (err) {
+        alert("Failed to generate report: " + err.message);
+        btn.textContent = "Generate & Send";
+        btn.disabled = false;
+    }
+}
+
 // ==========================================
 // RESULTS
 // ==========================================
@@ -2302,20 +2285,25 @@ async function loadAdminDashboard() {
 
         const pRes = await api("/api/admin/payments");
         document.getElementById("admPaymentsBody").innerHTML = pRes.payments.map(p => {
-            let badge = `<span class="badge-yellow">Pending</span>`;
-            if (p.status === 'completed' || p.status === 'paid') badge = `<span class="badge-green">Paid</span>`;
-            if (p.status === 'failed') badge = `<span class="badge-red">Failed</span>`;
+            let badge = `<span style="background: rgba(242,169,59,0.15); color: var(--adm-amber); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Pending</span>`;
+            if (p.status === 'completed' || p.status === 'paid') badge = `<span style="background: rgba(15,157,145,0.15); color: var(--adm-teal); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Paid</span>`;
+            if (p.status === 'failed') badge = `<span style="background: rgba(214,69,69,0.15); color: var(--adm-red); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Failed</span>`;
             
-            let actionBtn = p.status === 'pending' || p.status === 'paid' 
-                ? `<button class="small-btn" onclick="retryPayment('${p.transaction_id}')">Retry</button>` 
+            let invStatus = p.invoice_sent_at ? `<span style="color: var(--adm-teal);">✅ Yes</span>` : `<span style="color: var(--adm-red);">❌ No</span>`;
+            let repStatus = (p.status === 'completed' || p.status === 'paid') ? `<span style="color: var(--adm-teal);">✅ Yes</span>` : `<span style="color: var(--adm-red);">❌ No</span>`;
+            
+            let actionBtn = (p.status === 'pending' || p.status === 'paid') 
+                ? `<button class="admin-btn admin-btn-outline" onclick="retryPayment('${p.transaction_id}')">Retry</button>` 
                 : `-`;
 
             return `<tr>
+                <td style="font-size: 12px;">${new Date(p.created_at).toLocaleDateString()}</td>
                 <td style="font-size: 11px;">${p.transaction_id}</td>
                 <td>${p.user_id}</td>
-                <td>KES ${parseFloat(p.amount).toFixed(2)}</td>
+                <td style="font-weight: bold;">KES ${parseFloat(p.amount).toFixed(2)}</td>
                 <td>${badge}</td>
-                <td style="font-size: 12px;">${new Date(p.created_at).toLocaleDateString()}</td>
+                <td>${invStatus}</td>
+                <td>${repStatus}</td>
                 <td>${actionBtn}</td>
             </tr>`;
         }).join("");
@@ -2323,9 +2311,9 @@ async function loadAdminDashboard() {
         const cRes = await api("/api/admin/calculations");
         document.getElementById("admCalcsBody").innerHTML = cRes.calculations.map(c => {
             return `<tr>
-                <td>${c.reference}</td>
-                <td>${c.name}<br><span style="font-size:11px;color:var(--slate);">${c.email}</span></td>
-                <td><strong style="color:var(--success-green);">${c.cluster_points}</strong></td>
+                <td style="font-weight: 600;">${c.reference}</td>
+                <td>${c.name}<br><span style="font-size:11px;color:#64748B;">${c.email}</span></td>
+                <td><strong style="color: var(--adm-teal); font-size: 16px;">${c.cluster_points}</strong></td>
                 <td style="font-size: 12px;">${new Date(c.created_at).toLocaleString()}</td>
             </tr>`;
         }).join("");
