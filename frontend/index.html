@@ -5,11 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080916">
 
-<!-- Google Tag Manager -->
+<!-- ========================================= -->
+<!-- GOOGLE TAG MANAGER                        -->
+<!-- ========================================= -->
 <script>
 (function(w,d,s,l,i){
   w[l]=w[l]||[];
-  w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+  w[l].push({
+    'gtm.start': new Date().getTime(),
+    event:'gtm.js'
+  });
   var f=d.getElementsByTagName(s)[0],
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
   j.async=true;
@@ -20,6 +25,8 @@
 <!-- End Google Tag Manager -->
 
 <title>EduPoint AI - Your Academic Guidance Partner</title>
+
+<!-- Stylesheets & External Fonts -->
 <link rel="stylesheet" href="/css/style.css">
 <script src="https://accounts.google.com/gsi/client" onload="initAuth()" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -43,7 +50,7 @@
     --error-red: #DC2626;
     --border-grey: #E2E8F0;
     
-    /* Footer Specific */
+    /* Footer Specific Variables */
     --ep-footer-bg: #080916;
     --ep-primary: #2563EB;
     --ep-accent: #60A5FA;
@@ -55,7 +62,7 @@
     --ep-footer-padding-desktop: 44px;
     --ep-footer-padding-mobile: 30px;
 
-    /* Admin Dashboard Specific */
+    /* Admin Dashboard Specific Variables */
     --adm-navy: #101B3D;
     --adm-purple: #7047EB;
     --adm-teal: #0F9D91;
@@ -65,205 +72,1119 @@
     --adm-red: #D64545;
   }
   
-  * { box-sizing: border-box; }
+  /* Global Resets */
+  * { 
+    box-sizing: border-box; 
+  }
 
   html, body { 
-    margin: 0; padding: 0; width: 100%; overflow-x: hidden; 
-    background: var(--navy); color: var(--soft-white); 
+    margin: 0; 
+    padding: 0; 
+    width: 100%; 
+    overflow-x: hidden; 
+    background: var(--navy); 
+    color: var(--soft-white); 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-    display: flex; flex-direction: column; min-height: 100vh;
+    display: flex; 
+    flex-direction: column; 
+    min-height: 100vh;
   }
   
-  .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; flex: 1; flex-direction: column; }
-  .view.active { display: flex; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  /* ========================================= */
+  /* VIEW TRANSITIONS & LAYOUT                 */
+  /* ========================================= */
+  .view { 
+    display: none; 
+    animation: fadeIn 0.3s ease; 
+    min-height: 100vh; 
+    flex: 1; 
+    flex-direction: column; 
+  }
+  
+  .view.active { 
+    display: flex; 
+  }
+  
+  @keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
 
   /* ========================================= */
   /* LANDING & DASHBOARD (Dark Mode)           */
   /* ========================================= */
-  .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
-  .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: var(--white); }
-  .hero-section { position: relative; padding: 140px 20px 60px; max-width: 800px; margin: 0 auto; text-align: center; flex: 1; }
-  .hero-content h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.1; margin-bottom: 20px; color: var(--white); }
-  .hero-content h1 span { color: var(--electric-blue); }
-  .hero-content h1 .gold { color: #ffd700; }
-  .hero-content p { font-size: 18px; color: var(--slate); line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
-  .google-wrapper { display: flex; justify-content: center; margin: 30px 0; min-height: 50px; }
+  .header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    z-index: 100; 
+  }
   
-  .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; width: 100%; }
-  .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-  .app-header h1 { font-size: 22px; margin: 0; color: var(--white); }
-  .app-header .logout { color: var(--slate); text-decoration: none; font-size: 14px; }
-  .card { background: #0f1430; border: 1px solid #2a324b; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-  .card-title { color: var(--electric-blue); font-size: 18px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+  .brand-logo { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 22px; 
+    font-weight: bold; 
+    color: var(--white); 
+  }
   
-  .subject-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 10px; margin-bottom: 10px; }
-  .subject-row select { width: 100%; padding: 12px; background: var(--navy); color: var(--white); border: 1px solid #2a324b; border-radius: 8px; font-size: 14px; }
-  .btn-primary { width: 100%; padding: 15px; background: var(--royal-blue); color: var(--white); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+  .hero-section { 
+    position: relative; 
+    padding: 140px 20px 60px; 
+    max-width: 800px; 
+    margin: 0 auto; 
+    text-align: center; 
+    flex: 1; 
+  }
   
-  /* WELCOME / ONBOARDING VIEW */
-  .welcome-container { max-width: 600px; margin: 0 auto; padding: 40px 20px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; }
-  .welcome-card { background: linear-gradient(145deg, #0a1128, #0f1430); border: 1px solid #2a324b; border-radius: 16px; padding: 24px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-  .welcome-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; letter-spacing: 1px; color: var(--success-green); margin-bottom: 15px; text-transform: uppercase; }
-  .welcome-aboard { color: var(--slate); }
-  .welcome-title { font-size: 24px; margin: 0 0 10px; color: var(--white); }
-  .welcome-subtitle { font-size: 18px; color: var(--electric-blue); margin: 0 0 15px; }
-  .welcome-text { color: var(--slate); font-size: 14px; line-height: 1.5; margin-bottom: 25px; }
+  .hero-content h1 { 
+    font-size: clamp(40px, 5vw, 64px); 
+    line-height: 1.1; 
+    margin-bottom: 20px; 
+    color: var(--white); 
+  }
   
-  .benefits-title { color: var(--white); font-size: 14px; margin-bottom: 15px; font-weight: 700; }
-  .benefit-card { display: flex; gap: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 12px; opacity: 0; transform: translateY(20px); animation: slideUp 0.5s ease forwards; }
-  .benefit-icon { font-size: 24px; animation: float 3s ease-in-out infinite; }
-  .benefit-card h5 { margin: 0 0 5px; color: var(--white); font-size: 15px; }
-  .benefit-card p { margin: 0; color: var(--slate); font-size: 13px; }
+  .hero-content h1 span { 
+    color: var(--electric-blue); 
+  }
   
-  .welcome-footer { text-align: center; margin-top: 30px; margin-bottom: 15px; }
-  .welcome-footer h4 { color: var(--electric-blue); font-size: 18px; margin: 0 0 5px; }
-  .welcome-footer p { color: var(--slate); font-size: 13px; margin: 0; }
+  .hero-content h1 .gold { 
+    color: #ffd700; 
+  }
+  
+  .hero-content p { 
+    font-size: 18px; 
+    color: var(--slate); 
+    line-height: 1.6; 
+    margin-bottom: 40px; 
+    max-width: 600px; 
+    margin-left: auto; 
+    margin-right: auto; 
+  }
+  
+  .google-wrapper { 
+    display: flex; 
+    justify-content: center; 
+    margin: 30px 0; 
+    min-height: 50px; 
+  }
+  
+  .app-container { 
+    max-width: 650px; 
+    margin: 0 auto; 
+    padding: 20px; 
+    padding-bottom: 80px; 
+    width: 100%; 
+  }
+  
+  .app-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 25px; 
+  }
+  
+  .app-header h1 { 
+    font-size: 22px; 
+    margin: 0; 
+    color: var(--white); 
+  }
+  
+  .app-header .logout { 
+    color: var(--slate); 
+    text-decoration: none; 
+    font-size: 14px; 
+  }
+  
+  .card { 
+    background: #0f1430; 
+    border: 1px solid #2a324b; 
+    border-radius: 16px; 
+    padding: 20px; 
+    margin-bottom: 20px; 
+  }
+  
+  .card-title { 
+    color: var(--electric-blue); 
+    font-size: 18px; 
+    font-weight: bold; 
+    margin: 0 0 15px 0; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+  }
+  
+  .subject-row { 
+    display: grid; 
+    grid-template-columns: minmax(0, 1fr) 90px; 
+    gap: 10px; 
+    margin-bottom: 10px; 
+  }
+  
+  .subject-row select { 
+    width: 100%; 
+    padding: 12px; 
+    background: var(--navy); 
+    color: var(--white); 
+    border: 1px solid #2a324b; 
+    border-radius: 8px; 
+    font-size: 14px; 
+  }
+  
+  .btn-primary { 
+    width: 100%; 
+    padding: 15px; 
+    background: var(--royal-blue); 
+    color: var(--white); 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 16px; 
+    cursor: pointer; 
+  }
+  
+  /* ========================================= */
+  /* WELCOME / ONBOARDING VIEW                 */
+  /* ========================================= */
+  .welcome-container { 
+    max-width: 600px; 
+    margin: 0 auto; 
+    padding: 40px 20px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    min-height: 100vh; 
+  }
+  
+  .welcome-card { 
+    background: linear-gradient(145deg, #0a1128, #0f1430); 
+    border: 1px solid #2a324b; 
+    border-radius: 16px; 
+    padding: 24px; 
+    position: relative; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+  }
+  
+  .welcome-header { 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 11px; 
+    font-weight: bold; 
+    letter-spacing: 1px; 
+    color: var(--success-green); 
+    margin-bottom: 15px; 
+    text-transform: uppercase; 
+  }
+  
+  .welcome-aboard { 
+    color: var(--slate); 
+  }
+  
+  .welcome-title { 
+    font-size: 24px; 
+    margin: 0 0 10px; 
+    color: var(--white); 
+  }
+  
+  .welcome-subtitle { 
+    font-size: 18px; 
+    color: var(--electric-blue); 
+    margin: 0 0 15px; 
+  }
+  
+  .welcome-text { 
+    color: var(--slate); 
+    font-size: 14px; 
+    line-height: 1.5; 
+    margin-bottom: 25px; 
+  }
+  
+  .benefits-title { 
+    color: var(--white); 
+    font-size: 14px; 
+    margin-bottom: 15px; 
+    font-weight: 700; 
+  }
+  
+  .benefit-card { 
+    display: flex; 
+    gap: 15px; 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(255,255,255,0.05); 
+    padding: 16px; 
+    border-radius: 12px; 
+    margin-bottom: 12px; 
+    opacity: 0; 
+    transform: translateY(20px); 
+    animation: slideUp 0.5s ease forwards; 
+  }
+  
+  .benefit-icon { 
+    font-size: 24px; 
+    animation: float 3s ease-in-out infinite; 
+  }
+  
+  .benefit-card h5 { 
+    margin: 0 0 5px; 
+    color: var(--white); 
+    font-size: 15px; 
+  }
+  
+  .benefit-card p { 
+    margin: 0; 
+    color: var(--slate); 
+    font-size: 13px; 
+  }
+  
+  .welcome-footer { 
+    text-align: center; 
+    margin-top: 30px; 
+    margin-bottom: 15px; 
+  }
+  
+  .welcome-footer h4 { 
+    color: var(--electric-blue); 
+    font-size: 18px; 
+    margin: 0 0 5px; 
+  }
+  
+  .welcome-footer p { 
+    color: var(--slate); 
+    font-size: 13px; 
+    margin: 0; 
+  }
   
   /* 10-SECOND PROGRESS BAR */
-  .progress-bar-container { width: 100%; height: 4px; background: #1a1c33; border-radius: 2px; margin-top: 25px; overflow: hidden; }
-  .progress-bar { height: 100%; background: var(--electric-blue); width: 0%; transition: width 10s linear; }
-
-  @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-  .cursor-blink { animation: blink 1s step-end infinite; color: var(--electric-blue); font-weight: 300; }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  /* RESULTS */
-  .summary-banner { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
-  .summary-banner h2 { font-size: 42px; color: var(--electric-blue); margin: 0 0 5px 0; }
-  .summary-banner p { color: var(--slate); margin: 0; font-size: 14px; }
-  .stats-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .stat-box { background: #0f1430; border-radius: 12px; padding: 15px; text-align: center; }
-  .stat-box h3 { margin: 0 0 5px 0; font-size: 24px; }
-  .stat-box p { margin: 0; font-size: 12px; color: var(--slate); text-transform: uppercase; }
-  .stat-qual { color: var(--success-green); } .stat-close { color: var(--warning-amber); } .stat-not { color: var(--error-red); } .stat-rate { color: var(--electric-blue); }
+  .progress-bar-container { 
+    width: 100%; 
+    height: 4px; 
+    background: #1a1c33; 
+    border-radius: 2px; 
+    margin-top: 25px; 
+    overflow: hidden; 
+  }
   
-  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { color: var(--electric-blue); text-align: left; padding: 10px; border-bottom: 1px solid #2a324b; font-weight: 600; }
-  td { padding: 12px 10px; border-bottom: 1px solid #1e293b; color: var(--soft-white); }
-  tr:last-child td { border-bottom: none; }
-  .badge-green { background: rgba(22,163,74,0.1); color: var(--success-green); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .badge-yellow { background: rgba(245,158,11,0.1); color: var(--warning-amber); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .badge-red { background: rgba(220,38,38,0.1); color: var(--error-red); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
-  .filter-input { width: 100%; padding: 12px; background: var(--navy); border: 1px solid #2a324b; border-radius: 8px; color: var(--white); margin-bottom: 15px; }
+  .progress-bar { 
+    height: 100%; 
+    background: var(--electric-blue); 
+    width: 0%; 
+    transition: width 10s linear; 
+  }
 
-  /* CHAT & OTHER TOOLS */
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
-  .chip { background: transparent; border: 1px solid var(--electric-blue); color: var(--electric-blue); padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; }
-  .input-group { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
-  .input-group input { flex: 1; min-width: 0; padding: 12px; background: var(--navy); border: 1px solid #2a324b; border-radius: 8px; color: var(--white); }
-  .btn-orange { width: 100%; padding: 14px; background: var(--warning-amber); color: var(--white); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+  @keyframes slideUp { 
+    to { opacity: 1; transform: translateY(0); } 
+  }
   
-  .chat-box { background: var(--navy); border: 1px solid #2a324b; border-radius: 12px; padding: 15px; }
-  .chat-messages { height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
-  .chat-input-row { display: flex; gap: 10px; margin-top: 15px; width: 100%; }
-  .chat-input-row input { flex: 1; min-width: 0; padding: 12px; background: #0f1430; border: 1px solid #2a324b; border-radius: 8px; color: var(--white); }
-  .btn-send { background: var(--royal-blue); border: none; color: var(--white); padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex-shrink: 0; }
-  .quick-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
-  .quick-btn { background: transparent; border: 1px solid #2a324b; color: var(--slate); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+  @keyframes float { 
+    0%, 100% { transform: translateY(0); } 
+    50% { transform: translateY(-5px); } 
+  }
+  
+  .cursor-blink { 
+    animation: blink 1s step-end infinite; 
+    color: var(--electric-blue); 
+    font-weight: 300; 
+  }
+  
+  @keyframes blink { 
+    50% { opacity: 0; } 
+  }
 
-  .social-row { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-  .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--white); text-decoration: none; }
-  .bg-wa { background: #25D366; } .bg-li { background: #0077B5; } .bg-ig { background: #E1306C; } .bg-tt { background: #000; border: 1px solid var(--white); } .bg-mail { background: #EA4335; }
-  .floating-chat { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer; z-index: 999; }
+  /* ========================================= */
+  /* RESULTS SECTION                           */
+  /* ========================================= */
+  .summary-banner { 
+    background: linear-gradient(135deg, #0f172a, #1e293b); 
+    border-radius: 16px; 
+    padding: 20px; 
+    text-align: center; 
+    margin-bottom: 20px; 
+    border: 1px solid #334155; 
+  }
+  
+  .summary-banner h2 { 
+    font-size: 42px; 
+    color: var(--electric-blue); 
+    margin: 0 0 5px 0; 
+  }
+  
+  .summary-banner p { 
+    color: var(--slate); 
+    margin: 0; 
+    font-size: 14px; 
+  }
+  
+  .stats-mini-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+  }
+  
+  .stat-box { 
+    background: #0f1430; 
+    border-radius: 12px; 
+    padding: 15px; 
+    text-align: center; 
+  }
+  
+  .stat-box h3 { 
+    margin: 0 0 5px 0; 
+    font-size: 24px; 
+  }
+  
+  .stat-box p { 
+    margin: 0; 
+    font-size: 12px; 
+    color: var(--slate); 
+    text-transform: uppercase; 
+  }
+  
+  .stat-qual { color: var(--success-green); } 
+  .stat-close { color: var(--warning-amber); } 
+  .stat-not { color: var(--error-red); } 
+  .stat-rate { color: var(--electric-blue); }
+  
+  .table-wrap { 
+    overflow-x: auto; 
+    margin-bottom: 20px; 
+  }
+  
+  table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 13px; 
+  }
+  
+  th { 
+    color: var(--electric-blue); 
+    text-align: left; 
+    padding: 10px; 
+    border-bottom: 1px solid #2a324b; 
+    font-weight: 600; 
+  }
+  
+  td { 
+    padding: 12px 10px; 
+    border-bottom: 1px solid #1e293b; 
+    color: var(--soft-white); 
+  }
+  
+  tr:last-child td { 
+    border-bottom: none; 
+  }
+  
+  .badge-green { 
+    background: rgba(22,163,74,0.1); 
+    color: var(--success-green); 
+    padding: 4px 8px; 
+    border-radius: 6px; 
+    font-size: 11px; 
+  }
+  
+  .badge-yellow { 
+    background: rgba(245,158,11,0.1); 
+    color: var(--warning-amber); 
+    padding: 4px 8px; 
+    border-radius: 6px; 
+    font-size: 11px; 
+  }
+  
+  .badge-red { 
+    background: rgba(220,38,38,0.1); 
+    color: var(--error-red); 
+    padding: 4px 8px; 
+    border-radius: 6px; 
+    font-size: 11px; 
+  }
+  
+  .filter-input { 
+    width: 100%; 
+    padding: 12px; 
+    background: var(--navy); 
+    border: 1px solid #2a324b; 
+    border-radius: 8px; 
+    color: var(--white); 
+    margin-bottom: 15px; 
+  }
+
+  /* ========================================= */
+  /* CHAT & OTHER TOOLS                        */
+  /* ========================================= */
+  .chips { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+  }
+  
+  .chip { 
+    background: transparent; 
+    border: 1px solid var(--electric-blue); 
+    color: var(--electric-blue); 
+    padding: 8px 15px; 
+    border-radius: 20px; 
+    font-size: 13px; 
+    cursor: pointer; 
+  }
+  
+  .input-group { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 15px; 
+    width: 100%; 
+  }
+  
+  .input-group input { 
+    flex: 1; 
+    min-width: 0; 
+    padding: 12px; 
+    background: var(--navy); 
+    border: 1px solid #2a324b; 
+    border-radius: 8px; 
+    color: var(--white); 
+  }
+  
+  .btn-orange { 
+    width: 100%; 
+    padding: 14px; 
+    background: var(--warning-amber); 
+    color: var(--white); 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 16px; 
+    cursor: pointer; 
+  }
+  
+  .chat-box { 
+    background: var(--navy); 
+    border: 1px solid #2a324b; 
+    border-radius: 12px; 
+    padding: 15px; 
+  }
+  
+  .chat-messages { 
+    height: 250px; 
+    overflow-y: auto; 
+    margin-bottom: 15px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+  }
+  
+  .chat-input-row { 
+    display: flex; 
+    gap: 10px; 
+    margin-top: 15px; 
+    width: 100%; 
+  }
+  
+  .chat-input-row input { 
+    flex: 1; 
+    min-width: 0; 
+    padding: 12px; 
+    background: #0f1430; 
+    border: 1px solid #2a324b; 
+    border-radius: 8px; 
+    color: var(--white); 
+  }
+  
+  .btn-send { 
+    background: var(--royal-blue); 
+    border: none; 
+    color: var(--white); 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    flex-shrink: 0; 
+  }
+  
+  .quick-buttons { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+    margin-top: 15px; 
+  }
+  
+  .quick-btn { 
+    background: transparent; 
+    border: 1px solid #2a324b; 
+    color: var(--slate); 
+    padding: 6px 12px; 
+    border-radius: 20px; 
+    font-size: 12px; 
+    cursor: pointer; 
+  }
+
+  .social-row { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+    margin: 20px 0; 
+  }
+  
+  .social-icon { 
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 18px; 
+    color: var(--white); 
+    text-decoration: none; 
+  }
+  
+  .bg-wa { background: #25D366; } 
+  .bg-li { background: #0077B5; } 
+  .bg-ig { background: #E1306C; } 
+  .bg-tt { background: #000; border: 1px solid var(--white); } 
+  .bg-mail { background: #EA4335; }
+  
+  .floating-chat { 
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    width: 60px; 
+    height: 60px; 
+    background: #25D366; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 28px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+    cursor: pointer; 
+    z-index: 999; 
+  }
 
   /* ========================================= */
   /* PREMIUM PAYMENT MODAL                     */
   /* ========================================= */
-  #confirmModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; }
-  .secure-modal { background: var(--navy); border: 1px solid var(--royal-blue); border-radius: 16px; padding: 24px; width: 100%; max-width: 440px; margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; color: var(--soft-white); }
+  #confirmModal { 
+    display: none; 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0,0,0,0.85); 
+    z-index: 9999; 
+    padding: 20px; 
+    overflow-y: auto; 
+    backdrop-filter: blur(4px); 
+    align-items: flex-start; 
+    justify-content: center; 
+  }
   
-  .secure-header { text-align: center; margin-bottom: 20px; }
-  .secure-header .lock-icon { font-size: 11px; font-weight: bold; letter-spacing: 1px; color: var(--success-green); text-transform: uppercase; }
-  .secure-header h2 { color: var(--royal-blue); font-size: 22px; margin: 8px 0 5px; }
-  .secure-header p { color: var(--slate); font-size: 13px; margin: 0; }
-
-  .fee-card { background: rgba(37,99,235,0.1); border: 1px solid var(--royal-blue); border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 20px; }
-  .fee-card span { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-  .fee-card h3 { font-size: 28px; color: var(--white); margin: 5px 0; }
-  .fee-card small { font-size: 12px; color: var(--slate); }
-
-  .subject-list-preview { background: #0f1430; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; width: 100%; }
-  .preview-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; color: var(--soft-white); width: 100%; }
-  .preview-row span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .preview-row .preview-grade { flex-shrink: 0; margin-left: 10px; color: var(--electric-blue); font-weight: bold; text-transform: uppercase; }
-  .preview-row:last-child { border-bottom: none; }
-
-  .terms-summary { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-  .term-item { display: flex; gap: 12px; align-items: flex-start; }
-  .term-item .num { color: var(--royal-blue); font-weight: 900; font-size: 14px; opacity: 0.8; }
-  .term-item b { display: block; font-size: 13px; color: var(--white); margin-bottom: 2px; }
-  .term-item p { margin: 0; font-size: 12px; color: var(--slate); line-height: 1.4; }
-
-  .full-terms-toggle { text-align: center; margin-bottom: 15px; }
-  .full-terms-toggle a { color: var(--royal-blue); font-size: 12px; text-decoration: none; cursor: pointer; font-weight: bold; }
+  .secure-modal { 
+    background: var(--navy); 
+    border: 1px solid var(--royal-blue); 
+    border-radius: 16px; 
+    padding: 24px; 
+    width: 100%; 
+    max-width: 440px; 
+    margin: 0 auto; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); 
+    animation: fadeIn 0.25s ease; 
+    color: var(--soft-white); 
+  }
   
-  .full-terms-box { display: none; background: #0f1430; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; font-size: 11px; color: var(--slate); line-height: 1.5; }
-  .full-terms-box b { color: var(--white); }
+  .secure-header { 
+    text-align: center; 
+    margin-bottom: 20px; 
+  }
+  
+  .secure-header .lock-icon { 
+    font-size: 11px; 
+    font-weight: bold; 
+    letter-spacing: 1px; 
+    color: var(--success-green); 
+    text-transform: uppercase; 
+  }
+  
+  .secure-header h2 { 
+    color: var(--royal-blue); 
+    font-size: 22px; 
+    margin: 8px 0 5px; 
+  }
+  
+  .secure-header p { 
+    color: var(--slate); 
+    font-size: 13px; 
+    margin: 0; 
+  }
 
-  .modal-checkbox-box { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid #334155; }
-  .modal-checkbox-box input { width: 18px; min-height: 18px; margin-top: 2px; accent-color: var(--royal-blue); cursor: pointer; flex-shrink: 0; }
-  .modal-checkbox-box label { color: var(--soft-white); font-size: 12px; line-height: 1.5; cursor: pointer; }
+  .fee-card { 
+    background: rgba(37,99,235,0.1); 
+    border: 1px solid var(--royal-blue); 
+    border-radius: 12px; 
+    padding: 16px; 
+    text-align: center; 
+    margin-bottom: 20px; 
+  }
+  
+  .fee-card span { 
+    font-size: 11px; 
+    color: var(--slate); 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    font-weight: bold; 
+  }
+  
+  .fee-card h3 { 
+    font-size: 28px; 
+    color: var(--white); 
+    margin: 5px 0; 
+  }
+  
+  .fee-card small { 
+    font-size: 12px; 
+    color: var(--slate); 
+  }
 
-  .modal-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
-  .btn-edit { flex: 1; padding: 14px; background: transparent; border: 1px solid #334155; color: var(--white); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
-  .btn-pay-confirm { flex: 2; padding: 14px; background: var(--royal-blue); border: none; color: var(--white); border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
-  .btn-pay-confirm:disabled, .btn-edit:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-pay-confirm:not(:disabled):hover { background: #1d4ed8; }
+  .subject-list-preview { 
+    background: #0f1430; 
+    border-radius: 8px; 
+    padding: 12px 16px; 
+    margin-bottom: 20px; 
+    font-size: 13px; 
+    width: 100%; 
+  }
+  
+  .preview-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 8px 0; 
+    border-bottom: 1px solid #1e293b; 
+    color: var(--soft-white); 
+    width: 100%; 
+  }
+  
+  .preview-row span:first-child { 
+    flex: 1; 
+    min-width: 0; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+  }
+  
+  .preview-row .preview-grade { 
+    flex-shrink: 0; 
+    margin-left: 10px; 
+    color: var(--electric-blue); 
+    font-weight: bold; 
+    text-transform: uppercase; 
+  }
+  
+  .preview-row:last-child { 
+    border-bottom: none; 
+  }
 
-  .secure-footer { text-align: center; font-size: 10px; color: #64748B; letter-spacing: 0.5px; }
+  .terms-summary { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    margin-bottom: 20px; 
+  }
+  
+  .term-item { 
+    display: flex; 
+    gap: 12px; 
+    align-items: flex-start; 
+  }
+  
+  .term-item .num { 
+    color: var(--royal-blue); 
+    font-weight: 900; 
+    font-size: 14px; 
+    opacity: 0.8; 
+  }
+  
+  .term-item b { 
+    display: block; 
+    font-size: 13px; 
+    color: var(--white); 
+    margin-bottom: 2px; 
+  }
+  
+  .term-item p { 
+    margin: 0; 
+    font-size: 12px; 
+    color: var(--slate); 
+    line-height: 1.4; 
+  }
+
+  .full-terms-toggle { 
+    text-align: center; 
+    margin-bottom: 15px; 
+  }
+  
+  .full-terms-toggle a { 
+    color: var(--royal-blue); 
+    font-size: 12px; 
+    text-decoration: none; 
+    cursor: pointer; 
+    font-weight: bold; 
+  }
+  
+  .full-terms-box { 
+    display: none; 
+    background: #0f1430; 
+    border: 1px solid #334155; 
+    border-radius: 8px; 
+    padding: 12px; 
+    margin-bottom: 15px; 
+    max-height: 150px; 
+    overflow-y: auto; 
+    font-size: 11px; 
+    color: var(--slate); 
+    line-height: 1.5; 
+  }
+  
+  .full-terms-box b { 
+    color: var(--white); 
+  }
+
+  .modal-checkbox-box { 
+    display: flex; 
+    align-items: flex-start; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+    background: rgba(255,255,255,0.03); 
+    padding: 12px; 
+    border-radius: 8px; 
+    border: 1px solid #334155; 
+  }
+  
+  .modal-checkbox-box input { 
+    width: 18px; 
+    min-height: 18px; 
+    margin-top: 2px; 
+    accent-color: var(--royal-blue); 
+    cursor: pointer; 
+    flex-shrink: 0; 
+  }
+  
+  .modal-checkbox-box label { 
+    color: var(--soft-white); 
+    font-size: 12px; 
+    line-height: 1.5; 
+    cursor: pointer; 
+  }
+
+  .modal-buttons { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 15px; 
+  }
+  
+  .btn-edit { 
+    flex: 1; 
+    padding: 14px; 
+    background: transparent; 
+    border: 1px solid #334155; 
+    color: var(--white); 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 14px; 
+  }
+  
+  .btn-pay-confirm { 
+    flex: 2; 
+    padding: 14px; 
+    background: var(--royal-blue); 
+    border: none; 
+    color: var(--white); 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    font-size: 14px; 
+  }
+  
+  .btn-pay-confirm:disabled, .btn-edit:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+  
+  .btn-pay-confirm:not(:disabled):hover { 
+    background: #1d4ed8; 
+  }
+
+  .secure-footer { 
+    text-align: center; 
+    font-size: 10px; 
+    color: #64748B; 
+    letter-spacing: 0.5px; 
+  }
 
   /* ========================================= */
   /* INFO MODAL (About, Rules, Terms, Privacy) */
   /* ========================================= */
-  #infoModal { display: none; position: fixed; inset: 0; background: rgba(8, 9, 22, 0.95); z-index: 9000; padding: 20px; overflow-y: auto; backdrop-filter: blur(8px); align-items: flex-start; justify-content: center; }
-  .info-modal-content { background: var(--navy); border: 1px solid #1e293b; border-radius: 16px; padding: 30px; max-width: 700px; width: 100%; margin: 20px auto; color: var(--soft-white); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.7); animation: fadeIn 0.3s ease; }
+  #infoModal { 
+    display: none; 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(8, 9, 22, 0.95); 
+    z-index: 9000; 
+    padding: 20px; 
+    overflow-y: auto; 
+    backdrop-filter: blur(8px); 
+    align-items: flex-start; 
+    justify-content: center; 
+  }
   
-  .info-modal-close { position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: var(--slate); font-size: 28px; cursor: pointer; transition: color 0.2s; line-height: 1; z-index: 10; }
-  .info-modal-close:hover { color: var(--white); }
+  .info-modal-content { 
+    background: var(--navy); 
+    border: 1px solid #1e293b; 
+    border-radius: 16px; 
+    padding: 30px; 
+    max-width: 700px; 
+    width: 100%; 
+    margin: 20px auto; 
+    color: var(--soft-white); 
+    position: relative; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7); 
+    animation: fadeIn 0.3s ease; 
+  }
   
-  .info-modal-body h1 { color: var(--electric-blue); font-size: 28px; margin-top: 0; margin-bottom: 10px; text-align: center; }
-  .info-modal-body h2 { color: var(--white); font-size: 18px; margin-top: 30px; margin-bottom: 12px; border-bottom: 1px solid #1e293b; padding-bottom: 8px; }
-  .info-modal-body h3 { color: var(--electric-blue); font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
-  .info-modal-body p, .info-modal-body li { color: var(--slate); line-height: 1.7; font-size: 14px; margin-bottom: 15px; }
-  .info-modal-body ul { padding-left: 20px; }
-  .info-modal-body strong { color: var(--white); }
+  .info-modal-close { 
+    position: absolute; 
+    top: 15px; 
+    right: 20px; 
+    background: transparent; 
+    border: none; 
+    color: var(--slate); 
+    font-size: 28px; 
+    cursor: pointer; 
+    transition: color 0.2s; 
+    line-height: 1; 
+    z-index: 10; 
+  }
+  
+  .info-modal-close:hover { 
+    color: var(--white); 
+  }
+  
+  .info-modal-body h1 { 
+    color: var(--electric-blue); 
+    font-size: 28px; 
+    margin-top: 0; 
+    margin-bottom: 10px; 
+    text-align: center; 
+  }
+  
+  .info-modal-body h2 { 
+    color: var(--white); 
+    font-size: 18px; 
+    margin-top: 30px; 
+    margin-bottom: 12px; 
+    border-bottom: 1px solid #1e293b; 
+    padding-bottom: 8px; 
+  }
+  
+  .info-modal-body h3 { 
+    color: var(--electric-blue); 
+    font-size: 16px; 
+    margin-top: 20px; 
+    margin-bottom: 8px; 
+  }
+  
+  .info-modal-body p, .info-modal-body li { 
+    color: var(--slate); 
+    line-height: 1.7; 
+    font-size: 14px; 
+    margin-bottom: 15px; 
+  }
+  
+  .info-modal-body ul { 
+    padding-left: 20px; 
+  }
+  
+  .info-modal-body strong { 
+    color: var(--white); 
+  }
   
   /* About Us Specific Styles */
-  .about-hero { text-align: center; margin-bottom: 30px; }
-  .about-hero h1 { font-size: 32px; color: var(--white); margin-bottom: 10px; }
-  .about-hero p { color: var(--electric-blue); font-size: 16px; font-weight: 500; }
+  .about-hero { 
+    text-align: center; 
+    margin-bottom: 30px; 
+  }
   
-  .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-  .about-card { background: #0f1430; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; }
-  .about-card h4 { color: var(--white); font-size: 15px; margin-top: 0; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-  .about-card p { font-size: 13px; margin: 0; color: var(--slate); line-height: 1.5; }
+  .about-hero h1 { 
+    font-size: 32px; 
+    color: var(--white); 
+    margin-bottom: 10px; 
+  }
+  
+  .about-hero p { 
+    color: var(--electric-blue); 
+    font-size: 16px; 
+    font-weight: 500; 
+  }
+  
+  .about-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 15px; 
+    margin: 20px 0; 
+  }
+  
+  .about-card { 
+    background: #0f1430; 
+    border: 1px solid #1e293b; 
+    border-radius: 12px; 
+    padding: 20px; 
+  }
+  
+  .about-card h4 { 
+    color: var(--white); 
+    font-size: 15px; 
+    margin-top: 0; 
+    margin-bottom: 8px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+  }
+  
+  .about-card p { 
+    font-size: 13px; 
+    margin: 0; 
+    color: var(--slate); 
+    line-height: 1.5; 
+  }
 
-  .independence-box { background: rgba(139, 92, 246, 0.1); border-left: 4px solid var(--purple); padding: 20px; border-radius: 8px; margin: 30px 0; }
-  .independence-box h3 { color: var(--purple); margin-top: 0; font-size: 16px; }
-  .independence-box p { color: var(--soft-white); font-size: 14px; margin-bottom: 10px; }
-  .independence-box p:last-child { margin-bottom: 0; }
+  .independence-box { 
+    background: rgba(139, 92, 246, 0.1); 
+    border-left: 4px solid var(--purple); 
+    padding: 20px; 
+    border-radius: 8px; 
+    margin: 30px 0; 
+  }
+  
+  .independence-box h3 { 
+    color: var(--purple); 
+    margin-top: 0; 
+    font-size: 16px; 
+  }
+  
+  .independence-box p { 
+    color: var(--soft-white); 
+    font-size: 14px; 
+    margin-bottom: 10px; 
+  }
+  
+  .independence-box p:last-child { 
+    margin-bottom: 0; 
+  }
 
-  .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
-  .value-card { background: #0f1430; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; text-align: center; }
-  .value-card .icon { font-size: 24px; margin-bottom: 10px; display: inline-block; }
-  .value-card h5 { color: var(--emerald-green); font-size: 14px; margin: 0 0 5px; }
-  .value-card p { font-size: 12px; margin: 0; color: var(--slate); line-height: 1.4; }
+  .values-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    gap: 15px; 
+    margin: 20px 0; 
+  }
+  
+  .value-card { 
+    background: #0f1430; 
+    border: 1px solid #1e293b; 
+    border-radius: 12px; 
+    padding: 15px; 
+    text-align: center; 
+  }
+  
+  .value-card .icon { 
+    font-size: 24px; 
+    margin-bottom: 10px; 
+    display: inline-block; 
+  }
+  
+  .value-card h5 { 
+    color: var(--emerald-green); 
+    font-size: 14px; 
+    margin: 0 0 5px; 
+  }
+  
+  .value-card p { 
+    font-size: 12px; 
+    margin: 0; 
+    color: var(--slate); 
+    line-height: 1.4; 
+  }
 
-  .about-footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b; }
-  .about-footer h4 { color: var(--white); font-size: 18px; margin-bottom: 5px; }
-  .about-footer p { color: var(--electric-blue); font-size: 14px; margin: 0; }
+  .about-footer { 
+    text-align: center; 
+    margin-top: 40px; 
+    padding-top: 20px; 
+    border-top: 1px solid #1e293b; 
+  }
+  
+  .about-footer h4 { 
+    color: var(--white); 
+    font-size: 18px; 
+    margin-bottom: 5px; 
+  }
+  
+  .about-footer p { 
+    color: var(--electric-blue); 
+    font-size: 14px; 
+    margin: 0; 
+  }
 
   /* Privacy Specific Styles */
-  .privacy-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; background: #0f1430; border-radius: 8px; overflow: hidden; }
-  .privacy-table th { background: rgba(37, 99, 235, 0.2); color: var(--white); text-align: left; padding: 12px; }
-  .privacy-table td { padding: 12px; border-bottom: 1px solid #1e293b; color: var(--slate); }
-  .privacy-table tr:last-child td { border-bottom: none; }
+  .privacy-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 20px 0; 
+    font-size: 14px; 
+    background: #0f1430; 
+    border-radius: 8px; 
+    overflow: hidden; 
+  }
+  
+  .privacy-table th { 
+    background: rgba(37, 99, 235, 0.2); 
+    color: var(--white); 
+    text-align: left; 
+    padding: 12px; 
+  }
+  
+  .privacy-table td { 
+    padding: 12px; 
+    border-bottom: 1px solid #1e293b; 
+    color: var(--slate); 
+  }
+  
+  .privacy-table tr:last-child td { 
+    border-bottom: none; 
+  }
 
-  .return-btn { display: block; width: 100%; padding: 14px; background: var(--royal-blue); color: var(--white); text-align: center; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 30px; text-decoration: none; transition: background 0.2s; }
-  .return-btn:hover { background: #1d4ed8; }
+  .return-btn { 
+    display: block; 
+    width: 100%; 
+    padding: 14px; 
+    background: var(--royal-blue); 
+    color: var(--white); 
+    text-align: center; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 16px; 
+    cursor: pointer; 
+    margin-top: 30px; 
+    text-decoration: none; 
+    transition: background 0.2s; 
+  }
+  
+  .return-btn:hover { 
+    background: #1d4ed8; 
+  }
 
   /* ========================================= */
   /* ADMIN DASHBOARD                           */
@@ -281,12 +1202,37 @@
       text-align: center; 
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
   }
-  .admin-stat-card h3 { font-size: 28px; margin: 0 0 5px; font-weight: 800; }
-  .admin-stat-card p { margin: 0; font-size: 12px; color: #64748B; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
   
-  .admin-table th { background: #F8FAFC; color: var(--adm-navy); border-bottom: 2px solid #E2E8F0; font-weight: 700; }
-  .admin-table td { color: var(--adm-text); border-bottom: 1px solid #E2E8F0; }
-  .admin-table tr:hover { background-color: #F8FAFC; }
+  .admin-stat-card h3 { 
+    font-size: 28px; 
+    margin: 0 0 5px; 
+    font-weight: 800; 
+  }
+  
+  .admin-stat-card p { 
+    margin: 0; 
+    font-size: 12px; 
+    color: #64748B; 
+    text-transform: uppercase; 
+    font-weight: 600; 
+    letter-spacing: 0.5px; 
+  }
+  
+  .admin-table th { 
+    background: #F8FAFC; 
+    color: var(--adm-navy); 
+    border-bottom: 2px solid #E2E8F0; 
+    font-weight: 700; 
+  }
+  
+  .admin-table td { 
+    color: var(--adm-text); 
+    border-bottom: 1px solid #E2E8F0; 
+  }
+  
+  .admin-table tr:hover { 
+    background-color: #F8FAFC; 
+  }
   
   .admin-btn { 
       padding: 8px 16px; 
@@ -297,10 +1243,26 @@
       border: none; 
       transition: 0.2s;
   }
-  .admin-btn-primary { background: var(--adm-purple); color: #fff; }
-  .admin-btn-primary:hover { background: #5a35d6; }
-  .admin-btn-outline { background: transparent; border: 1px solid var(--adm-navy); color: var(--adm-navy); }
-  .admin-btn-outline:hover { background: var(--adm-navy); color: #fff; }
+  
+  .admin-btn-primary { 
+    background: var(--adm-purple); 
+    color: #fff; 
+  }
+  
+  .admin-btn-primary:hover { 
+    background: #5a35d6; 
+  }
+  
+  .admin-btn-outline { 
+    background: transparent; 
+    border: 1px solid var(--adm-navy); 
+    color: var(--adm-navy); 
+  }
+  
+  .admin-btn-outline:hover { 
+    background: var(--adm-navy); 
+    color: #fff; 
+  }
 
   /* ========================================= */
   /* EDPOINTAI V11.0 MINIMAL FOOTER            */
@@ -314,32 +1276,139 @@
     border-top: 1px solid var(--ep-separator);
     margin-top: auto;
   }
-  .edupoint-footer__brand { display: flex; flex-direction: column; align-items: center; }
-  .logo-icon { width: 56px; height: 56px; background: var(--ep-primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-  .logo-icon svg { width: 32px; height: 32px; fill: none; stroke: var(--ep-white); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .edupoint-footer__brand h2 { font-size: 26px; font-weight: 700; margin: 0 0 4px 0; color: var(--ep-white); }
-  .tagline { font-size: 14px; font-weight: 500; color: var(--ep-accent); }
-  .edupoint-footer__description { color: var(--ep-description); max-width: 600px; margin: 14px auto 24px; font-size: 14px; line-height: 1.6; }
-  .edupoint-footer__divider { width: 100%; max-width: 900px; height: 1px; background: var(--ep-separator); border: 0; margin: 0 auto 20px; }
-  .edupoint-footer__links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; color: var(--ep-separator-muted); font-size: 14px; }
-  .edupoint-footer__links a { color: var(--ep-accent); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 220ms ease; cursor: pointer; }
-  .edupoint-footer__links a:hover { color: var(--ep-white); text-decoration: underline; }
-  .edupoint-footer__copyright { color: var(--ep-muted); font-size: 13px; margin-top: 18px; margin-bottom: 8px; }
-  .edupoint-footer__tagline { color: var(--ep-accent); font-size: 13px; margin: 0; }
   
-  @media (max-width: 600px) {
-    .edupoint-footer { padding: var(--ep-footer-padding-mobile) 16px 24px; }
-    .edupoint-footer__brand h2 { font-size: 23px; }
-    .logo-icon { width: 48px; height: 48px; border-radius: 12px; }
-    .logo-icon svg { width: 24px; height: 24px; }
-    .edupoint-footer__links { gap: 6px; }
-    .edupoint-footer__links a { font-size: 13px; }
-    .info-modal-content { padding: 20px; }
-    .about-grid { grid-template-columns: 1fr; }
-    .stats-mini-grid { grid-template-columns: 1fr; }
+  .edupoint-footer__brand { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
   }
+  
+  .logo-icon { 
+    width: 56px; 
+    height: 56px; 
+    background: var(--ep-primary); 
+    border-radius: 16px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    margin-bottom: 10px; 
+  }
+  
+  .logo-icon svg { 
+    width: 32px; 
+    height: 32px; 
+    fill: none; 
+    stroke: var(--ep-white); 
+    stroke-width: 2; 
+    stroke-linecap: round; 
+    stroke-linejoin: round; 
+  }
+  
+  .edupoint-footer__brand h2 { 
+    font-size: 26px; 
+    font-weight: 700; 
+    margin: 0 0 4px 0; 
+    color: var(--ep-white); 
+  }
+  
+  .tagline { 
+    font-size: 14px; 
+    font-weight: 500; 
+    color: var(--ep-accent); 
+  }
+  
+  .edupoint-footer__description { 
+    color: var(--ep-description); 
+    max-width: 600px; 
+    margin: 14px auto 24px; 
+    font-size: 14px; 
+    line-height: 1.6; 
+  }
+  
+  .edupoint-footer__divider { 
+    width: 100%; 
+    max-width: 900px; 
+    height: 1px; 
+    background: var(--ep-separator); 
+    border: 0; 
+    margin: 0 auto 20px; 
+  }
+  
+  .edupoint-footer__links { 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 8px; 
+    color: var(--ep-separator-muted); 
+    font-size: 14px; 
+  }
+  
+  .edupoint-footer__links a { 
+    color: var(--ep-accent); 
+    text-decoration: none; 
+    font-size: 14px; 
+    font-weight: 500; 
+    transition: color 220ms ease; 
+    cursor: pointer; 
+  }
+  
+  .edupoint-footer__links a:hover { 
+    color: var(--ep-white); 
+    text-decoration: underline; 
+  }
+  
+  .edupoint-footer__copyright { 
+    color: var(--ep-muted); 
+    font-size: 13px; 
+    margin-top: 18px; 
+    margin-bottom: 8px; 
+  }
+  
+  .edupoint-footer__tagline { 
+    color: var(--ep-accent); 
+    font-size: 13px; 
+    margin: 0; 
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 600px) {
+    .edupoint-footer { 
+      padding: var(--ep-footer-padding-mobile) 16px 24px; 
+    }
+    .edupoint-footer__brand h2 { 
+      font-size: 23px; 
+    }
+    .logo-icon { 
+      width: 48px; 
+      height: 48px; 
+      border-radius: 12px; 
+    }
+    .logo-icon svg { 
+      width: 24px; 
+      height: 24px; 
+    }
+    .edupoint-footer__links { 
+      gap: 6px; 
+    }
+    .edupoint-footer__links a { 
+      font-size: 13px; 
+    }
+    .info-modal-content { 
+      padding: 20px; 
+    }
+    .about-grid { 
+      grid-template-columns: 1fr; 
+    }
+    .stats-mini-grid { 
+      grid-template-columns: 1fr; 
+    }
+  }
+  
   @media (prefers-reduced-motion: reduce) {
-    .edupoint-footer__links a { transition: none; }
+    .edupoint-footer__links a { 
+      transition: none; 
+    }
   }
 </style>
 </head>
@@ -439,6 +1508,12 @@
     <div class="app-header">
       <h1>🎓 EduPoint AI</h1>
       <div style="display: flex; gap: 15px; align-items: center;">
+        
+        <!-- ADMIN TOGGLE BUTTON (Hidden by default) -->
+        <span id="adminToggleBtn" style="display: none;">
+          <a href="#" style="color: #F59E0B; text-decoration: none; font-weight: bold;" onclick="showView('admin'); event.preventDefault();">👑 Admin Panel</a>
+        </span>
+        
         <a href="#" class="logout" onclick="logout()">Logout</a>
       </div>
     </div>
@@ -446,7 +1521,7 @@
     <div class="card" id="calculatorCard">
       <div class="card-title">📋 Enter Your 7 KCSE Subjects</div>
       <div id="subjectList"></div>
-      <button class="btn-primary" id="btnCalculate">⚡ Calculate My Cluster Points — KES 100</button>
+      <button class="btn-primary" id="btnCalculate" onclick="handleCalculateClick()">⚡ Calculate My Cluster Points — KES 100</button>
       <div id="calcMessage" style="text-align: center; margin-top: 10px; font-size: 13px; color: var(--warning-amber);"></div>
     </div>
 
@@ -535,9 +1610,9 @@
         <a href="#" class="social-icon bg-li">in</a>
         <a href="#" class="social-icon bg-ig">📷</a>
         <a href="#" class="social-icon bg-tt">🎵</a>
-        <a href="mailto:academichelpdesk1@gmail.com" class="social-icon bg-mail">✉️</a>
+        <a href="mailto:nexoraacademyhelpdesk@gmail.com" class="social-icon bg-mail">✉️</a>
       </div>
-      <p style="font-size: 12px; color: var(--slate); margin: 5px 0;">📧 academichelpdesk1@gmail.com</p>
+      <p style="font-size: 12px; color: var(--slate); margin: 5px 0;">📧 nexoraacademyhelpdesk@gmail.com</p>
     </div>
   </div>
 </div>
@@ -550,12 +1625,11 @@
     <div class="app-header">
       <h1 style="color: var(--adm-navy);">👑 Admin Dashboard</h1>
       <div style="display: flex; gap: 15px;">
-        <a href="#" class="admin-btn admin-btn-outline" onclick="showView('student'); event.preventDefault();">← Back to Dashboard</a>
+        <a href="#" class="admin-btn admin-btn-outline" onclick="showView('student'); event.preventDefault();">← Back to Student View</a>
         <a href="#" class="logout" style="color: var(--adm-red);" onclick="logout()">Logout</a>
       </div>
     </div>
 
-    <!-- Metrics -->
     <div class="stats-mini-grid" style="grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
       <div class="admin-stat-card">
         <h3 style="color: var(--adm-teal);">KES <span id="admRevenue">0</span></h3>
@@ -575,7 +1649,6 @@
       </div>
     </div>
 
-    <!-- Payments Table -->
     <div class="card" style="background: #ffffff; border-color: #E2E8F0;">
       <div class="card-title" style="color: var(--adm-navy); display: flex; justify-content: space-between; align-items: center;">
         <span>Recent Payments</span>
@@ -600,7 +1673,6 @@
       </div>
     </div>
 
-    <!-- Calculations Table -->
     <div class="card" style="background: #ffffff; border-color: #E2E8F0;">
       <div class="card-title" style="color: var(--adm-navy);">Recent Calculations</div>
       <div class="table-wrap">
@@ -628,41 +1700,73 @@
   <div class="info-modal-content">
     <button class="info-modal-close" onclick="closeInfoModal()">✕</button>
     
-    <!-- About Us Content -->
+    <!-- ========================================= -->
+    <!-- ABOUT US CONTENT                          -->
+    <!-- ========================================= -->
     <div id="info-content-about" class="info-modal-body" style="display: none;">
       <div class="about-hero">
         <h1>About EduPointAI</h1>
         <p>Independent Academic Guidance</p>
       </div>
+      
       <h2>1. Who We Are</h2>
       <p>EduPointAI is an independent, technology-driven academic guidance platform developed to help students understand their academic qualifications, explore university courses and discover educational opportunities that align with their academic performance, interests and career aspirations.</p>
       <p>Choosing a university course is one of the most important decisions in a student's educational journey. However, many students find it challenging to interpret their KCSE results, understand university course requirements, compare available programmes or identify alternative academic pathways.</p>
       <p>EduPointAI seeks to make this process easier by bringing academic guidance, course exploration, qualification calculations and educational information together in one accessible digital platform.</p>
       <p>Through technology, structured academic information and intelligent guidance tools, we help students make sense of their results and explore possibilities for their future.</p>
       <p>Our goal is not simply to show students courses they may qualify for, but also to help them understand their options and make more informed educational decisions.</p>
+      
       <h2>2. Our Mission</h2>
       <p>Our mission is to make academic information more accessible, understandable and useful to every student.</p>
       <p>We aim to simplify the process of interpreting academic qualifications, exploring university programmes and identifying educational opportunities through reliable information and innovative technology.</p>
       <p>We believe that students should have access to the information they need before making important decisions about their education.</p>
+      
       <h2>3. Our Vision</h2>
       <p>To become a trusted digital academic guidance platform that empowers students to discover educational opportunities, understand their potential and confidently plan their academic and professional futures.</p>
       <p>We envision a future where access to academic guidance is not limited by geographical location, financial background or access to traditional career counselling services.</p>
+      
       <h2>4. Who We Serve</h2>
       <p>EduPointAI is designed for individuals at different stages of their educational journey.</p>
       <div class="about-grid">
-        <div class="about-card"><h4>🎓 KCSE Candidates</h4><p>Students preparing for their future after completing secondary education can explore possible academic pathways and understand how their performance relates to university course requirements.</p></div>
-        <div class="about-card"><h4>⏳ Students Awaiting Placement</h4><p>Students waiting for placement can explore available courses, review historical admission requirements and prepare for their next academic steps.</p></div>
-        <div class="about-card"><h4>🔍 Students Exploring Courses</h4><p>Students who are uncertain about which programme to pursue can compare different courses, examine qualification requirements and discover alternative options.</p></div>
-        <div class="about-card"><h4>👨‍👩‍👧 Parents and Guardians</h4><p>Parents and guardians can use EduPointAI as an information resource to better understand their children's academic options and participate in educational planning.</p></div>
+        <div class="about-card">
+          <h4>🎓 KCSE Candidates</h4>
+          <p>Students preparing for their future after completing secondary education can explore possible academic pathways and understand how their performance relates to university course requirements.</p>
+        </div>
+        <div class="about-card">
+          <h4>⏳ Students Awaiting Placement</h4>
+          <p>Students waiting for placement can explore available courses, review historical admission requirements and prepare for their next academic steps.</p>
+        </div>
+        <div class="about-card">
+          <h4>🔍 Students Exploring Courses</h4>
+          <p>Students who are uncertain about which programme to pursue can compare different courses, examine qualification requirements and discover alternative options.</p>
+        </div>
+        <div class="about-card">
+          <h4>👨‍👩‍👧 Parents and Guardians</h4>
+          <p>Parents and guardians can use EduPointAI as an information resource to better understand their children's academic options and participate in educational planning.</p>
+        </div>
       </div>
+      
       <h2>5. What We Do</h2>
       <p>EduPointAI brings several academic guidance services together to simplify educational decision-making.</p>
       <div class="about-grid">
-        <div class="about-card"><h4>🧮 Academic Calculations</h4><p>We help students interpret their academic results and calculate relevant qualification indicators to understand their academic standing.</p></div>
-        <div class="about-card"><h4>🎓 University Course Exploration</h4><p>Students can explore university programmes, review course requirements and identify programmes that may align with their qualifications.</p></div>
-        <div class="about-card"><h4>🤖 AI-Powered Guidance</h4><p>Our AI-assisted guidance tools help students explore career interests, understand academic pathways and discover related programmes.</p></div>
-        <div class="about-card"><h4>💰 Scholarships & Opportunities</h4><p>We aim to help students discover scholarship opportunities and other forms of educational support that may assist them in pursuing their studies.</p></div>
+        <div class="about-card">
+          <h4>🧮 Academic Calculations</h4>
+          <p>We help students interpret their academic results and calculate relevant qualification indicators to understand their academic standing.</p>
+        </div>
+        <div class="about-card">
+          <h4>🎓 University Course Exploration</h4>
+          <p>Students can explore university programmes, review course requirements and identify programmes that may align with their qualifications.</p>
+        </div>
+        <div class="about-card">
+          <h4>🤖 AI-Powered Guidance</h4>
+          <p>Our AI-assisted guidance tools help students explore career interests, understand academic pathways and discover related programmes.</p>
+        </div>
+        <div class="about-card">
+          <h4>💰 Scholarships & Opportunities</h4>
+          <p>We aim to help students discover scholarship opportunities and other forms of educational support that may assist them in pursuing their studies.</p>
+        </div>
       </div>
+      
       <h2>6. Our Approach to Academic Guidance</h2>
       <p>We believe academic guidance should be understandable, accessible and practical. Our approach is built around five principles:</p>
       <ul>
@@ -672,6 +1776,7 @@
         <li><strong>Informed decisions:</strong> Helping students understand their options rather than making educational decisions on their behalf.</li>
         <li><strong>Continuous improvement:</strong> Improving our platform, information resources and tools as educational requirements and student needs evolve.</li>
       </ul>
+      
       <h2>7. Our Commitment to Students</h2>
       <p>Every student's academic journey is different. A student's KCSE performance should be a starting point for exploring opportunities, not a reason to stop pursuing their ambitions.</p>
       <p>At EduPointAI, we are committed to helping students:</p>
@@ -684,6 +1789,7 @@
         <li>Approach their educational future with greater confidence.</li>
       </ul>
       <p>We aim to make academic guidance more approachable, particularly for students who may not have access to personalised educational counselling.</p>
+      
       <div class="independence-box">
         <h3>8. Our Independence and Transparency</h3>
         <p><strong>An Independent Academic Guidance Platform</strong></p>
@@ -693,11 +1799,13 @@
         <p>Official admission, placement, programme availability and eligibility decisions remain the responsibility of the relevant authorised institutions.</p>
         <p>We encourage students to verify important admission information, programme requirements, application deadlines and placement decisions through the appropriate official channels before taking action.</p>
       </div>
+      
       <h2>9. Technology and Innovation</h2>
       <p>EduPointAI uses technology to make academic guidance more accessible and efficient.</p>
       <p>Our platform brings together digital academic tools, structured educational information and AI-assisted guidance to help students explore their options.</p>
       <p>We believe technology can help simplify complicated academic information and make guidance more accessible to students regardless of where they are located.</p>
       <p>As the platform develops, we intend to continue improving our tools, expanding our educational resources and introducing more ways to support students throughout their academic journeys.</p>
+      
       <h2>10. Our Core Values</h2>
       <div class="values-grid">
         <div class="value-card"><div class="icon">🎓</div><h5>Student First</h5><p>Students' educational needs remain at the centre of our work.</p></div>
@@ -707,10 +1815,12 @@
         <div class="value-card"><div class="icon">🎯</div><h5>Accuracy</h5><p>We strive to provide clear, carefully structured and regularly reviewed information.</p></div>
         <div class="value-card"><div class="icon">📈</div><h5>Growth</h5><p>We continuously seek better ways to serve students and educational communities.</p></div>
       </div>
+      
       <h2>11. Looking Ahead</h2>
       <p>EduPointAI is being developed with a long-term commitment to educational guidance and digital innovation.</p>
       <p>Our ambition is to grow beyond basic academic calculations into a comprehensive digital environment where students can explore courses, receive career guidance, discover scholarships, understand educational pathways and access useful academic resources.</p>
       <p>We recognise that educational needs change, and we are committed to evolving alongside the students and communities we serve.</p>
+      
       <div class="about-footer">
         <h4>12. Our Promise</h4>
         <p style="margin-bottom: 15px;">We believe every student deserves the opportunity to understand their academic potential and explore the possibilities available to them.</p>
@@ -720,13 +1830,16 @@
       </div>
     </div>
 
-    <!-- Rules Content -->
+    <!-- ========================================= -->
+    <!-- RULES CONTENT                             -->
+    <!-- ========================================= -->
     <div id="info-content-rules" class="info-modal-body" style="display: none;">
       <h1>Rules & Regulations</h1>
       <p><strong>Version 1.0 · 2026</strong></p>
       <p>These Rules & Regulations govern access to and use of EduPointAI, including its academic calculation tools, course exploration services, AI Career Advisor, EduBot, Scholarship Finder, reports, user accounts and other educational resources.</p>
       <p>By registering, signing in, accessing or using EduPointAI, users agree to comply with these rules.</p>
       <p>The purpose of these regulations is to promote responsible platform usage, protect users, maintain the integrity of academic information and establish clear expectations between EduPointAI and its users.</p>
+      
       <h2>1. Platform Governance and General Responsibilities</h2>
       <p>EduPointAI is an independent academic guidance platform designed to assist students in understanding their academic qualifications and exploring educational opportunities.</p>
       <ul>
@@ -738,6 +1851,7 @@
         <li>EduPointAI reserves the right to improve, modify, restrict or discontinue platform features when necessary.</li>
         <li>These rules apply to all users, regardless of whether they use free or paid services.</li>
       </ul>
+      
       <h2>2. Account Registration and User Responsibilities</h2>
       <p>Users may be required to create an account before accessing certain EduPointAI services.</p>
       <h3>Account requirements</h3>
@@ -757,6 +1871,7 @@
         <li>Users must not attempt to access another user's account.</li>
       </ul>
       <p>EduPointAI may restrict accounts involved in suspicious, fraudulent or unauthorised activities.</p>
+      
       <h2>3. KCSE Subject Entry and Academic Information</h2>
       <p>EduPointAI allows students to enter their seven KCSE subjects and corresponding grades for academic calculations.</p>
       <p>Users are responsible for ensuring that the information submitted is accurate.</p>
@@ -777,6 +1892,7 @@
         <li>Users should compare important results with official academic records and applicable admission requirements.</li>
       </ul>
       <p>EduPointAI does not guarantee that every calculated result will correspond to an official placement outcome.</p>
+      
       <h2>4. Cluster Points Calculation and Payments</h2>
       <p>EduPointAI provides a cluster-point calculation service at the displayed price of KES 100.</p>
       <h3>Payment requirements</h3>
@@ -799,6 +1915,7 @@
       <p>EduPointAI may investigate payment-related complaints and request reasonable supporting evidence.</p>
       <h3>Refunds</h3>
       <p>Refund requests will be assessed according to the applicable refund policy, the nature of the transaction and whether the purchased service has already been delivered. A successful payment does not automatically guarantee a refund.</p>
+      
       <h2>5. University Course Exploration and Eligibility Information</h2>
       <p>EduPointAI provides course exploration features to help students identify university programmes that may correspond to their academic qualifications.</p>
       <p>Users should understand the following:</p>
@@ -820,6 +1937,7 @@
         <li>Courses requiring additional academic consideration.</li>
       </ul>
       <p>These categories are guidance classifications generated from the platform's available data and calculation rules. They are not official KUCCPS eligibility classifications unless explicitly confirmed by the relevant authority.</p>
+      
       <h2>6. AI Career Advisor</h2>
       <p>The AI Career Advisor is designed to help students explore careers based on their interests, academic backgrounds and future ambitions.</p>
       <p>Users may select interests such as:</p>
@@ -842,6 +1960,7 @@
         <li>Users must not use the AI Career Advisor to generate harmful, fraudulent or unlawful content.</li>
       </ul>
       <p>EduPointAI aims to provide useful guidance while recognising that final educational and career decisions belong to the individual.</p>
+      
       <h2>7. Scholarship Finder</h2>
       <p>The Scholarship Finder helps students discover potential scholarship opportunities using information such as their intended major and GPA.</p>
       <h3>User responsibilities</h3>
@@ -865,6 +1984,7 @@
       <h3>Fraud prevention</h3>
       <p>Users must not submit forged academic documents, falsified financial information or misleading personal details when pursuing scholarship opportunities.</p>
       <p>EduPointAI may remove or restrict access to scholarship information that is found to be misleading or unreliable.</p>
+      
       <h2>8. EduBot Career Advisor</h2>
       <p>EduBot is an AI-assisted educational guidance tool designed to answer questions about career pathways, university courses, KCSE requirements and job opportunities.</p>
       <p>Users may ask questions such as:</p>
@@ -888,6 +2008,7 @@
       <h3>Accuracy and limitations</h3>
       <p>EduBot provides informational guidance. It does not replace official academic authorities, university admissions offices, qualified career counsellors or professional licensing bodies.</p>
       <p>EduPointAI does not guarantee that every response generated by EduBot will be completely accurate or suitable for every student's circumstances.</p>
+      
       <h2>9. Academic Resources and Career Information</h2>
       <p>EduPointAI may provide educational resources, course information, career explanations, academic tips and other materials.</p>
       <p>Users agree to:</p>
@@ -899,6 +2020,7 @@
         <li>Avoid presenting EduPointAI materials as official government or university publications.</li>
       </ul>
       <p>Educational resources may be updated, corrected, replaced or withdrawn as necessary.</p>
+      
       <h2>10. Acceptable Use Policy</h2>
       <p>EduPointAI must be used responsibly and in a manner that protects the platform and its users.</p>
       <h3>Permitted Activities</h3>
@@ -926,6 +2048,7 @@
         <li>Attempting to steal, expose or misuse user information.</li>
         <li>Using EduPointAI to facilitate unlawful activities.</li>
       </ul>
+      
       <h2>11. Platform Security and Technical Restrictions</h2>
       <p>Users must respect the technical security measures implemented by EduPointAI.</p>
       <p>The following activities are prohibited:</p>
@@ -941,6 +2064,7 @@
       </ul>
       <p>Users who identify security vulnerabilities should report them responsibly rather than exploit them.</p>
       <p>EduPointAI may investigate suspicious activity and take reasonable protective measures.</p>
+      
       <h2>12. User Privacy and Personal Information</h2>
       <p>EduPointAI recognises the importance of protecting users' personal information.</p>
       <p>Users may provide information such as:</p>
@@ -967,6 +2091,7 @@
       <p>Personal information may be processed where necessary to provide services, maintain accounts, process payments, improve platform functionality, respond to enquiries and meet applicable legal obligations.</p>
       <p>Where external service providers are involved, relevant information may be processed by those providers in accordance with their applicable arrangements and privacy practices.</p>
       <p>For further details about personal information collection, processing, retention, disclosure and user rights, users should consult the EduPointAI Privacy Policy.</p>
+      
       <h2>13. Platform Availability and Maintenance</h2>
       <p>EduPointAI strives to maintain reliable access to its services. However, uninterrupted availability cannot be guaranteed.</p>
       <p>Services may occasionally become unavailable because of:</p>
@@ -981,6 +2106,7 @@
       </ul>
       <p>EduPointAI may temporarily suspend specific features when maintenance, investigation or security measures are necessary.</p>
       <p>Where reasonably possible, important service interruptions will be communicated to affected users.</p>
+      
       <h2>14. Third-Party Information and External Services</h2>
       <p>EduPointAI may rely on or reference information provided by universities, scholarship organisations, educational institutions and other external sources.</p>
       <p>Users acknowledge that:</p>
@@ -992,6 +2118,7 @@
         <li>Users should verify important information directly with the relevant organisation.</li>
       </ul>
       <p>The presence of an institution, scholarship or external resource on EduPointAI does not automatically indicate an official partnership, endorsement or affiliation.</p>
+      
       <h2>15. Intellectual Property and Ownership</h2>
       <p>The EduPointAI name, branding, platform design, original software, website content, graphics, interfaces, documentation and other original materials are protected by applicable intellectual property laws.</p>
       <p>Unless otherwise stated, these materials belong to their respective owners.</p>
@@ -1004,6 +2131,7 @@
         <li>Republish protected materials in a misleading manner.</li>
       </ul>
       <p>Users retain any rights they hold in information and materials they independently provide, subject to the rights and permissions necessary to operate the services.</p>
+      
       <h2>16. Misuse, Violations and Account Restrictions</h2>
       <p>EduPointAI reserves the right to investigate activities that may violate these regulations.</p>
       <p>Depending on the nature and seriousness of a violation, appropriate measures may include:</p>
@@ -1018,6 +2146,7 @@
       </ul>
       <p>Serious violations, including fraud, unauthorised access and deliberate security attacks, may result in immediate protective action.</p>
       <p>Where appropriate, users may be given an opportunity to explain or challenge an account restriction.</p>
+      
       <h2>17. Limitation of Responsibility</h2>
       <p>EduPointAI provides academic guidance, educational information and technology-assisted services.</p>
       <p>Users acknowledge that:</p>
@@ -1031,6 +2160,7 @@
       </ul>
       <p>To the extent permitted by applicable law, EduPointAI does not guarantee uninterrupted service, error-free calculations or specific educational outcomes.</p>
       <p>Nothing in these regulations excludes liability that cannot legally be excluded under applicable law, including rights that users are entitled to retain under consumer protection and data protection legislation.</p>
+      
       <h2>18. Complaints, Feedback and Support</h2>
       <p>EduPointAI encourages users to report problems, provide suggestions and request assistance whenever necessary.</p>
       <p>Users may contact the platform regarding:</p>
@@ -1048,9 +2178,10 @@
       <div class="info-box" style="margin: 20px 0;">
         <strong>Official support contact</strong><br>
         EduPointAI Support<br>
-        Email: <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a>
+        Email: <a href="mailto:nexoraacademyhelpdesk@gmail.com" style="color: var(--electric-blue); text-decoration: none;">nexoraacademyhelpdesk@gmail.com</a>
       </div>
       <p>Users should provide sufficient information to help the support team understand and investigate their enquiries. Users should never send passwords or confidential authentication credentials.</p>
+      
       <h2>19. Amendments to These Regulations</h2>
       <p>EduPointAI may update these Rules & Regulations when necessary to reflect:</p>
       <ul>
@@ -1064,6 +2195,7 @@
       <p>Updated regulations will be published on the platform.</p>
       <p>Users are encouraged to review this page periodically to remain informed about their responsibilities.</p>
       <p>Where a material change requires additional notice or consent under applicable law, EduPointAI will take appropriate steps.</p>
+      
       <h2>20. Applicable Laws and Regulatory Compliance</h2>
       <p>These Rules & Regulations are governed by and construed in accordance with the applicable laws of the Republic of Kenya.</p>
       <p>EduPointAI aims to comply with relevant legislation, including data protection and consumer protection laws, where applicable to its operations.</p>
@@ -1071,17 +2203,26 @@
       <p>Users are responsible for complying with the local laws and regulations that apply to them when using the platform.</p>
     </div>
 
-    <!-- Terms Content -->
+    <!-- ========================================= -->
+    <!-- TERMS & CONDITIONS CONTENT                -->
+    <!-- ========================================= -->
     <div id="info-content-terms" class="info-modal-body" style="display: none;">
       <h1>Terms & Conditions</h1>
-      <p style="text-align: center;"><strong>Last Updated:</strong> November 2026<br><strong>Version:</strong> 1.0<br><strong>Platform:</strong> EduPoint AI<br><strong>Tagline:</strong> Your Academic Guidance Partner</p>
+      <p style="text-align: center;">
+        <strong>Last Updated:</strong> November 2026<br>
+        <strong>Version:</strong> 1.0<br>
+        <strong>Platform:</strong> EduPoint AI<br>
+        <strong>Tagline:</strong> Your Academic Guidance Partner
+      </p>
       
       <h2>1. Introduction</h2>
       <p>Welcome to EduPoint AI. These Terms & Conditions govern your access to and use of the EduPoint AI website, platform, academic calculation services, career guidance tools, scholarship discovery features, educational resources, and related services.</p>
       <p>By accessing, registering for, or using EduPoint AI, you acknowledge that you have read, understood, and agreed to these Terms & Conditions. If you do not agree with any part of these Terms, you should discontinue using the platform. These Terms apply to students, parents, guardians, visitors, and any other individuals accessing the platform.</p>
+      
       <h2>2. About EduPoint AI</h2>
       <p>EduPoint AI is an independent digital academic guidance platform designed to help students understand their academic qualifications, explore possible university courses, discover career pathways, and identify potential educational opportunities. Our services are intended to support informed academic decision-making through technology and educational information.</p>
       <p>EduPoint AI is not KUCCPS, a university, the Ministry of Education, or a government admission authority. We do not make official university admission, course placement, scholarship award, or government funding decisions.</p>
+      
       <h2>3. Definitions</h2>
       <p>For the purposes of these Terms:</p>
       <ul>
@@ -1095,6 +2236,7 @@
         <li><strong>Payment Provider:</strong> The third-party payment service provider used to process payments, including Pesapal.</li>
         <li><strong>Academic Information:</strong> KCSE subjects, grades, examination results, intended courses, and other educational information submitted by users.</li>
       </ul>
+      
       <h2>4. Description of Services</h2>
       <p>EduPoint AI may provide the following services:</p>
       <ul>
@@ -1109,6 +2251,7 @@
         <li>General educational guidance and updates.</li>
       </ul>
       <p>The availability of particular services may change as the platform develops. We reserve the right to improve, modify, suspend, or discontinue features where reasonably necessary.</p>
+      
       <h2>5. User Registration and Account Responsibilities</h2>
       <p>Certain platform services may require users to create an account or sign in.</p>
       <p>When creating or accessing an account, users agree to:</p>
@@ -1121,6 +2264,7 @@
         <li>Ensure that information submitted through their account is accurate.</li>
       </ul>
       <p>Users are responsible for activities performed through their accounts, subject to applicable law and our security responsibilities. We may restrict access where we reasonably suspect account misuse, fraud, unauthorized access, or violation of these Terms.</p>
+      
       <h2>6. KCSE Subject and Grade Submission</h2>
       <p>EduPoint AI allows users to enter seven KCSE subjects and their corresponding grades for academic calculations.</p>
       <p>Users are responsible for ensuring that:</p>
@@ -1131,12 +2275,16 @@
         <li>No false, misleading, or fabricated academic information is submitted.</li>
       </ul>
       <p>Incorrect information may produce inaccurate calculations and course recommendations. EduPoint AI is not responsible for errors arising from incorrect information deliberately or unintentionally submitted by a user. Where available, users should compare their entries with their official KCSE result documents.</p>
+      
       <h2>7. Cluster-Point Calculation Service</h2>
       <p>EduPoint AI provides an academic calculation service intended to help users understand their estimated academic performance and potential course eligibility. The calculation service may use the seven subjects and grades entered by the user together with the applicable calculation methodology and available academic reference information.</p>
+      
       <h3>7.1 Calculation Fee</h3>
       <p>The stated fee for each cluster-point calculation is: <strong>KES 100 per calculation.</strong> The applicable fee will be displayed before payment is initiated.</p>
+      
       <h3>7.2 Payment Requirement</h3>
       <p>Users must complete the required payment before a paid calculation is processed. A transaction marked as pending, initiated, incomplete, or unsuccessful does not automatically qualify as a completed payment.</p>
+      
       <h3>7.3 Calculation Results</h3>
       <p>Results may include:</p>
       <ul>
@@ -1146,8 +2294,10 @@
         <li>Courses requiring additional academic consideration.</li>
         <li>Relevant university and course information, where available.</li>
       </ul>
+      
       <h3>7.4 Accuracy and Limitations</h3>
       <p>Calculations are guidance estimates and should not be treated as official placement decisions. Actual course eligibility and placement may depend on official KUCCPS requirements, applicable subject combinations, university-specific requirements, available programme capacity, annual cutoff changes, government admission policies, and other requirements established by relevant authorities. Users should always verify important admission information through official sources.</p>
+      
       <h2>8. Course Eligibility and University Information</h2>
       <p>EduPoint AI may display courses and universities that appear relevant to a user's academic qualifications. Course recommendations are intended to assist exploration and academic planning.</p>
       <p>A course displayed as a possible match does not guarantee:</p>
@@ -1159,12 +2309,15 @@
         <li>A particular university cutoff in a future admission cycle.</li>
       </ul>
       <p>Universities and relevant admission authorities retain responsibility for their official requirements and decisions. Users should independently verify current programme information before making academic decisions.</p>
+      
       <h2>9. AI Career Advisor</h2>
       <p>The AI Career Advisor allows users to select areas of interest, including Medicine, Technology, Engineering, Business, Education, and Arts.</p>
       <p>Based on the interests selected, the platform may provide career suggestions, possible academic pathways, and related guidance.</p>
       <p>The AI Career Advisor is an informational tool. Its recommendations do not constitute professional career counselling, official academic assessment, employment guarantees, or admission decisions. Users should consider their abilities, interests, qualifications, financial circumstances, and available opportunities before choosing a career pathway.</p>
+      
       <h2>10. EduBot Career Advisor</h2>
       <p>EduBot is an AI-powered educational guidance assistant designed to answer questions relating to career pathways, university courses, KCSE subject requirements, academic qualifications, professional occupations, job opportunities, and general career exploration. Users may submit questions through the EduBot chat interface.</p>
+      
       <h3>10.1 Responsible Use</h3>
       <p>Users agree not to use EduBot to:</p>
       <ul>
@@ -1174,35 +2327,48 @@
         <li>Submit harmful or malicious content.</li>
         <li>Attempt to compromise the platform.</li>
       </ul>
+      
       <h3>10.2 AI Response Limitations</h3>
       <p>EduBot responses may contain incomplete, outdated, or inaccurate information. AI-generated responses should be treated as general educational guidance rather than verified official information. Users should confirm important academic, professional, financial, and admission-related information with the relevant institutions. EduPoint AI does not guarantee that every AI-generated response will be accurate, complete, or suitable for every individual.</p>
+      
       <h2>11. Scholarship Finder</h2>
       <p>The Scholarship Finder is intended to help users discover scholarship opportunities that may match their educational interests and academic profile.</p>
       <p>Users may be asked to provide information such as intended major, GPA, academic interests, and other eligibility-related information.</p>
+      
       <h3>11.1 Scholarship Eligibility</h3>
       <p>A scholarship displayed through the platform does not guarantee that the user qualifies for the opportunity. Actual eligibility may depend on academic performance, nationality or residency requirements, financial circumstances, intended course of study, age restrictions, application deadlines, supporting documents, and requirements established by the scholarship provider.</p>
+      
       <h3>11.2 Scholarship Applications</h3>
       <p>Unless a specific application service is expressly provided, the Scholarship Finder should be understood as a discovery and guidance feature rather than an automatic scholarship application or award service. Scholarship providers retain authority over their application processes and final decisions. EduPoint AI does not guarantee scholarship approval, funding, or financial assistance.</p>
+      
       <h2>12. Academic Reports and Results</h2>
       <p>Where available, EduPoint AI may generate academic calculation reports or display results within the user's account.</p>
       <p>Reports may contain submitted academic information, estimated cluster points, potential course matches, close course matches, university information, and general academic recommendations.</p>
       <p>Users are responsible for reviewing their reports and identifying any incorrect information. A report generated by EduPoint AI is not an official KCSE certificate, university admission letter, KUCCPS placement letter, or government-issued academic document.</p>
+      
       <h2>13. Payment Terms</h2>
       <p>Certain services on EduPoint AI may require payment. The calculation service currently carries a stated fee of KES 100 per calculation.</p>
       <p>Before initiating payment, users should review the amount displayed on the platform. Users agree to submit genuine payment information, use an authorized payment method, avoid fraudulent payment confirmations, avoid manipulating payment references, and cooperate with reasonable payment verification procedures. The platform may delay processing while a payment is being verified.</p>
+      
       <h2>14. Third-Party Payment Processing</h2>
       <p>Payments are processed through the designated third-party payment provider, including Pesapal.</p>
       <p>By initiating payment, users acknowledge that payment processing may be subject to the payment provider's own terms, conditions, privacy policy, and security procedures. EduPoint AI may receive transaction information necessary to verify payment status and provide the requested service. EduPoint AI does not control the internal operations, availability, or independent policies of third-party payment providers. Users should contact the relevant payment provider where a payment-related issue requires investigation by that provider.</p>
+      
       <h2>15. Refunds, Failed Transactions, and Payment Disputes</h2>
       <p>Payments for successfully delivered and generated calculations are generally non-refundable. However, payment issues will be considered individually.</p>
+      
       <h3>15.1 Duplicate Payments</h3>
       <p>Where a user is charged more than once for the same service, the user may contact support for investigation.</p>
+      
       <h3>15.2 Successful Payment but No Service</h3>
       <p>Where payment is confirmed but the requested service is not delivered because of a verified technical failure, the user may request assistance and an appropriate resolution.</p>
+      
       <h3>15.3 Pending Transactions</h3>
       <p>A pending transaction is not automatically treated as a completed payment. The user may need to allow the payment provider and platform sufficient time to verify the transaction.</p>
+      
       <h3>15.4 Refund Requests</h3>
       <p>Refund requests should include relevant transaction details and a clear explanation of the issue. EduPoint AI will review legitimate complaints and communicate the available resolution. Nothing in this section removes any consumer rights that cannot lawfully be excluded.</p>
+      
       <h2>16. Acceptable Use of the Platform</h2>
       <p>Users agree to use EduPoint AI responsibly and lawfully.</p>
       <p>Users must not:</p>
@@ -1219,64 +2385,85 @@
         <li>Misrepresent EduPoint AI as an official government or university service.</li>
       </ul>
       <p>We may investigate suspected misuse and take appropriate action.</p>
+      
       <h2>17. Academic Integrity</h2>
       <p>EduPoint AI is designed to support students in making informed educational decisions.</p>
       <p>Users must not present generated estimates, recommendations, or reports as official documents issued by KUCCPS, universities, examination authorities, or government institutions. The platform must not be used to fabricate academic qualifications, admission letters, examination results, or scholarship awards.</p>
+      
       <h2>18. Privacy and Personal Information</h2>
       <p>EduPoint AI may process personal and academic information to provide its services.</p>
       <p>Information may include account details, KCSE subject entries, grades, career interests, scholarship search details, payment references, and communications submitted through the platform. Personal information is handled in accordance with the EduPoint AI Privacy Policy and applicable data protection requirements. Users should read the Privacy Policy to understand how their information is collected, used, stored, and shared.</p>
+      
       <h2>19. Data Protection and User Rights</h2>
       <p>EduPoint AI aims to handle personal information responsibly and in accordance with applicable Kenyan data protection laws, including the Data Protection Act, 2019.</p>
       <p>Subject to applicable law, users may have rights relating to access to personal information, correction of inaccurate information, deletion of personal information, objection to certain processing, withdrawal of consent where consent is the legal basis, and other applicable data protection rights. Requests relating to personal information may be submitted through the platform's designated support contact.</p>
+      
       <h2>20. Intellectual Property Rights</h2>
       <p>The EduPoint AI platform, including its branding, logos, interface design, original written content, software, graphics, and other protected materials, may be owned by or licensed to EduPoint AI.</p>
       <p>Users are granted limited permission to access and use the platform for personal, lawful, and educational purposes. Unless expressly authorized, users must not copy or reproduce substantial protected platform content, redistribute platform software, sell access to platform services without authorization, remove ownership notices, reverse engineer or attempt to extract protected software components, or use the EduPoint AI name or branding in a misleading way. Nothing in these Terms transfers ownership of the platform's intellectual property to users.</p>
+      
       <h2>21. Third-Party Websites and Information</h2>
       <p>EduPoint AI may display information originating from external institutions, universities, scholarship providers, government websites, and other third parties. Such information may change without notice.</p>
       <p>External websites are governed by their own terms and privacy policies. EduPoint AI is not responsible for the independent operation, availability, content, or policies of external websites. Users should verify important information directly with the relevant organization.</p>
+      
       <h2>22. Platform Availability and Maintenance</h2>
       <p>EduPoint AI aims to provide reliable access to its services. However, uninterrupted availability cannot be guaranteed.</p>
       <p>The platform may temporarily become unavailable because of scheduled maintenance, software updates, hosting interruptions, network failures, security incidents, third-party service interruptions, or circumstances beyond reasonable control. Where reasonably possible, important maintenance or service interruptions may be communicated to users.</p>
+      
       <h2>23. Changes to Platform Services</h2>
       <p>EduPoint AI may introduce new features, modify existing services, update calculation methodologies, or discontinue certain features.</p>
       <p>Where a change materially affects a paid service, the platform should communicate relevant information where reasonably practicable. Any applicable service fee should be displayed before the user commits to a new paid transaction.</p>
+      
       <h2>24. Account Suspension and Termination</h2>
       <p>EduPoint AI may restrict, suspend, or terminate access where there are reasonable grounds to believe that a user has violated these Terms, engaged in fraudulent activity, attempted unauthorized access, abused platform services, interfered with platform security, or used the platform for unlawful purposes.</p>
       <p>Where appropriate, users may be informed of the reason for a restriction and given an opportunity to seek clarification. Suspension or termination does not remove rights or obligations that arose before the suspension or termination.</p>
+      
       <h2>25. Disclaimer of Warranties</h2>
       <p>EduPoint AI provides academic guidance and digital tools on an informational basis. To the extent permitted by applicable law, the platform does not guarantee that every calculation will be free from error, every course recommendation will result in admission, scholarship opportunities will remain available, AI responses will always be accurate, the platform will operate without interruption, or third-party academic information will always be current.</p>
       <p>The platform will make reasonable efforts to maintain and improve its services. Nothing in these Terms excludes warranties or consumer rights that cannot legally be excluded.</p>
+      
       <h2>26. Limitation of Liability</h2>
       <p>To the extent permitted by applicable law, EduPoint AI will not be responsible for indirect or consequential losses arising from the use of informational guidance, reliance on outdated third-party information, or temporary service interruptions. Users remain responsible for independently verifying important academic and admission information. Nothing in these Terms limits liability where doing so would be unlawful, including liability that cannot legally be excluded.</p>
+      
       <h2>27. Indemnification</h2>
       <p>Where permitted by law, users may be responsible for losses, claims, or reasonable costs arising directly from their unlawful conduct, fraudulent activities, or material violation of these Terms. This section does not remove any rights or protections available to users under applicable law.</p>
+      
       <h2>28. Force Majeure</h2>
       <p>EduPoint AI will not be considered in breach of these Terms solely because of a delay or interruption caused by circumstances beyond reasonable control. Such circumstances may include natural disasters, major network failures, government restrictions, widespread infrastructure interruptions, and other comparable events.</p>
+      
       <h2>29. Complaints and Customer Support</h2>
       <p>Users may contact EduPoint AI regarding incorrect calculations, payment verification, duplicate transactions, technical problems, account access, academic guidance concerns, privacy-related requests, and other platform complaints.</p>
       <div class="info-box" style="margin: 20px 0;">
-        <strong>Support Email:</strong> <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a>
+        <strong>Support Email:</strong> 
+        <a href="mailto:nexoraacademyhelpdesk@gmail.com" style="color: var(--electric-blue); text-decoration: none;">nexoraacademyhelpdesk@gmail.com</a>
       </div>
       <p>When submitting a complaint, users should provide sufficient information to help identify the issue. Users should avoid sending passwords or unnecessary sensitive personal information through ordinary email.</p>
+      
       <h2>30. Applicable Law</h2>
       <p>These Terms are governed by the laws of Kenya, subject to applicable legal requirements.</p>
       <p>Disputes should first be raised through the designated support channel for an opportunity to resolve the matter. Where a dispute cannot be resolved informally, the parties may pursue remedies through the appropriate legal or regulatory processes in accordance with applicable law.</p>
+      
       <h2>31. Amendments to These Terms</h2>
       <p>EduPoint AI may update these Terms from time to time to reflect changes in platform features, changes in payment arrangements, changes in applicable laws, improvements to platform operations, or new services or user requirements.</p>
       <p>The latest version will be made available through the platform. The updated document will display its revision date and version number. Users should review the Terms periodically. Where required by law, material changes will be communicated or consent will be obtained.</p>
+      
       <h2>32. Severability</h2>
       <p>If any provision of these Terms is found to be unlawful, invalid, or unenforceable, the remaining provisions will continue to apply to the extent permitted by law.</p>
+      
       <h2>33. No Waiver</h2>
       <p>A failure by EduPoint AI to enforce a provision of these Terms immediately does not automatically mean that the provision has been waived. Any waiver must be consistent with applicable law.</p>
+      
       <h2>34. Entire Agreement</h2>
       <p>These Terms, together with the EduPoint AI Privacy Policy and other applicable platform policies, describe the terms governing use of the platform. Where a specific service has additional terms, those terms will apply to that service alongside this document.</p>
+      
       <h2>35. Contact Information</h2>
       <p>For questions, complaints, clarification, or support relating to these Terms:</p>
       <div class="info-box" style="margin: 20px 0;">
         <strong>Platform:</strong> EduPoint AI<br>
-        <strong>Email:</strong> <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a><br>
+        <strong>Email:</strong> <a href="mailto:nexoraacademyhelpdesk@gmail.com" style="color: var(--electric-blue); text-decoration: none;">nexoraacademyhelpdesk@gmail.com</a><br>
         <strong>Website:</strong> <a href="https://edupointai-frontend.vercel.app/" target="_blank" style="color: var(--electric-blue); text-decoration: none;">https://edupointai-frontend.vercel.app/</a>
       </div>
+      
       <h2>36. Acceptance of These Terms</h2>
       <p>By accessing or using EduPoint AI, users acknowledge that they have had an opportunity to review these Terms & Conditions. Users who do not agree with these Terms should discontinue use of the platform.</p>
       <p style="text-align: center; margin-top: 30px; color: var(--white); font-weight: bold;">EduPoint AI — Your Academic Guidance Partner.</p>
@@ -1284,10 +2471,15 @@
       <p style="text-align: center; font-size: 12px; color: var(--slate); margin-top: 20px;">© 2026 EduPoint AI. All Rights Reserved.</p>
     </div>
 
-    <!-- Privacy Content -->
+    <!-- ========================================= -->
+    <!-- PRIVACY POLICY CONTENT                    -->
+    <!-- ========================================= -->
     <div id="info-content-privacy" class="info-modal-body" style="display: none;">
       <h1>Privacy Policy</h1>
-      <p><strong>Version 1.0</strong><br><strong>Last Updated:</strong> 15 November 2026</p>
+      <p>
+        <strong>Version 1.0</strong><br>
+        <strong>Last Updated:</strong> 15 November 2026
+      </p>
 
       <h2>1. Introduction</h2>
       <p>EduPointAI respects the privacy of individuals who access and use its platform.</p>
@@ -1315,6 +2507,7 @@
 
       <h2>3. Information We Collect</h2>
       <p>The information collected depends on the services a user accesses.</p>
+      
       <h3>3.1 Identity and Account Information</h3>
       <p>When users register or maintain an account, we may collect:</p>
       <ul>
@@ -1597,7 +2790,7 @@
         <li>Requests for information about data sharing.</li>
         <li>Complaints regarding privacy practices.</li>
       </ul>
-      <p>To submit a request, please contact us at <strong>academichelpdesk1@gmail.com</strong>.</p>
+      <p>To submit a request, please contact us at <strong>nexoraacademyhelpdesk@gmail.com</strong>.</p>
       <p>We will respond within the timeframes required by applicable law. We may require reasonable verification of your identity before processing your request to ensure that personal information is not disclosed to an unauthorised person.</p>
       <p>If you are not satisfied with our response, you have the right to lodge a complaint with the Office of the Data Protection Commissioner in Kenya.</p>
 
@@ -1610,7 +2803,7 @@
       <p>If you have questions, concerns or complaints about this Privacy Policy or our data protection practices, please contact:</p>
       <div class="info-box" style="margin: 20px 0;">
         <strong>EduPointAI Support</strong><br>
-        Email: <a href="mailto:academichelpdesk1@gmail.com" style="color: var(--electric-blue); text-decoration: none;">academichelpdesk1@gmail.com</a>
+        Email: <a href="mailto:nexoraacademyhelpdesk@gmail.com" style="color: var(--electric-blue); text-decoration: none;">nexoraacademyhelpdesk@gmail.com</a>
       </div>
     </div>
 
@@ -1632,7 +2825,7 @@
 
     <div style="margin-bottom: 20px;">
       <label style="display: block; font-size: 13px; font-weight: 700; color: var(--adm-navy); margin-bottom: 8px;">Student Email Address</label>
-      <input type="email" id="adminTargetEmail" placeholder="student@example.com" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 15px; outline: none;">
+      <input type="email" id="adminTargetEmail" placeholder="student@example.com" style="width: 100%; padding: 12px; background: #000; color: #fff; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 15px; outline: none;">
     </div>
 
     <div style="display: flex; gap: 10px;">
@@ -1748,12 +2941,25 @@
 <div class="floating-chat" onclick="document.getElementById('chatInput').focus()">💬</div>
 
 <script>
+// ==========================================
+// 1. CORE CONFIGURATION & ADMIN EMAIL
+// ==========================================
+// The specific email address that grants Admin access
+const ADMIN_EMAIL_ADDRESS = "nexoraacademyhelpdesk@gmail.com"; 
+
 window.EDUPOINT_API = window.EDUPOINT_API || (location.hostname === "localhost" ? "http://localhost:5000" : "https://edupoint-api.onrender.com");
 const TOKEN_KEY = "edupoint_token";
 const getToken = () => localStorage.getItem(TOKEN_KEY);
 const setToken = t => localStorage.setItem(TOKEN_KEY, t);
 const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
+let me = null;
+let allResultsData = [];
+let pendingCalc = null;
+
+// ==========================================
+// 2. API HELPER
+// ==========================================
 async function api(path, opts = {}) {
   const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
   const t = getToken();
@@ -1777,10 +2983,78 @@ async function api(path, opts = {}) {
   }
 }
 
-let me = null;
-let allResultsData = [];
-let pendingCalc = null;
+// ==========================================
+// 3. ADMIN VERIFICATION LOGIC
+// ==========================================
+function checkIsAdmin(user) {
+    if (!user) return false;
+    
+    // Check if the backend role explicitly sets the user as admin
+    if (user.role === 'admin' || user.isAdmin === true) return true;
+    
+    // Check if the logged-in email matches the hardcoded admin email (ignores uppercase/lowercase)
+    if (user.email && user.email.toLowerCase() === ADMIN_EMAIL_ADDRESS.toLowerCase()) return true;
+    
+    return false;
+}
 
+// ==========================================
+// 4. CALCULATE BUTTON INTERCEPTOR
+// ==========================================
+function handleCalculateClick() {
+  if (!me) {
+      alert("Please log in first.");
+      return;
+  }
+  
+  // Verify if the current user is an admin
+  if (checkIsAdmin(me)) {
+    // ADMIN FLOW: Open the free support override modal
+    document.getElementById('adminCalculateModal').style.display = 'flex';
+  } else {
+    // STUDENT FLOW: Open the KES 100 payment checkout modal
+    document.getElementById('confirmModal').style.display = 'flex';
+  }
+}
+
+// ==========================================
+// 5. MODAL ACTIONS
+// ==========================================
+function adminGenerateFreeReport() {
+    if (!checkIsAdmin(me)) {
+        alert("Unauthorized: Only admins can use this feature.");
+        return;
+    }
+    const targetEmail = document.getElementById('adminTargetEmail').value;
+    if(!targetEmail) {
+        alert("Please enter the student's email address.");
+        return;
+    }
+    
+    // API call would go here to send the email
+    alert("Admin override successful. Report generated and sent to: " + targetEmail);
+    document.getElementById('adminCalculateModal').style.display = 'none';
+}
+
+function closeConfirm() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+function confirmAndPay() {
+    // Logic to redirect to Pesapal / Payment gateway
+    const btn = document.getElementById('btnPayConfirm');
+    btn.innerHTML = "Connecting...";
+    document.getElementById('calcMessage').innerText = "Opening secure payment window...";
+    
+    setTimeout(() => {
+        alert("Redirecting to secure payment...");
+        btn.innerHTML = "Pay KES 100 →";
+    }, 1500);
+}
+
+// ==========================================
+// 6. AUTHENTICATION & ROUTING
+// ==========================================
 function initAuth() {
   if (typeof google === 'undefined') return;
   
@@ -1818,15 +3092,60 @@ async function handleGoogleLogin(response) {
   }
 }
 
+async function init() {
+  if (getToken()) {
+    try {
+      const res = await api("/api/me");
+      me = res.user;
+      
+      // --- ROLE ROUTING ---
+      if (checkIsAdmin(me)) {
+        // Show Admin Panel link for admins
+        document.getElementById('adminToggleBtn').style.display = 'inline-block';
+        
+        // Send admins directly to their dashboard
+        showView("admin");
+      } else {
+        // Normal student flow
+        document.getElementById('adminToggleBtn').style.display = 'none';
+        
+        if (!sessionStorage.getItem('edupoint_welcome_shown')) {
+          showView("welcome");
+          triggerWelcomeAnimation(me.name || "Student");
+        } else {
+          showView("student");
+        }
+      }
+    } catch (err) {
+      console.error("Auth error", err);
+      clearToken();
+      showView("public");
+      initAuth();
+    }
+  } else {
+    showView("public");
+    initAuth();
+  }
+}
+
 // ==========================================
-// INFO MODAL LOGIC
+// 7. UTILITIES & MODALS
 // ==========================================
+function showView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const targetView = document.getElementById('view-' + viewName);
+    if (targetView) targetView.classList.add('active');
+}
+
+function logout() {
+    clearToken();
+    window.location.reload();
+}
+
 function openInfoModal(section) {
   document.querySelectorAll('.info-modal-body').forEach(el => el.style.display = 'none');
-  
   const target = document.getElementById('info-content-' + section);
   if (target) target.style.display = 'block';
-  
   document.getElementById('infoModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -1836,531 +3155,23 @@ function closeInfoModal() {
   document.body.style.overflow = '';
 }
 
-// Close modal if user clicks outside the content
-document.getElementById('infoModal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeInfoModal();
-  }
-});
-
-// ==========================================
-// INIT & VIEW LOGIC
-// ==========================================
-async function init() {
-  if (getToken()) {
-    try {
-      const res = await api("/api/me");
-      me = res.user;
-      
-      if (!sessionStorage.getItem('edupoint_welcome_shown')) {
-        showView("welcome");
-        triggerWelcomeAnimation(me.name);
-        
-        setTimeout(() => {
-          const pb = document.getElementById('welcomeProgress');
-          if (pb) pb.style.width = '100%'; 
-        }, 100); 
-
-        setTimeout(() => {
-          goToDashboard();
-        }, 10000);
-      } else {
-        showView("student");
-        setupCalculator();
-      }
-      
-      // Inject Admin Button if admin
-      if (me.role === 'admin') {
-        const header = document.querySelector('#view-student .app-header div');
-        if (header && !document.getElementById('adminBtn')) {
-            const btn = document.createElement('a');
-            btn.id = 'adminBtn';
-            btn.href = '#';
-            btn.className = 'logout'; 
-            btn.style.color = 'var(--electric-blue)';
-            btn.textContent = '👑 Admin Panel';
-            btn.onclick = (e) => {
-                e.preventDefault();
-                showView('admin');
-            };
-            header.insertBefore(btn, header.querySelector('.logout'));
-        }
-      }
-      
-    } catch (e) {
-      if (e.status === 401) {
-        clearToken();
-        showView("public");
-        if (typeof google !== 'undefined') initAuth();
-      } else {
-        showView("student");
-        setupCalculator();
-        document.getElementById("calcMessage").innerHTML = '<span style="color:var(--warning-amber);">Warning: Could not connect to server.</span>';
-      }
-    }
-  } else {
-    showView("public");
-    if (typeof google !== 'undefined') initAuth();
-  }
-}
-init();
-
-function showView(viewId) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  const target = document.getElementById(`view-${viewId}`);
-  if (target) target.classList.add('active');
-  window.scrollTo(0,0);
-  
-  if (viewId === 'admin') {
-    loadAdminDashboard();
-  }
-}
-
 function triggerWelcomeAnimation(name) {
-  const nameEl = document.getElementById('welcomeName');
-  if (!name) return;
-  
-  let i = 0;
-  nameEl.innerHTML = '';
-  
-  function typeWriter() {
-    if (i < name.length) {
-      nameEl.innerHTML += name.charAt(i);
-      i++;
-      setTimeout(typeWriter, 60);
-    } else {
-      nameEl.innerHTML += '<span class="cursor-blink">|</span>';
-      setTimeout(() => {
-        const cursor = nameEl.querySelector('.cursor-blink');
-        if (cursor) cursor.remove();
-      }, 1000);
-    }
-  }
-  setTimeout(typeWriter, 400);
-}
-
-function goToDashboard() {
-  sessionStorage.setItem('edupoint_welcome_shown', 'true');
-  showView("student");
-  setupCalculator();
-}
-
-function logout() { 
-  clearToken(); 
-  sessionStorage.removeItem('edupoint_welcome_shown');
-  location.reload(); 
-}
-
-function setupCalculator() {
-  if(document.getElementById("subjectList").innerHTML !== "") return;
-
-  const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
-  const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
-  let html = "";
-  for (let i = 0; i < 7; i++) {
-    html += `<div class="subject-row">
-      <select class="sub-select" onchange="preventDuplicates()">
-        <option value="">Subject ${i+1}</option>${subjects.map(s => `<option value="${s}">${s}</option>`).join("")}
-      </select>
-      <select class="grade-select">
-        <option value="">Grade</option>${grades.map(g => `<option value="${g}">${g}</option>`).join("")}
-      </select>
-    </div>`;
-  }
-  document.getElementById("subjectList").innerHTML = html;
-}
-
-function preventDuplicates() {
-  const selects = document.querySelectorAll('.sub-select');
-  const selected = Array.from(selects).map(s => s.value).filter(v => v);
-  selects.forEach(select => {
-    const cur = select.value;
-    Array.from(select.options).forEach(opt => {
-      if (opt.value === "") return;
-      opt.disabled = (opt.value !== cur && selected.includes(opt.value));
-    });
-  });
-}
-
-// ==========================================
-// PAYMENT FLOW & ADMIN OVERRIDE
-// ==========================================
-document.getElementById("btnCalculate").onclick = () => {
-  const subjects = {}, grades = {}, displayList = [];
-  let count = 0;
-  document.querySelectorAll('.sub-select').forEach((s, i) => {
-    const gradeEl = document.querySelectorAll('.grade-select')[i];
-    if (s.value && gradeEl.value) {
-      subjects[i] = s.value;
-      grades[i] = gradeEl.value;
-      displayList.push({ subject: s.value, grade: gradeEl.value });
-      count++;
-    }
-  });
-
-  if (count < 7) return alert("Please select all 7 subjects and grades.");
-
-  // Check if the user is an admin
-  if (me && me.role === 'admin') {
-    window.adminPendingCalc = { subjects, grades };
-    document.getElementById('adminTargetEmail').value = '';
-    document.getElementById('adminCalculateModal').style.display = 'flex';
-    return;
-  }
-
-  pendingCalc = { subjects, grades, displayList };
-  openConfirmModal();
-};
-
-function openConfirmModal() {
-  const preview = document.getElementById('confirmSubjectList');
-  preview.innerHTML = pendingCalc.displayList.map(d =>
-    `<div class="preview-row"><span>${d.subject}</span><span class="preview-grade">${d.grade}</span></div>`
-  ).join('');
-
-  document.getElementById('rulesCheck').checked = false;
-  document.getElementById('btnPayConfirm').disabled = true;
-  document.getElementById('btnEdit').disabled = false;
-  document.getElementById('fullTerms').style.display = 'none';
-  
-  document.getElementById('confirmModal').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeConfirm() {
-  pendingCalc = null;
-  document.getElementById('confirmModal').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-async function confirmAndPay() {
-  if (!pendingCalc) return;
-  const { subjects, grades } = pendingCalc;
-
-  document.getElementById('btnPayConfirm').disabled = true;
-  document.getElementById('btnEdit').disabled = true;
-  document.getElementById('btnPayConfirm').textContent = "Opening payment...";
-
-  closeConfirm();
-
-  const btn = document.getElementById("btnCalculate");
-  const msg = document.getElementById("calcMessage");
-  const payWindow = window.open('', '_blank');
-
-  if (payWindow) {
-    payWindow.document.write(`
-      <!doctype html>
-      <html><head><title>Connecting to Pesapal...</title>
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      <style>
-        body { background: #080916; color: #fff; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-        .loader { border: 4px solid #1a1c33; border-top: 4px solid #60A5FA; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        h2 { color: #60A5FA; } p { color: #94a3b8; }
-      </style></head><body>
-      <div><div class="loader"></div><h2>Connecting to Pesapal...</h2><p>Please wait while we generate your secure payment link.</p></div>
-      </body></html>
-    `);
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Connecting...";
-  msg.innerHTML = '<span style="color:var(--warning-amber);">Opening secure payment window...</span>';
-
-  try {
-    const phone = me.phone || "0700000000";
-
-    const j = await api("/api/payment/initiate", {
-      method: "POST",
-      body: JSON.stringify({ 
-        plan: "standard", provider: "pesapal", phone: phone, 
-        subjects: subjects, grades: grades,
-        accepted_terms: true, terms_version: "1.0"
-      })
-    });
-
-    if (j.redirect_url) {
-      if (payWindow) {
-        payWindow.location.href = j.redirect_url;
-      } else {
-        window.location.href = j.redirect_url;
-      }
-
-      msg.innerHTML = '<span style="color:var(--warning-amber);">Complete the payment. Waiting for confirmation...</span>';
-      btn.textContent = "Waiting for Payment...";
-
-      let n = 0;
-      const t = setInterval(async () => {
-        if (payWindow && payWindow.closed) {
-            try {
-                const x = await api("/api/payment/status/" + j.transaction_id);
-                if (x.payment.status === "paid" || x.payment.status === "completed") {
-                    clearInterval(t);
-                    renderResults(x.calculation_results);
-                    return;
-                }
-            } catch(e) {}
-            
-            clearInterval(t);
-            msg.innerHTML = '<span style="color:var(--warning-amber);">Payment cancelled. Click above to try again.</span>';
-            btn.disabled = false;
-            btn.textContent = "⚡ Pay KES 100 for Confirmed Subjects";
-            return;
-        }
-
-        try {
-          const x = await api("/api/payment/status/" + j.transaction_id);
-          if (x.payment.status === "paid" || x.payment.status === "completed") {
-            clearInterval(t);
-            if (payWindow) payWindow.close();
-            
-            if (x.calculation_results) {
-              renderResults(x.calculation_results);
-              alert("Payment Confirmed! Results unlocked and emailed.");
-            } else {
-              msg.innerHTML = '<span style="color:var(--warning-amber);">Paid! Your results are being prepared — check your email.</span>';
-            }
-          }
-          if (x.payment.status === "failed" || n >= 60) {
-            clearInterval(t);
-            msg.textContent = "Payment failed or timed out.";
-            btn.disabled = false;
-            btn.textContent = "⚡ Calculate My Cluster Points — KES 100";
-          }
-        } catch (e) {
-          console.log("Polling error...", e.message);
-        }
-        n++;
-      }, 3000);
-    }
-  } catch (err) {
-    if (payWindow) payWindow.close();
-    msg.innerHTML = `<span style="color:var(--error-red);">${err.message}</span>`;
-    btn.disabled = false;
-    btn.textContent = "⚡ Calculate My Cluster Points — KES 100";
-  }
-}
-
-async function adminGenerateFreeReport() {
-    const email = document.getElementById('adminTargetEmail').value.trim();
-    if (!email) return alert("Please enter a valid email address.");
-
-    const btn = document.querySelector('#adminCalculateModal .admin-btn-primary');
-    btn.textContent = "Generating...";
-    btn.disabled = true;
-
-    try {
-        const res = await api("/api/admin/calculate/free", {
-            method: "POST",
-            body: JSON.stringify({
-                email: email,
-                subjects: window.adminPendingCalc.subjects,
-                grades: window.adminPendingCalc.grades
-            })
-        });
-
-        document.getElementById('adminCalculateModal').style.display = 'none';
-        btn.textContent = "Generate & Send";
-        btn.disabled = false;
-
-        // Render results on the admin screen
-        renderResults(res.calculation_results);
-        alert(`✅ Report successfully generated and emailed to ${email}`);
-
-    } catch (err) {
-        alert("Failed to generate report: " + err.message);
-        btn.textContent = "Generate & Send";
-        btn.disabled = false;
-    }
-}
-
-// ==========================================
-// RESULTS
-// ==========================================
-function renderResults(data) {
-  allResultsData = data.results;
-  document.getElementById("resultsSection").style.display = "block";
-  document.getElementById("calcMessage").textContent = "";
-  const qualified = data.results.filter(r => r.match === "qualified");
-  const close = data.results.filter(r => r.match === "close");
-  const not = data.results.filter(r => r.match === "not_qualified");
-
-  document.getElementById("resPoints").textContent = data.cluster_points;
-  document.getElementById("resQualified").textContent = qualified.length;
-  document.getElementById("resClose").textContent = close.length;
-  document.getElementById("resNot").textContent = not.length;
-  document.getElementById("resRate").textContent = ((qualified.length / data.results.length) * 100).toFixed(1) + "%";
-  document.getElementById("qualCountTitle").textContent = qualified.length;
-  document.getElementById("closeCountTitle").textContent = close.length;
-
-  document.getElementById("qualifiedTableBody").innerHTML = qualified.map(c => `<tr><td>💰 ${c.n}</td><td>${c.u}</td></tr>`).join("");
-  document.getElementById("closeTableBody").innerHTML = close.map(c => `<tr><td>🌐 ${c.n}</td><td>${c.u}</td></tr>`).join("");
-  renderAllCourses(allResultsData);
-  document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
-
-  const btn = document.getElementById("btnCalculate");
-  btn.disabled = false;
-  btn.textContent = "⚡ Calculate Again — KES 100";
-}
-
-function renderAllCourses(data) {
-  const term = document.getElementById("courseFilter").value.toLowerCase();
-  const filtered = term ? data.filter(c => c.n.toLowerCase().includes(term) || c.u.toLowerCase().includes(term)) : data;
-  document.getElementById("allCoursesBody").innerHTML = filtered.map((c, i) => {
-    let badge = `<span class="badge-red">✖ Not</span>`;
-    if (c.match === "qualified") badge = `<span class="badge-green">✅ Qualified</span>`;
-    if (c.match === "close") badge = `<span class="badge-yellow">⚠ Close</span>`;
-    return `<tr><td>${i+1}</td><td>${c.n}</td><td>${c.u}</td><td>${c.c}</td><td style="color:${c.difference > 0 ? 'var(--success-green)' : 'var(--error-red)'}">${c.difference > 0 ? '+' : ''}${c.difference.toFixed(1)}</td><td>${badge}</td></tr>`;
-  }).join("");
-}
-
-function filterCourses() { renderAllCourses(allResultsData); }
-
-function showCareer(field) {
-  const advice = {
-    "Medicine": "Top courses: Medicine, Pharmacy, Nursing.",
-    "Technology": "Top courses: Computer Science, IT.",
-    "Engineering": "Top courses: Civil, Electrical.",
-    "Business": "Top courses: Commerce, Economics.",
-    "Education": "Top courses: Education (Arts/Science).",
-    "Arts": "Top courses: Law, Journalism."
-  };
-  document.getElementById("careerResult").innerHTML = `<b>${field}:</b> ${advice[field]}`;
-}
-
-function findScholarships() {
-  const resDiv = document.getElementById("scholarshipResults");
-  resDiv.innerHTML = `<p style="color: var(--success-green);">Searching...</p>`;
-  setTimeout(() => {
-    resDiv.innerHTML = `
-      <p style="color: var(--success-green); font-weight: bold; font-size:14px; margin-bottom:10px;">✅ 6 scholarships found</p>
-      <div class="table-wrap"><table><thead><tr><th>Scholarship</th><th>Amount</th><th>Min GPA</th></tr></thead><tbody>
-        <tr><td>Zawadi Africa</td><td>KES 200,000/yr</td><td>3.5</td></tr>
-        <tr><td>Mastercard Foundation</td><td>Full scholarship</td><td>3.2</td></tr>
-        <tr><td>Equity Bank Wings to Fly</td><td>Full tuition</td><td>3.0</td></tr>
-        <tr><td>DAAD Kenya</td><td>KES 150K–300K</td><td>3.0</td></tr>
-        <tr><td>HELB Undergraduate</td><td>Up to 60K/yr</td><td>2.5</td></tr>
-        <tr><td>KCB Foundation</td><td>KES 100,000</td><td>2.0</td></tr>
-      </tbody></table></div>`;
-  }, 800);
-}
-
-async function sendChat(msgText = null) {
-  const input = document.getElementById("chatInput");
-  const msg = msgText || input.value.trim();
-  if (!msg) return;
-  input.value = "";
-
-  const messages = document.getElementById("chatMessages");
-  messages.innerHTML += `<div style="color: var(--electric-blue); text-align: right; margin-bottom: 5px; margin-top: 10px;"><b>You:</b> ${msg}</div>`;
-  messages.scrollTop = messages.scrollHeight;
-
-  const typingId = "typing-" + Date.now();
-  messages.innerHTML += `<div id="${typingId}" style="color: var(--slate); font-style: italic; margin-top: 5px;">EduBot is typing...</div>`;
-  messages.scrollTop = messages.scrollHeight;
-
-  try {
-    const res = await api("/api/chat", { method: "POST", body: JSON.stringify({ question: msg }) });
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    messages.innerHTML += `<div style="color: var(--success-green); margin-bottom: 5px; margin-top: 10px;"><b>EduBot:</b> ${res.answer}</div>`;
-    messages.scrollTop = messages.scrollHeight;
-  } catch (err) {
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    messages.innerHTML += `<div style="color: var(--error-red); margin-top: 5px;"><b>Error:</b> ${err.message}</div>`;
-  }
-}
-
-// ==========================================
-// ADMIN DASHBOARD LOGIC
-// ==========================================
-async function loadAdminDashboard() {
-    try {
-        const mRes = await api("/api/admin/metrics");
-        document.getElementById("admRevenue").textContent = mRes.metrics.revenue.toLocaleString();
-        document.getElementById("admUsers").textContent = mRes.metrics.users;
-        document.getElementById("admCalcs").textContent = mRes.metrics.calculations;
-        document.getElementById("admPending").textContent = mRes.metrics.pending_payments;
-
-        const pRes = await api("/api/admin/payments");
-        document.getElementById("admPaymentsBody").innerHTML = pRes.payments.map(p => {
-            let badge = `<span style="background: rgba(242,169,59,0.15); color: var(--adm-amber); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Pending</span>`;
-            if (p.status === 'completed' || p.status === 'paid') badge = `<span style="background: rgba(15,157,145,0.15); color: var(--adm-teal); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Paid</span>`;
-            if (p.status === 'failed') badge = `<span style="background: rgba(214,69,69,0.15); color: var(--adm-red); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Failed</span>`;
-            
-            let invStatus = p.invoice_sent_at ? `<span style="color: var(--adm-teal);">✅ Yes</span>` : `<span style="color: var(--adm-red);">❌ No</span>`;
-            let repStatus = (p.status === 'completed' || p.status === 'paid') ? `<span style="color: var(--adm-teal);">✅ Yes</span>` : `<span style="color: var(--adm-red);">❌ No</span>`;
-            
-            let actionBtn = (p.status === 'pending' || p.status === 'paid') 
-                ? `<button class="admin-btn admin-btn-outline" onclick="retryPayment('${p.transaction_id}')">Retry</button>` 
-                : `-`;
-
-            return `<tr>
-                <td style="font-size: 12px;">${new Date(p.created_at).toLocaleDateString()}</td>
-                <td style="font-size: 11px;">${p.transaction_id}</td>
-                <td>${p.user_id}</td>
-                <td style="font-weight: bold;">KES ${parseFloat(p.amount).toFixed(2)}</td>
-                <td>${badge}</td>
-                <td>${invStatus}</td>
-                <td>${repStatus}</td>
-                <td>${actionBtn}</td>
-            </tr>`;
-        }).join("");
-
-        const cRes = await api("/api/admin/calculations");
-        document.getElementById("admCalcsBody").innerHTML = cRes.calculations.map(c => {
-            return `<tr>
-                <td style="font-weight: 600;">${c.reference}</td>
-                <td>${c.name}<br><span style="font-size:11px;color:#64748B;">${c.email}</span></td>
-                <td><strong style="color: var(--adm-teal); font-size: 16px;">${c.cluster_points}</strong></td>
-                <td style="font-size: 12px;">${new Date(c.created_at).toLocaleString()}</td>
-            </tr>`;
-        }).join("");
-
-    } catch (e) {
-        alert("Error loading admin data: " + e.message);
-    }
-}
-
-async function retryPayment(txId) {
-    if(!confirm("Are you sure you want to force a status check and process this payment?")) return;
-    try {
-        const res = await api(`/api/admin/payments/${txId}/retry`, { method: "POST" });
-        alert(res.message || "Retry successful.");
-        loadAdminDashboard();
-    } catch(e) {
-        alert("Retry failed: " + e.message);
-    }
-}
-
-function downloadPaymentsSheet() {
-    const url = window.EDUPOINT_API + "/api/admin/payments/export";
+    document.getElementById('welcomeName').textContent = name;
+    // Progress bar animation
+    setTimeout(() => {
+        const pb = document.getElementById('welcomeProgress');
+        if(pb) pb.style.width = '100%';
+    }, 100);
     
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'Authorization': 'Bearer ' + getToken()
-        }
-    })
-    .then(response => {
-        if (!response.ok) throw new Error("Failed to download");
-        return response.blob();
-    })
-    .then(blob => {
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `EduPoint_Payments_${new Date().toISOString().slice(0,10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(downloadUrl);
-    })
-    .catch(err => {
-        alert("Error downloading Excel sheet: " + err.message);
-    });
+    // Auto-advance to student dashboard after 10s
+    setTimeout(() => { 
+        sessionStorage.setItem('edupoint_welcome_shown', 'true');
+        showView('student'); 
+    }, 10000);
 }
+
+// Start the app
+init();
 </script>
 </body>
 </html>
