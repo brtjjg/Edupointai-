@@ -36,12 +36,12 @@ from services.payments import PaymentService, normalize_phone, validate_provider
 from services.reports import generate_and_send_reports
 from services.invoices import generate_invoice_pdf
 
-# Safely import admin analytics
+# Safely import admin analytics (will not crash if file is missing)
 try:
     from services import admin_analytics as aa
 except ImportError:
     aa = None
-    print("WARNING: admin_analytics.py not found. Admin dashboard will fail.")
+    print("WARNING: admin_analytics.py not found. Admin dashboard endpoints will fail.")
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -57,7 +57,7 @@ init_db()
 payments = PaymentService()
 
 # ==========================================
-# HELPERS
+# HELPERS & ADMIN SETUP
 # ==========================================
 
 def add_credit(user_id):
@@ -725,7 +725,7 @@ def send_pending_reminders():
     return sent
 
 # ==========================================
-# ROUTES
+# AUTH & STUDENT ROUTES
 # ==========================================
 
 @app.get("/health")
@@ -737,8 +737,7 @@ def google_login():
     token = d.get("credential")
     if not token: return jsonify(ok=False, error="No Google credential provided."), 400
     try:
-        client_id = os.getenv("GOOGLE_CLIENT_ID")
-        if not client_id: raise ValueError("GOOGLE_CLIENT_ID missing in Render Environment.")
+        client_id = os.getenv("GOOGLE_CLIENT_ID", "124164127578-2qhjodmcu98cvm9hl70jcqhuid945dh4.apps.googleusercontent.com")
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
         email = idinfo["email"].strip().lower(); name = idinfo.get("name", "Google User")
         with connect() as conn:
@@ -1168,7 +1167,7 @@ def trigger_daily_reports():
         return "Error", 500
 
 # ================================================================
-# ADMIN DASHBOARD — NEW ROUTES (Appended)
+# NEW ADMIN DASHBOARD ROUTES
 # ================================================================
 
 @app.get("/api/admin/overview")
