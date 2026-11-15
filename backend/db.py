@@ -1,3 +1,4 @@
+# db.py
 import os
 import psycopg
 from psycopg.rows import dict_row
@@ -19,7 +20,9 @@ def connect():
 
 def init_db():
     with connect() as conn:
-        # --- USERS ---
+        # ==========================================
+        # 1. USERS TABLE & SAFE COLUMN UPDATES
+        # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -29,13 +32,15 @@ def init_db():
                 credits INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now()
             );
         """)
-        # Safely add missing columns to existing 'users' table
+        # Safely add missing columns if they don't exist (Fixes the Render error)
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS active INT DEFAULT 1;")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INT DEFAULT 0;")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT;")
 
-        # --- PAYMENTS ---
+        # ==========================================
+        # 2. PAYMENTS TABLE
+        # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS payments (
                 id SERIAL PRIMARY KEY,
@@ -51,7 +56,9 @@ def init_db():
         conn.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS last_reminder_at TIMESTAMPTZ;")
         conn.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS reminder_count INT DEFAULT 0;")
         
-        # --- CALCULATIONS ---
+        # ==========================================
+        # 3. CALCULATIONS
+        # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS calculation_history (
                 id SERIAL PRIMARY KEY, user_id INT, reference TEXT UNIQUE,
@@ -72,7 +79,9 @@ def init_db():
             );
         """)
         
-        # --- SESSIONS ---
+        # ==========================================
+        # 4. SESSIONS
+        # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id SERIAL PRIMARY KEY, user_id INT, token TEXT UNIQUE,
@@ -80,7 +89,9 @@ def init_db():
             );
         """)
 
-        # --- ADMIN DASHBOARD TABLES ---
+        # ==========================================
+        # 5. ADMIN DASHBOARD TABLES
+        # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS email_logs (
                 id SERIAL PRIMARY KEY, user_id INT, email_to TEXT NOT NULL,
