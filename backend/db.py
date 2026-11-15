@@ -20,9 +20,7 @@ def connect():
 
 def init_db():
     with connect() as conn:
-        # ==========================================
-        # 1. USERS TABLE & SAFE COLUMN UPDATES
-        # ==========================================
+        # 1. USERS
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -32,15 +30,21 @@ def init_db():
                 credits INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now()
             );
         """)
-        # Safely add missing columns if they don't exist
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS active INT DEFAULT 1;")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INT DEFAULT 0;")
-        conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT;")
+        
+        # 2. SESSIONS (Fixed the crash)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                id SERIAL PRIMARY KEY, user_id INT, token TEXT UNIQUE,
+                created_at TIMESTAMPTZ DEFAULT now()
+            );
+        """)
+        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS token TEXT UNIQUE;")
+        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;")
 
-        # ==========================================
-        # 2. PAYMENTS TABLE
-        # ==========================================
+        # 3. PAYMENTS
         conn.execute("""
             CREATE TABLE IF NOT EXISTS payments (
                 id SERIAL PRIMARY KEY,
@@ -52,21 +56,14 @@ def init_db():
                 created_at TIMESTAMPTZ DEFAULT now(), updated_at TIMESTAMPTZ DEFAULT now()
             );
         """)
-        conn.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS invoice_sent_at TIMESTAMPTZ;")
-        conn.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS last_reminder_at TIMESTAMPTZ;")
-        conn.execute("ALTER TABLE payments ADD COLUMN IF NOT EXISTS reminder_count INT DEFAULT 0;")
         
-        # ==========================================
-        # 3. CALCULATIONS
-        # ==========================================
+        # 4. CALCULATIONS
         conn.execute("""
             CREATE TABLE IF NOT EXISTS calculation_history (
                 id SERIAL PRIMARY KEY, user_id INT, reference TEXT UNIQUE,
                 cluster_points NUMERIC, created_at TIMESTAMPTZ DEFAULT now()
             );
         """)
-        conn.execute("ALTER TABLE calculation_history ADD COLUMN IF NOT EXISTS report_status TEXT DEFAULT 'pending';")
-        
         conn.execute("""
             CREATE TABLE IF NOT EXISTS calculation_subjects (
                 id SERIAL PRIMARY KEY, history_id INT, subject TEXT, grade TEXT
@@ -78,24 +75,8 @@ def init_db():
                 university TEXT, cutoff NUMERIC, difference NUMERIC, match_type TEXT
             );
         """)
-        
-        # ==========================================
-        # 4. SESSIONS (FIXED FOR AUTH.PY)
-        # ==========================================
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS sessions (
-                id SERIAL PRIMARY KEY, user_id INT, token TEXT UNIQUE,
-                created_at TIMESTAMPTZ DEFAULT now()
-            );
-        """)
-        # Safely add missing columns that auth.py expects
-        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS token TEXT UNIQUE;")
-        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;")
-        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();")
 
-        # ==========================================
         # 5. ADMIN DASHBOARD TABLES
-        # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS email_logs (
                 id SERIAL PRIMARY KEY, user_id INT, email_to TEXT NOT NULL,
