@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os, uuid, logging, base64, threading, random, string, io, json, traceback, re
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import psycopg
 from flask import Flask, request, jsonify, send_file
@@ -36,19 +36,12 @@ from services.payments import PaymentService, normalize_phone, validate_provider
 from services.reports import generate_and_send_reports
 from services.invoices import generate_invoice_pdf
 
-# Safely import admin analytics
-try:
-    from services import admin_analytics as aa
-except ImportError:
-    aa = None
-    print("WARNING: admin_analytics.py not found. Admin dashboard endpoints will fail.")
-
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config["JSON_SORT_KEYS"] = False
 
 FRONTEND_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",") if o.strip()]
-CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "DELETE", "OPTIONS", "PATCH"])
+CORS(app, resources={r"/api/*": {"origins": FRONTEND_ORIGINS}}, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "DELETE", "OPTIONS"])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,7 +50,7 @@ init_db()
 payments = PaymentService()
 
 # ==========================================
-# HELPERS & ADMIN SETUP
+# HELPERS
 # ==========================================
 
 def add_credit(user_id):
@@ -68,11 +61,9 @@ def ensure_admin():
     email = os.getenv("ADMIN_EMAIL", "").strip().lower()
     password = os.getenv("ADMIN_PASSWORD", "")
     if not email or not password: return
-    
     with connect() as conn:
         row = conn.execute("SELECT id FROM users WHERE email=%s", (email,)).fetchone()
         if row:
-            # Safe update - only updates what exists
             conn.execute("UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", (hash_password(password), row["id"]))
         else:
             conn.execute(
@@ -167,7 +158,7 @@ def _claim_and_process(tx_id):
         return None
 
 # ==========================================
-# PDF GENERATION
+# PDF GENERATION (UNTOUCHED)
 # ==========================================
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
@@ -408,11 +399,15 @@ def send_pending_invoice_email(user_email, user_name, payment):
                 <tr>
                     <td align="center">
                         <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                            
+                            <!-- Header -->
                             <tr>
                                 <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
                                     <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
                                 </td>
                             </tr>
+                            
+                            <!-- Body -->
                             <tr>
                                 <td style="padding: 40px;">
                                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -436,12 +431,16 @@ def send_pending_invoice_email(user_email, user_name, payment):
                                                 <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
                                             </td>
                                         </tr>
+                                        
+                                        <!-- Invoice Details -->
                                         <tr>
                                             <td align="center" style="padding-bottom: 30px;">
                                                 <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Invoice INV-{inv_short}</p>
                                                 <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
                                             </td>
                                         </tr>
+
+                                        <!-- Pay Button -->
                                         <tr>
                                             <td align="center" style="padding-bottom: 20px;">
                                                 <a href="{pay_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">PAY NOW — KES {amount:.0f}</a>
@@ -455,6 +454,8 @@ def send_pending_invoice_email(user_email, user_name, payment):
                                     </table>
                                 </td>
                             </tr>
+                            
+                            <!-- Footer -->
                             <tr>
                                 <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
                                     <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
@@ -512,11 +513,15 @@ def send_reminder_email(user_email, user_name, payment):
                 <tr>
                     <td align="center">
                         <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                            
+                            <!-- Header -->
                             <tr>
                                 <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
                                     <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
                                 </td>
                             </tr>
+                            
+                            <!-- Body -->
                             <tr>
                                 <td style="padding: 40px;">
                                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -540,12 +545,16 @@ def send_reminder_email(user_email, user_name, payment):
                                                 <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
                                             </td>
                                         </tr>
+                                        
+                                        <!-- Invoice Details -->
                                         <tr>
                                             <td align="center" style="padding-bottom: 30px;">
                                                 <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Invoice INV-{inv_short} • Reminder #{reminder_num}</p>
                                                 <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
                                             </td>
                                         </tr>
+
+                                        <!-- Pay Button -->
                                         <tr>
                                             <td align="center" style="padding-bottom: 20px;">
                                                 <a href="{pay_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">PAY NOW — KES {amount:.0f}</a>
@@ -559,6 +568,8 @@ def send_reminder_email(user_email, user_name, payment):
                                     </table>
                                 </td>
                             </tr>
+                            
+                            <!-- Footer -->
                             <tr>
                                 <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
                                     <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
@@ -613,11 +624,15 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
                 <tr>
                     <td align="center">
                         <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                            
+                            <!-- Header -->
                             <tr>
                                 <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
                                     <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
                                 </td>
                             </tr>
+                            
+                            <!-- Body -->
                             <tr>
                                 <td style="padding: 40px;">
                                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -641,6 +656,8 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
                                                 <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
                                             </td>
                                         </tr>
+                                        
+                                        <!-- Success Details -->
                                         <tr>
                                             <td align="center" style="padding-bottom: 30px;">
                                                 <h3 style="color: #7047EB; margin: 0 0 10px 0; font-size: 22px; font-weight: 700;">Your report is ready! 🎓</h3>
@@ -648,6 +665,8 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
                                                 <p style="color: #26324D; margin: 10px 0 0 0; font-size: 15px;"><strong>Cluster Points:</strong> {cluster_points}</p>
                                             </td>
                                         </tr>
+
+                                        <!-- Action Button -->
                                         <tr>
                                             <td align="center" style="padding-bottom: 20px;">
                                                 <a href="https://edupointai-frontend.vercel.app/" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">VIEW MY REPORT</a>
@@ -661,6 +680,8 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
                                     </table>
                                 </td>
                             </tr>
+                            
+                            <!-- Footer -->
                             <tr>
                                 <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
                                     <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
@@ -727,7 +748,7 @@ def send_pending_reminders():
     return sent
 
 # ==========================================
-# AUTH & STUDENT ROUTES
+# ROUTES
 # ==========================================
 
 @app.get("/health")
@@ -739,7 +760,8 @@ def google_login():
     token = d.get("credential")
     if not token: return jsonify(ok=False, error="No Google credential provided."), 400
     try:
-        client_id = os.getenv("GOOGLE_CLIENT_ID", "124164127578-2qhjodmcu98cvm9hl70jcqhuid945dh4.apps.googleusercontent.com")
+        client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not client_id: raise ValueError("GOOGLE_CLIENT_ID missing in Render Environment.")
         idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
         email = idinfo["email"].strip().lower(); name = idinfo.get("name", "Google User")
         with connect() as conn:
@@ -978,7 +1000,7 @@ def chat():
     return jsonify(answer="I am still expanding my career database. Try asking about specific careers (e.g., 'Software Engineer', 'Nursing'), subject requirements, or KCSE grades.")
 
 # ==========================================
-# EXISTING ADMIN ROUTES
+# ADMIN ROUTES
 # ==========================================
 
 @app.get("/api/admin/metrics")
@@ -1003,6 +1025,36 @@ def admin_metrics():
         "calculations": total_calcs,
         "pending_payments": total_pending
     })
+
+@app.get("/api/admin/calculations")
+@admin_required
+def admin_calculations():
+    with connect() as conn:
+        rows = conn.execute("""
+            SELECT h.id, h.reference, h.cluster_points, h.created_at, u.email, u.name
+            FROM calculation_history h
+            JOIN users u ON h.user_id = u.id
+            ORDER BY h.created_at DESC
+            LIMIT 50
+        """).fetchall()
+    
+    for r in rows:
+        r["created_at"] = r["created_at"].isoformat()
+        r["cluster_points"] = float(r["cluster_points"])
+        
+    return jsonify(ok=True, calculations=rows)
+
+@app.get("/api/admin/payments")
+@admin_required
+def admin_payments():
+    with connect() as conn:
+        rows = conn.execute("""
+            SELECT id, transaction_id, user_id, amount, status,
+                   invoice_sent_at, last_reminder_at, reminder_count,
+                   (CASE WHEN status IN ('completed', 'paid') THEN true ELSE false END) as report_sent
+            FROM payments ORDER BY id DESC LIMIT 100
+        """).fetchall()
+    return jsonify(ok=True, payments=[dict(r) for r in rows])
 
 @app.post("/api/admin/payments/<transaction_id>/retry")
 @admin_required
@@ -1038,6 +1090,7 @@ def admin_free_calculation():
         return jsonify(ok=False, error="Missing email, subjects, or grades."), 400
         
     with connect() as conn:
+        # Find user or create a placeholder user so the calculation can link to them
         u = conn.execute("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
         if not u:
             u = conn.execute(
@@ -1047,8 +1100,10 @@ def admin_free_calculation():
             ).fetchone()
 
     try:
+        # 1. Process the calculation
         calc_results = process_calculation(u, subjects, grades)
         
+        # 2. Create a fake payment object for the receipt
         fake_payment = {
             "transaction_id": "ADMIN-" + uuid.uuid4().hex[:8].upper(),
             "user_id": u["id"],
@@ -1057,6 +1112,7 @@ def admin_free_calculation():
             "created_at": datetime.now()
         }
 
+        # 3. Send the email with the PDF Report and Receipt
         send_paid_receipt_email(
             email, u["name"],
             calc_results["cluster_points"], calc_results["results"],
@@ -1167,311 +1223,6 @@ def trigger_daily_reports():
     except Exception:
         logger.error(f"Cron Error: {traceback.format_exc()}")
         return "Error", 500
-
-# ================================================================
-# NEW ADMIN DASHBOARD ROUTES
-# ================================================================
-
-@app.get("/api/admin/overview")
-@admin_required
-def api_admin_overview():
-    if not aa: return jsonify(ok=False, error="Admin analytics service unavailable"), 500
-    u = current_user()
-    return jsonify(
-        ok=True,
-        stats=aa.overview_stats(7),
-        activity=aa.daily_activity(7),
-        payment_distribution=aa.payment_distribution(),
-        student_distribution=aa.student_distribution(),
-        revenue=aa.revenue_trend(14),
-        recent_students=aa.list_students(5),
-        system_health=aa.system_health(),
-        admin={"name": u.get("name","Admin"), "email": u["email"], "role": u.get("role","admin")}
-    )
-
-@app.get("/api/admin/charts/<name>")
-@admin_required
-def api_admin_chart(name):
-    if not aa: return jsonify(ok=False), 500
-    days = int(request.args.get("days", 30))
-    mapping = {
-        "daily-activity":     lambda: aa.daily_activity(days),
-        "revenue":            lambda: aa.revenue_trend(days),
-        "registrations":      lambda: aa.registration_trend(days),
-        "payment-performance":lambda: aa.payment_performance(days),
-        "cluster":            aa.cluster_distribution,
-        "invoice-report":     lambda: aa.invoice_report_trend(days),
-        "reminders":          lambda: aa.reminder_stats(days),
-        "payment-distribution": aa.payment_distribution,
-        "student-distribution": aa.student_distribution,
-        "email-distribution":   aa.email_distribution,
-        "invoice-distribution": aa.invoice_distribution,
-        "report-distribution":  aa.report_distribution,
-    }
-    fn = mapping.get(name)
-    if not fn: return jsonify(ok=False, error="Unknown chart"), 404
-    return jsonify(ok=True, data=fn())
-
-@app.get("/api/admin/students")
-@admin_required
-def api_admin_students():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, students=aa.list_students(300, request.args.get("status")))
-
-@app.post("/api/admin/students/<int:user_id>/status")
-@admin_required
-def api_admin_student_status(user_id):
-    if not aa: return jsonify(ok=False), 500
-    d = request.get_json(silent=True) or {}
-    status = d.get("status")
-    if status not in ("active", "suspended"): return jsonify(ok=False, error="Invalid status"), 400
-    aa.set_student_status(user_id, status, current_user())
-    return jsonify(ok=True)
-
-@app.get("/api/admin/payments")
-@admin_required
-def api_admin_payments_new():
-    with connect() as conn:
-        rows = conn.execute("""
-            SELECT p.id, p.transaction_id, p.user_id, p.amount, p.status, p.created_at,
-                   p.network, p.provider_reference,
-                   u.name student_name, u.email student_email,
-                   i.invoice_number invoice_id,
-                   (SELECT email_status FROM report_versions rv
-                     WHERE rv.history_id = (SELECT id FROM calculation_history ch
-                        WHERE ch.user_id = p.user_id ORDER BY ch.created_at DESC LIMIT 1)
-                     ORDER BY rv.created_at DESC LIMIT 1) report_status
-            FROM payments p
-            LEFT JOIN users u ON u.id=p.user_id
-            LEFT JOIN invoice_records i ON i.transaction_id=p.transaction_id
-            ORDER BY p.created_at DESC LIMIT 500""").fetchall()
-    return jsonify(ok=True, payments=[dict(r) for r in rows])
-
-@app.get("/api/admin/calculations")
-@admin_required
-def api_admin_calculations_new():
-    with connect() as conn:
-        rows = conn.execute("""
-            SELECT h.id, h.reference, h.user_id, h.cluster_points, h.created_at,
-                   h.report_status, u.name student_name, u.email student_email
-            FROM calculation_history h LEFT JOIN users u ON u.id=h.user_id
-            ORDER BY h.created_at DESC LIMIT 500""").fetchall()
-    return jsonify(ok=True, calculations=[dict(r) for r in rows])
-
-@app.get("/api/admin/eligibility")
-@admin_required
-def api_admin_eligibility():
-    try:
-        with connect() as conn:
-            rows = conn.execute("""
-                SELECT u.name student_name, h.cluster_points,
-                       cc.course, cc.university, cc.cutoff,
-                       CASE WHEN h.cluster_points >= cc.cutoff THEN 'eligible'
-                            WHEN cc.cutoff - h.cluster_points <= 1.0 THEN 'close'
-                            ELSE 'not' END status
-                FROM calculation_history h
-                JOIN users u ON u.id = h.user_id
-                LEFT JOIN calculation_courses cc ON cc.history_id = h.id
-                WHERE h.cluster_points IS NOT NULL
-                ORDER BY h.created_at DESC LIMIT 500
-            """).fetchall()
-        return jsonify(ok=True, rows=[dict(r) for r in rows])
-    except Exception:
-        return jsonify(ok=True, rows=[])
-
-@app.get("/api/admin/invoices")
-@admin_required
-def api_admin_invoices():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, invoices=aa.list_invoices())
-
-@app.get("/api/admin/reports")
-@admin_required
-def api_admin_reports():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, reports=aa.list_reports())
-
-@app.get("/api/admin/emails")
-@admin_required
-def api_admin_emails():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, emails=aa.list_emails(300, request.args.get("status")))
-
-@app.get("/api/admin/reminders")
-@admin_required
-def api_admin_reminders():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, reminders=aa.list_outstanding_reminders())
-
-@app.get("/api/admin/audit-logs")
-@admin_required
-def api_admin_audit():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, logs=aa.list_audit())
-
-@app.get("/api/admin/health")
-@admin_required
-def api_admin_health():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, checks=aa.system_health(), data_quality=aa.data_quality())
-
-@app.get("/api/admin/settings")
-@admin_required
-def api_admin_settings_get():
-    if not aa: return jsonify(ok=False), 500
-    return jsonify(ok=True, settings=aa.get_settings())
-
-@app.post("/api/admin/settings/<key>")
-@admin_required
-def api_admin_settings_set(key):
-    if not aa: return jsonify(ok=False), 500
-    d = request.get_json(silent=True) or {}
-    aa.set_setting(key, d, current_user()["id"])
-    aa.log_audit(current_user(), f"settings.update.{key}", "settings", key, d)
-    return jsonify(ok=True)
-
-@app.get("/api/admin/excel/history")
-@admin_required
-def api_admin_excel_history():
-    with connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM daily_excel_reports ORDER BY report_date DESC LIMIT 90").fetchall()
-    return jsonify(ok=True, rows=[
-        dict(r, report_date=str(r["report_date"]),
-             generated_at=str(r["generated_at"])) for r in rows])
-
-@app.post("/api/admin/excel/generate")
-@admin_required
-def api_admin_excel_generate():
-    if not aa: return jsonify(ok=False), 500
-    d = request.get_json(silent=True) or {}
-    day_str = d.get("date")
-    day = datetime.strptime(day_str, "%Y-%m-%d").date() if day_str else (
-        aa.today_nairobi() - timedelta(days=1))
-    res = aa.generate_and_store_daily_excel(day)
-    if not res:
-        return jsonify(ok=False, error="Already exists or generation failed"), 400
-    aa.log_audit(current_user(), "excel.generate", "daily_excel", str(day), res)
-    return jsonify(ok=True, **res)
-
-@app.get("/api/admin/excel/download/<int:report_id>")
-@admin_required
-def api_admin_excel_download(report_id):
-    with connect() as conn:
-        row = conn.execute(
-            "SELECT * FROM daily_excel_reports WHERE id=%s", (report_id,)).fetchone()
-    if not row or not row["file_path"] or not os.path.exists(row["file_path"]):
-        return jsonify(ok=False, error="File not found"), 404
-    return send_file(row["file_path"], as_attachment=True, download_name=row["filename"])
-
-@app.get("/api/admin/cron/daily-excel")
-def cron_daily_excel():
-    if not aa: return "Service unavailable", 500
-    secret = request.args.get("secret")
-    if secret != os.getenv("CRON_SECRET", "change_me_in_env"):
-        return "Unauthorized", 401
-    res = aa.generate_and_store_daily_excel()
-    return jsonify(ok=True, generated=res)
-
-# ================================================================
-# EMAIL / INVOICE / REPORT LOGGING HOOKS
-# ================================================================
-
-def _log_email_safe(user_id, email_to, email_type, subject,
-                    status="accepted_by_provider", error=None):
-    try:
-        with connect() as conn:
-            conn.execute(
-                "INSERT INTO email_logs(user_id,email_to,email_type,subject,status,error_message) "
-                "VALUES(%s,%s,%s,%s,%s,%s)",
-                (user_id, email_to, email_type, subject, status, error))
-    except Exception:
-        log_msg = traceback.format_exc()
-        print(f"[admin_hook] log_email failed: {log_msg}")
-
-def _log_invoice_safe(invoice_number, transaction_id, user_id, amount):
-    try:
-        with connect() as conn:
-            conn.execute(
-                "INSERT INTO invoice_records"
-                "(invoice_number,transaction_id,user_id,amount,delivery_status,email_sent_at) "
-                "VALUES(%s,%s,%s,%s,'sent',now()) "
-                "ON CONFLICT (invoice_number) DO NOTHING",
-                (invoice_number, transaction_id, user_id, amount))
-    except Exception:
-        print(f"[admin_hook] log_invoice failed: {traceback.format_exc()}")
-
-def _log_report_safe(user_id):
-    try:
-        with connect() as conn:
-            hist = conn.execute(
-                "SELECT id FROM calculation_history WHERE user_id=%s "
-                "ORDER BY created_at DESC LIMIT 1", (user_id,)).fetchone()
-            if hist:
-                conn.execute(
-                    "INSERT INTO report_versions"
-                    "(history_id,version,pdf_status,email_status) "
-                    "VALUES(%s,1,'generated','sent')", (hist["id"],))
-    except Exception:
-        print(f"[admin_hook] log_report failed: {traceback.format_exc()}")
-
-def _wrap_and_hook(name, before=None, after=None):
-    fn = globals().get(name)
-    if not callable(fn):
-        return
-    def wrapper(*args, **kwargs):
-        result = None
-        try:
-            if before:
-                before(*args, **kwargs)
-            result = fn(*args, **kwargs)
-            if after:
-                after(result, *args, **kwargs)
-        except Exception as e:
-            print(f"[admin_hook] {name} raised: {e}")
-            raise
-        return result
-    wrapper.__name__ = name
-    globals()[name] = wrapper
-
-def _before_invoice(user_email=None, user_name=None, payment=None, *a, **k):
-    if payment:
-        _log_email_safe(
-            payment.get("user_id"), user_email, "invoice_pending",
-            f"Invoice {str(payment.get('transaction_id',''))[-8:]}",
-            status="accepted_by_provider")
-        _log_invoice_safe(
-            "INV-" + str(payment.get("transaction_id",""))[-8:].upper(),
-            payment.get("transaction_id"),
-            payment.get("user_id"),
-            float(payment.get("amount", 0)))
-
-_wrap_and_hook("send_pending_invoice_email", before=_before_invoice)
-
-def _after_receipt(result=None, user_email=None, *a, **k):
-    payment = k.get("payment")
-    if not payment and len(a) >= 7:
-        payment = a[6]
-    uid = payment.get("user_id") if isinstance(payment, dict) else None
-    _log_email_safe(uid, user_email, "report_receipt", "Your Results & Receipt",
-                    status="accepted_by_provider")
-    if uid:
-        _log_report_safe(uid)
-
-_wrap_and_hook("send_paid_receipt_email", after=_after_receipt)
-
-def _before_reminder(user_email=None, user_name=None, payment=None, *a, **k):
-    if payment:
-        _log_email_safe(
-            payment.get("user_id"), user_email, "reminder",
-            f"Reminder {str(payment.get('transaction_id',''))[-8:]}",
-            status="accepted_by_provider")
-        try:
-            if aa: aa.log_reminder(payment.get("transaction_id"))
-        except Exception:
-            pass
-
-_wrap_and_hook("send_reminder_email", before=_before_reminder)
 
 # ==========================================
 # GLOBAL ERROR HANDLERS
