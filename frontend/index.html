@@ -431,9 +431,7 @@ tr:last-child td { border-bottom: none; }
 
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5CXDVBHG" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-<!-- ================================ -->
-<!-- CONNECTION ERROR MODAL           -->
-<!-- ================================ -->
+<!-- CONNECTION ERROR MODAL -->
 <div id="connectionErrorModal">
   <div class="error-modal-content">
     <div class="error-icon">📡</div>
@@ -459,17 +457,13 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<!-- ================================ -->
-<!-- LOADING OVERLAY                  -->
-<!-- ================================ -->
+<!-- LOADING OVERLAY -->
 <div id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">Connecting to EduPointAI...</div>
 </div>
 
-<!-- ================================ -->
-<!-- PUBLIC LANDING VIEW (ACTIVE)     -->
-<!-- ================================ -->
+<!-- PUBLIC LANDING VIEW -->
 <div id="view-public" class="view active">
   <header class="header">
     <div class="brand-logo"><span style="font-size: 28px;">🎓</span> EduPoint AI</div>
@@ -493,9 +487,7 @@ tr:last-child td { border-bottom: none; }
   </main>
 </div>
 
-<!-- ================================ -->
-<!-- ONBOARDING / WELCOME VIEW        -->
-<!-- ================================ -->
+<!-- ONBOARDING / WELCOME VIEW -->
 <div id="view-welcome" class="view">
   <div class="welcome-container">
     <div class="welcome-card">
@@ -536,9 +528,7 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<!-- ================================ -->
-<!-- MAIN STUDENT DASHBOARD           -->
-<!-- ================================ -->
+<!-- MAIN STUDENT DASHBOARD -->
 <div id="view-student" class="view">
   <div class="app-container">
     <div class="app-header">
@@ -647,9 +637,7 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<!-- ============================================================= -->
-<!-- ADMIN DASHBOARD V11.0 — full-width · no sidebar              -->
-<!-- ============================================================= -->
+<!-- ADMIN DASHBOARD V11.0 -->
 <div id="view-admin" class="view">
   <header class="adm-header">
     <div class="adm-header-left">
@@ -872,14 +860,31 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<!-- ========================================= -->
-<!-- INFO MODAL — FULL ORIGINAL CONTENT       -->
-<!-- ========================================= -->
+<!-- FOOTER -->
+<footer class="edupoint-footer" id="mainFooter">
+  <div class="edupoint-footer__brand">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 3 2 9l10 6 10-6-10-6z"/><path d="M2 9v6l10 6 10-6V9"/></svg></div>
+    <h2>EduPointAI</h2>
+    <span class="tagline">Your Academic Guidance Partner</span>
+  </div>
+  <p class="edupoint-footer__description">Empowering students to make informed academic decisions through intelligent course eligibility calculations and university guidance.</p>
+  <hr class="edupoint-footer__divider">
+  <div class="edupoint-footer__links">
+    <a onclick="openInfoModal('about')">About Us</a><span>•</span>
+    <a onclick="openInfoModal('rules')">Rules</a><span>•</span>
+    <a onclick="openInfoModal('terms')">Terms</a><span>•</span>
+    <a onclick="openInfoModal('privacy')">Privacy</a>
+  </div>
+  <div class="edupoint-footer__copyright">© 2026 EduPointAI. All Rights Reserved.</div>
+  <p class="edupoint-footer__tagline">Independent Academic Guidance · Technology · Educational opportunities</p>
+</footer>
+
+<!-- INFO MODAL -->
 <div id="infoModal">
   <div class="info-modal-content">
     <button class="info-modal-close" onclick="closeInfoModal()">✕</button>
 
-    <!-- ========== ABOUT US ========== -->
+    <!-- ABOUT US -->
     <div id="info-content-about" class="info-modal-body" style="display: none;">
       <div class="about-hero">
         <h1>About EduPointAI</h1>
@@ -971,7 +976,7 @@ tr:last-child td { border-bottom: none; }
       </div>
     </div>
 
-    <!-- ========== RULES & REGULATIONS ========== -->
+    <!-- RULES & REGULATIONS -->
     <div id="info-content-rules" class="info-modal-body" style="display: none;">
       <h1>Rules & Regulations</h1>
       <p><strong>Version 1.0 · 2026</strong></p>
@@ -1342,7 +1347,7 @@ tr:last-child td { border-bottom: none; }
       <p>Users are responsible for complying with the local laws and regulations that apply to them when using the platform.</p>
     </div>
 
-    <!-- ========== TERMS & CONDITIONS ========== -->
+    <!-- TERMS & CONDITIONS -->
     <div id="info-content-terms" class="info-modal-body" style="display: none;">
       <h1>Terms & Conditions</h1>
       <p style="text-align: center;"><strong>Last Updated:</strong> November 2026<br><strong>Version:</strong> 1.0<br><strong>Platform:</strong> EduPoint AI<br><strong>Tagline:</strong> Your Academic Guidance Partner</p>
@@ -1590,7 +1595,7 @@ tr:last-child td { border-bottom: none; }
       <p style="text-align: center; font-size: 12px; color: var(--slate); margin-top: 20px;">© 2026 EduPoint AI. All Rights Reserved.</p>
     </div>
 
-    <!-- ========== PRIVACY POLICY ========== -->
+    <!-- PRIVACY POLICY -->
     <div id="info-content-privacy" class="info-modal-body" style="display: none;">
       <h1>Privacy Policy</h1>
       <p><strong>Version 1.0</strong><br><strong>Last Updated:</strong> 15 November 2026</p>
@@ -1881,744 +1886,334 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
-<!-- ===== FOOTER ===== -->
-<footer class="edupoint-footer">
-  <div class="edupoint-footer__brand">
-    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 3 2 9l10 6 10-6-10-6z"/><path d="M2 9v6l10 6 10-6V9"/></svg></div>
-    <h2>EduPointAI</h2>
-    <span class="tagline">Your Academic Guidance Partner</span>
-  </div>
-  <p class="edupoint-footer__description">Empowering students to make informed academic decisions through intelligent course eligibility calculations and university guidance.</p>
-  <hr class="edupoint-footer__divider">
-  <div class="edupoint-footer__links">
-    <a onclick="openInfoModal('about')">About Us</a><span>•</span>
-    <a onclick="openInfoModal('rules')">Rules</a><span>•</span>
-    <a onclick="openInfoModal('terms')">Terms</a><span>•</span>
-    <a onclick="openInfoModal('privacy')">Privacy</a>
-  </div>
-  <div class="edupoint-footer__copyright">© 2026 EduPointAI. All Rights Reserved.</div>
-  <p class="edupoint-footer__tagline">Independent Academic Guidance · Technology · Educational opportunities</p>
-</footer>
-
-<!-- ===== EXTERNAL SCRIPTS ===== -->
-<script src="/js/app.js" defer></script>
-
-<!-- ===== ADMIN DASHBOARD (inline JS) ===== -->
 <script>
-(function(){
-  'use strict';
+window.EDUPOINT_API = window.EDUPOINT_API || (location.hostname === "localhost" ? "http://localhost:5000" : "https://edupoint-api.onrender.com");
+const TOKEN_KEY = "edupoint_token";
+const getToken = () => localStorage.getItem(TOKEN_KEY);
+const setToken = t => localStorage.setItem(TOKEN_KEY, t);
+const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
-  const API_BASE = window.EDUPOINT_API_BASE || '/api/admin';
-  const TZ = 'Africa/Nairobi';
-  const FEE_PER_CALC = 100;
-  const DEV_MODE = !window.EDUPOINT_API_BASE;
+async function api(path, opts = {}) {
+  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+  const t = getToken();
+  if (t) headers["Authorization"] = "Bearer " + t;
+  
+  try {
+    const r = await fetch(window.EDUPOINT_API + path, { ...opts, headers });
+    const contentType = r.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) throw new Error("Server error.");
+    let data = await r.json();
+    if (r.status === 401) { clearToken(); }
+    if (!r.ok) throw Object.assign(new Error(data.error || ("HTTP " + r.status)), { status: r.status });
+    return data;
+  } catch (err) {
+    if (err.message === "Failed to fetch" || err.message.includes("NetworkError")) {
+        throw new Error("Failed to connect. Server might be waking up.");
+    }
+    throw err;
+  }
+}
 
-  const state = {
-    students:[], payments:[], calculations:[], eligibility:[],
-    invoices:[], reports:[], emails:[], reminders:[], audit:[],
-    xlsHistory:[], notifications:[],
-    charts:{}, trendRange:7, trendGroup:'day', revenueRange:30,
-    payTab:'all', studentFilter:'', emailFilter:'', currentPage:'overview'
-  };
+let me = null;
 
-  const n = (v)=>Number(v||0).toLocaleString('en-KE');
-  const kes = (v)=>'KES '+n(v);
-  const dt = (v)=> v ? new Date(v).toLocaleString('en-KE',{timeZone:TZ,day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
-  const dOnly = (v)=> v ? new Date(v).toLocaleDateString('en-KE',{timeZone:TZ,day:'2-digit',month:'short',year:'numeric'}) : '—';
-  const pct = (a,b)=> b ? Math.round((a/b)*1000)/10 : 0;
+function initAuth() {
+  if (typeof google === 'undefined') return;
+  google.accounts.id.initialize({
+    client_id: "243689444748-m3tnlqlhm2m8sm52p1gf5nepbroodk33.apps.googleusercontent.com",
+    callback: handleGoogleLogin
+  });
+  const container = document.getElementById('google-btn-landing');
+  if (container) {
+    container.innerHTML = '';
+    google.accounts.id.renderButton(container, { theme: "outline", size: "large", width: "300", text: "continue_with", shape: "pill" });
+  }
+}
 
-  function todayKey(){ return new Date().toLocaleDateString('en-CA',{timeZone:TZ}); }
-  function todayKeyOf(iso){ return new Date(iso).toLocaleDateString('en-CA',{timeZone:TZ}); }
-  function lastNDays(k){ const arr=[]; const base=new Date(); for(let i=k-1;i>=0;i--){ const d=new Date(base); d.setDate(base.getDate()-i); arr.push(d.toLocaleDateString('en-CA',{timeZone:TZ})); } return arr; }
+async function handleGoogleLogin(response) {
+  showLoading();
+  try {
+    const res = await api("/api/auth/google", { method: "POST", body: JSON.stringify({ credential: response.credential }) });
+    setToken(res.token);
+    location.reload();
+  } catch (err) { 
+    showConnectionError(err.message); 
+  } finally {
+    hideLoading();
+  }
+}
 
-  async function api(path, opts={}){
-    if (DEV_MODE) return null;
+async function init() {
+  if (getToken()) {
     try {
-      const res = await fetch(API_BASE + path, {
-        credentials:'include',
-        headers:{'Content-Type':'application/json', ...(opts.headers||{})},
-        ...opts
-      });
-      if (!res.ok) throw new Error(res.status+' '+res.statusText);
-      return await res.json();
-    } catch(e){ console.warn('[admin api]', path, e.message); return null; }
-  }
-
-  function seedDemo(){
-    const now = Date.now();
-    const day = 86400000;
-    const names=['Amina Wanjiku','Brian Otieno','Cynthia Mwangi','David Kimani','Esther Njeri','Felix Ochieng','Grace Achieng','Hassan Ali','Irene Chepkoech','James Mwangi','Kellie Mutua','Lydia Auma','Martin Wekesa','Nancy Wambui','Oscar Oduor'];
-    const emails=names.map((x,i)=>`student${i+1}@example.com`);
-
-    state.students = names.map((name,i)=>({
-      id:`STU-${String(1001+i)}`, name, email:emails[i],
-      created_at:new Date(now - (30-i)*day).toISOString(),
-      status: i===3?'suspended':'active',
-      calc_count: 1 + (i%4),
-      pay_count: i%3===0 ? 0 : 1 + (i%2),
-      last_activity: new Date(now - (i*4)*3600000).toISOString()
-    }));
-
-    state.payments = Array.from({length:40},(_,i)=>{
-      const st = i%5===0?'failed':(i%3===0?'pending':'success');
-      return {
-        tx_id:`TXN-${8000+i}`, student_id:`STU-${1001+(i%15)}`,
-        student_name:names[i%15], amount:FEE_PER_CALC,
-        method:'Pesapal', created_at:new Date(now-(i*.6)*day).toISOString(),
-        status:st, invoice_id:`INV-${2000+i}`, report_sent: st==='success'
-      };
-    });
-
-    state.calculations = Array.from({length:28},(_,i)=>({
-      ref:`CALC-${5000+i}`, student_id:`STU-${1001+(i%15)}`,
-      student_name:names[i%15], cluster_points:+(6+Math.random()*5).toFixed(3),
-      payment_ref:`TXN-${8000+i}`, created_at:new Date(now-(i*.7)*day).toISOString(),
-      report_status: i%4===0?'pending':'generated',
-      subjects:[
-        {code:'MAT A',grade:'A'},{code:'ENG',grade:'B+'},
-        {code:'BIO',grade:'A-'},{code:'CHEM',grade:'B+'},
-        {code:'PHY',grade:'A'},{code:'KIS',grade:'B'},
-        {code:'HIST',grade:'B-'}
-      ]
-    }));
-
-    state.eligibility = Array.from({length:18},(_,i)=>({
-      student_name:names[i%15], cluster_points:+(6+Math.random()*5).toFixed(2),
-      course:['Medicine','Computer Science','Civil Engineering','Actuarial Science','Nursing','Law','Architecture','Economics','Pharmacy'][i%9],
-      university:['UoN','JKUAT','KU','Moi','Egerton','Strathmore','USIU','Kenyatta'][i%8],
-      cutoff:+(6+Math.random()*5).toFixed(2),
-      status: i%3===0?'eligible':(i%3===1?'close':'not')
-    }));
-
-    state.invoices = state.payments.map((p,i)=>({
-      number:`INV-${2000+i}`, student_name:p.student_name,
-      tx_id:p.tx_id, amount:p.amount, generated_at:p.created_at,
-      email_ts: p.status==='success'?new Date(now-i*3600000).toISOString():null,
-      delivery: p.status==='success'?'delivered':(p.status==='pending'?'queued':'failed')
-    }));
-
-    state.reports = state.calculations.map((c,i)=>({
-      ref:`RPT-${4000+i}`, student_name:c.student_name,
-      calc_ref:c.ref, cluster_points:c.cluster_points,
-      pdf_status: c.report_status==='generated'?'ready':'pending',
-      email_status: i%5===0?'failed':'delivered',
-      generated_at:c.created_at, retries: i%7===0?2:0
-    }));
-
-    state.emails = Array.from({length:35},(_,i)=>({
-      id:`EML-${9000+i}`,
-      type:['Payment successful','Invoice','Academic report','Payment reminder','Payment pending'][i%5],
-      recipient:emails[i%15],
-      subject:['Payment received','Your invoice','Cluster point report','Reminder','Payment pending'][i%5],
-      status:['delivered','delivered','delivered','queued','failed','bounced'][i%6],
-      attempts: 1+(i%3), error: i%6===4?'SMTP timeout':'',
-      created_at:new Date(now-(i*.5)*day).toISOString()
-    }));
-
-    state.reminders = state.payments.filter(p=>p.status==='pending').map((p,i)=>({
-      tx_id:p.tx_id, student_name:p.student_name, amount:p.amount,
-      pending_since:p.created_at, count:1+(i%3),
-      last_reminder:new Date(now-i*3600000).toISOString()
-    }));
-
-    state.audit = Array.from({length:20},(_,i)=>({
-      created_at:new Date(now-i*3600000).toISOString(),
-      actor:['admin@edupointai','system','support@edupointai'][i%3],
-      role:['Super Admin','System','Admin'][i%3],
-      action:['LOGIN','PAYMENT_VERIFIED','STUDENT_SUSPENDED','REPORT_GENERATED','EXPORT_EXCEL','SETTINGS_UPDATED'][i%6],
-      target:`entity-${i}`, ip:`196.201.${i%255}.${i}`, details:'—'
-    }));
-
-    state.xlsHistory = lastNDays(5).reverse().map(d=>({
-      date:d, size:'184 KB', sheets:15, status:'generated', url:`/api/admin/excel/${d}.xlsx`
-    }));
-  }
-
-  async function loadAll(){
-    if (DEV_MODE) { seedDemo(); return; }
-    const [students, payments, calcs, elig, invoices, reports, emails, reminders, audit, xls] = await Promise.all([
-      api('/students'), api('/payments'), api('/calculations'), api('/eligibility'),
-      api('/invoices'), api('/reports'), api('/emails'), api('/reminders'), api('/audit'), api('/excel/history')
-    ]);
-    if (students)  state.students     = students.rows || students;
-    if (payments)  state.payments     = payments.rows || payments;
-    if (calcs)     state.calculations = calcs.rows || calcs;
-    if (elig)      state.eligibility  = elig.rows || elig;
-    if (invoices)  state.invoices     = invoices.rows || invoices;
-    if (reports)   state.reports      = reports.rows || reports;
-    if (emails)    state.emails       = emails.rows || emails;
-    if (reminders) state.reminders    = reminders.rows || reminders;
-    if (audit)     state.audit        = audit.rows || audit;
-    if (xls)       state.xlsHistory   = xls.rows || xls;
-  }
-
-  function computeStats(){
-    const p = state.payments;
-    const success = p.filter(x=>x.status==='success');
-    const pending = p.filter(x=>x.status==='pending');
-    const failed  = p.filter(x=>x.status==='failed');
-    const revenue = success.reduce((s,x)=>s+Number(x.amount||0),0);
-    return {
-      revenue, students:state.students.length,
-      applications:state.students.length,
-      calculations:state.calculations.length,
-      success:success.length, pending:pending.length, failed:failed.length,
-      invoices:state.invoices.length,
-      reports:state.reports.length,
-      sent:state.reports.filter(r=>r.email_status==='delivered').length
-    };
-  }
-
-  function renderStats(){
-    const s = computeStats();
-    const cards = [
-      {key:'rev', icon:'💰', label:'Total Revenue', value:kes(s.revenue)},
-      {key:'stu', icon:'👥', label:'Total Students', value:n(s.students)},
-      {key:'stu', icon:'📝', label:'Applications', value:n(s.applications)},
-      {key:'calc', icon:'🧮', label:'Calculations', value:n(s.calculations)},
-      {key:'rev', icon:'✅', label:'Successful Payments', value:n(s.success)},
-      {key:'pend', icon:'⏳', label:'Pending Payments', value:n(s.pending)},
-      {key:'fail', icon:'❌', label:'Failed Payments', value:n(s.failed)},
-      {key:'inv', icon:'🧾', label:'Invoices Generated', value:n(s.invoices)},
-      {key:'rep', icon:'📄', label:'Academic Reports', value:n(s.reports)},
-      {key:'sent', icon:'📧', label:'Reports Sent', value:n(s.sent)}
-    ];
-    document.getElementById('admStatGrid').innerHTML = cards.map(c=>`
-      <div class="adm-stat-card ${c.key}" onclick="Adm.statClick('${c.key}')">
-        <div class="adm-stat-icon">${c.icon}</div>
-        <div class="adm-stat-value">${c.value}</div>
-        <div class="adm-stat-label">${c.label}</div>
-        <div class="adm-stat-compare adm-up">▲ vs prev period</div>
-      </div>`).join('');
-  }
-
-  function renderTrend(){
-    const days = lastNDays(state.trendRange);
-    const appsByDay = days.map(d => state.students.filter(s=>todayKeyOf(s.created_at)===d).length);
-    const paysByDay = days.map(d => state.payments.filter(p=>p.status==='success' && todayKeyOf(p.created_at)===d).length);
-    const calcByDay = days.map(d => state.calculations.filter(c=>todayKeyOf(c.created_at)===d).length);
-
-    const ctx = document.getElementById('trendChart').getContext('2d');
-    if (state.charts.trend) state.charts.trend.destroy();
-    state.charts.trend = new Chart(ctx, {
-      type:'line',
-      data:{ labels:days.map(d=>d.slice(5)), datasets:[
-        {label:'Applications', data:appsByDay, borderColor:'#16A36A', backgroundColor:'rgba(22,163,106,.08)', tension:.3, fill:true},
-        {label:'Payments',     data:paysByDay, borderColor:'#DC3545', backgroundColor:'rgba(220,53,69,.08)', tension:.3, fill:true},
-        {label:'Calculations', data:calcByDay, borderColor:'#F59E0B', backgroundColor:'rgba(245,158,11,.08)', tension:.3, fill:true}
-      ]},
-      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-        plugins:{ legend:{position:'bottom'} },
-        scales:{ y:{beginAtZero:true, ticks:{precision:0}} }
+      const res = await api("/api/me");
+      me = res.user;
+      if(me.role === 'admin') {
+          document.getElementById('adminBtn').style.display = 'inline-block';
+          showView("student");
+          setupCalculator();
+      } else {
+          showView("student");
+          setupCalculator();
       }
-    });
-
-    const todayIdx = days.length - 1;
-    const prevIdx  = days.length - 2;
-    const mk = (label, curr, prev)=>`<div class="adm-compare-item"><b>${label}:</b> today ${curr||0} · yesterday ${prev||0}</div>`;
-    document.getElementById('admTrendCompare').innerHTML =
-      mk('Applications', appsByDay[todayIdx], appsByDay[prevIdx]) +
-      mk('Payments',     paysByDay[todayIdx], paysByDay[prevIdx]) +
-      mk('Calculations', calcByDay[todayIdx], calcByDay[prevIdx]);
-  }
-
-  function doughnut(id, labels, values, colors, legendId){
-    const ctx = document.getElementById(id).getContext('2d');
-    if (state.charts[id]) state.charts[id].destroy();
-    state.charts[id] = new Chart(ctx, {
-      type:'doughnut',
-      data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderWidth:0 }] },
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
-        plugins:{ legend:{display:false} } }
-    });
-    const total = values.reduce((a,b)=>a+b,0);
-    document.getElementById(legendId).innerHTML = labels.map((l,i)=>
-      `<span><i style="background:${colors[i]}"></i>${l} · ${values[i]} (${pct(values[i],total)}%)</span>`).join('');
-  }
-
-  function renderDoughnuts(){
-    const p = state.payments;
-    doughnut('payDoughnut',
-      ['Successful','Pending','Failed'],
-      [p.filter(x=>x.status==='success').length, p.filter(x=>x.status==='pending').length, p.filter(x=>x.status==='failed').length],
-      ['#16A36A','#F59E0B','#DC3545'], 'payLegend');
-
-    const s = state.students;
-    doughnut('appDoughnut',
-      ['Active','Suspended'],
-      [s.filter(x=>x.status==='active').length, s.filter(x=>x.status==='suspended').length],
-      ['#16A36A','#DC3545'], 'appLegend');
-
-    const c = state.calculations;
-    doughnut('calcDoughnut',
-      ['Completed','Processing','Failed'],
-      [c.filter(x=>x.report_status==='generated').length,
-       c.filter(x=>x.report_status==='pending').length,
-       c.filter(x=>x.report_status==='failed').length || 0],
-      ['#F59E0B','#2563EB','#DC3545'], 'calcLegend');
-  }
-
-  function renderExtraCharts(){
-    const days = lastNDays(state.revenueRange);
-    const revByDay = days.map(d=>{
-      return state.payments.filter(p=>p.status==='success' && todayKeyOf(p.created_at)===d)
-        .reduce((s,x)=>s+Number(x.amount||0),0);
-    });
-    const revCtx = document.getElementById('revenueChart').getContext('2d');
-    if (state.charts.rev) state.charts.rev.destroy();
-    state.charts.rev = new Chart(revCtx,{
-      type:'line',
-      data:{ labels:days.map(d=>d.slice(5)), datasets:[{ label:'Revenue (KES)', data:revByDay,
-        borderColor:'#16B8A6', backgroundColor:'rgba(22,184,166,.1)', tension:.3, fill:true }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-    });
-
-    const studCtx = document.getElementById('studentChart').getContext('2d');
-    const days14 = lastNDays(14);
-    const regByDay = days14.map(d=>state.students.filter(s=>todayKeyOf(s.created_at)===d).length);
-    if (state.charts.stud) state.charts.stud.destroy();
-    state.charts.stud = new Chart(studCtx,{
-      type:'bar', data:{ labels:days14.map(d=>d.slice(5)),
-        datasets:[{ label:'New students', data:regByDay, backgroundColor:'#2563EB' }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-    });
-
-    const perfCtx = document.getElementById('payPerfChart').getContext('2d');
-    if (state.charts.perf) state.charts.perf.destroy();
-    state.charts.perf = new Chart(perfCtx,{
-      type:'bar',
-      data:{ labels:days14.map(d=>d.slice(5)), datasets:[
-        {label:'Success', data:days14.map(d=>state.payments.filter(p=>p.status==='success'&&todayKeyOf(p.created_at)===d).length), backgroundColor:'#16A36A'},
-        {label:'Pending', data:days14.map(d=>state.payments.filter(p=>p.status==='pending'&&todayKeyOf(p.created_at)===d).length), backgroundColor:'#F59E0B'},
-        {label:'Failed',  data:days14.map(d=>state.payments.filter(p=>p.status==='failed' &&todayKeyOf(p.created_at)===d).length), backgroundColor:'#DC3545'}
-      ]},
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true}} }
-    });
-
-    const buckets=[0,0,0,0,0];
-    state.calculations.forEach(c=>{const p=c.cluster_points; if(p<6)buckets[0]++; else if(p<7)buckets[1]++; else if(p<8)buckets[2]++; else if(p<9)buckets[3]++; else buckets[4]++;});
-    const clCtx = document.getElementById('clusterChart').getContext('2d');
-    if (state.charts.cl) state.charts.cl.destroy();
-    state.charts.cl = new Chart(clCtx,{
-      type:'bar', data:{ labels:['<6','6–7','7–8','8–9','9+'],
-        datasets:[{ label:'Students', data:buckets, backgroundColor:'#7952C7' }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-    });
-
-    const e = state.emails;
-    const eLabels=['Delivered','Queued','Bounced','Failed'];
-    const eValues=[
-      e.filter(x=>x.status==='delivered').length,
-      e.filter(x=>x.status==='queued').length,
-      e.filter(x=>x.status==='bounced').length,
-      e.filter(x=>x.status==='failed').length
-    ];
-    const emCtx = document.getElementById('emailChart').getContext('2d');
-    if (state.charts.em) state.charts.em.destroy();
-    state.charts.em = new Chart(emCtx,{
-      type:'doughnut', data:{ labels:eLabels, datasets:[{data:eValues,
-        backgroundColor:['#16A36A','#F59E0B','#DC3545','#94A3B8'],borderWidth:0}]},
-      options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
-        plugins:{legend:{position:'bottom'}} }
-    });
-
-    const irCtx = document.getElementById('invoiceReportChart').getContext('2d');
-    if (state.charts.ir) state.charts.ir.destroy();
-    state.charts.ir = new Chart(irCtx,{
-      type:'line', data:{ labels:days14.map(d=>d.slice(5)), datasets:[
-        {label:'Invoices', data:days14.map(d=>state.invoices.filter(x=>todayKeyOf(x.generated_at)===d).length), borderColor:'#7952C7', tension:.3},
-        {label:'Reports', data:days14.map(d=>state.reports.filter(x=>todayKeyOf(x.generated_at)===d).length), borderColor:'#16A36A', tension:.3}
-      ]},
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}, scales:{y:{beginAtZero:true}} }
-    });
-  }
-
-  function renderRecent(){
-    document.getElementById('recentStudents').innerHTML = state.students.slice(0,5).map(s=>`
-      <tr><td>${s.name}</td><td>${s.email}</td><td>${dOnly(s.created_at)}</td></tr>`).join('');
-    document.getElementById('recentPayments').innerHTML = state.payments.slice(0,5).map(p=>`
-      <tr><td>${p.tx_id}</td><td>KES ${n(p.amount)}</td>
-      <td><span class="adm-tag ${p.status==='success'?'adm-tag-green':p.status==='pending'?'adm-tag-amber':'adm-tag-red'}">${p.status}</span></td></tr>`).join('');
-  }
-
-  const MODULES = [
-    {id:'overview',    n:'01', t:'Overview',           d:'Statistics and graphs'},
-    {id:'students',    n:'02', t:'Student Management', d:'Student profiles and accounts'},
-    {id:'payments',    n:'03', t:'Payment Management', d:'Successful, pending and failed'},
-    {id:'calculations',n:'04', t:'Academic Calculations',d:'Subjects, grades and points'},
-    {id:'eligibility', n:'05', t:'Course Eligibility', d:'Eligible courses and universities'},
-    {id:'invoices',    n:'06', t:'Invoice Management', d:'Invoices and delivery'},
-    {id:'reports',     n:'07', t:'Academic Reports',   d:'PDF reports and history'},
-    {id:'emails',      n:'08', t:'Email Delivery Logs',d:'Email statuses and retries'},
-    {id:'reminders',   n:'09', t:'Payment Reminders',  d:'Outstanding transactions'},
-    {id:'excel',       n:'10', t:'Daily Excel Reports',d:'Automatic daily workbooks'},
-    {id:'analytics',   n:'11', t:'Analytics & Performance',d:'Detailed graphs and trends'},
-    {id:'audit',       n:'12', t:'Activity & Audit Logs',d:'Admin and system activity'},
-    {id:'health',      n:'13', t:'System Health',      d:'Errors, diagnostics'},
-    {id:'settings',    n:'14', t:'Settings & Administrators',d:'Security and configuration'}
-  ];
-  function renderModules(){
-    document.getElementById('admModuleGrid').innerHTML = MODULES.map(m=>`
-      <div class="adm-module-card" onclick="Adm.showPage('${m.id}')">
-        <div class="adm-mod-num">${m.n}</div>
-        <div class="adm-mod-title">${m.t}</div>
-        <div class="adm-mod-desc">${m.d}</div>
-      </div>`).join('');
-  }
-
-  function renderStudents(){
-    const f = state.studentFilter.toLowerCase();
-    const rows = state.students.filter(s=>!f || s.name.toLowerCase().includes(f) || s.email.toLowerCase().includes(f));
-    document.getElementById('admStudentsBody').innerHTML = rows.map(s=>`
-      <tr>
-        <td>${s.id}</td><td>${s.name}</td><td>${s.email}</td>
-        <td>${dOnly(s.created_at)}</td>
-        <td><span class="adm-tag ${s.status==='active'?'adm-tag-green':'adm-tag-red'}">${s.status}</span></td>
-        <td>${s.calc_count||0}</td><td>${s.pay_count||0}</td>
-        <td>${dt(s.last_activity)}</td>
-        <td>
-          <button class="adm-action-btn" onclick="Adm.viewStudent('${s.id}')">View</button>
-          <button class="adm-action-btn ${s.status==='active'?'red':''}"
-            onclick="Adm.toggleStudent('${s.id}','${s.status==='active'?'suspended':'active'}')">
-            ${s.status==='active'?'Suspend':'Activate'}
-          </button>
-        </td>
-      </tr>`).join('');
-  }
-  function renderPayments(){
-    const tab = state.payTab;
-    const rows = state.payments.filter(p=>tab==='all'||p.status===tab);
-    document.getElementById('admPaymentsBody').innerHTML = rows.map(p=>`
-      <tr>
-        <td>${p.tx_id}</td><td>${p.student_name||p.student_id}</td>
-        <td>KES ${n(p.amount)}</td><td>${p.method||'Pesapal'}</td>
-        <td>${dt(p.created_at)}</td>
-        <td><span class="adm-tag ${p.status==='success'?'adm-tag-green':p.status==='pending'?'adm-tag-amber':'adm-tag-red'}">${p.status}</span></td>
-        <td>${p.invoice_id||'—'}</td>
-        <td>${p.report_sent?'<span class="adm-tag adm-tag-green">sent</span>':'<span class="adm-tag adm-tag-slate">pending</span>'}</td>
-        <td>
-          <button class="adm-action-btn" onclick="Adm.verifyPayment('${p.tx_id}')">Verify</button>
-          <button class="adm-action-btn" onclick="Adm.viewReceipt('${p.tx_id}')">Receipt</button>
-        </td>
-      </tr>`).join('');
-  }
-  function renderCalcs(){
-    document.getElementById('admCalcBody').innerHTML = state.calculations.map(c=>`
-      <tr>
-        <td>${c.ref}</td><td>${c.student_name||c.student_id}</td>
-        <td>${(c.subjects||[]).map(s=>s.code+':'+s.grade).join(' · ')||'—'}</td>
-        <td><b>${(+c.cluster_points).toFixed(3)}</b></td>
-        <td>${c.payment_ref||'—'}</td>
-        <td>${dt(c.created_at)}</td>
-        <td><span class="adm-tag ${c.report_status==='generated'?'adm-tag-green':'adm-tag-amber'}">${c.report_status}</span></td>
-        <td><button class="adm-action-btn" onclick="Adm.downloadReport('${c.ref}')">Download</button></td>
-      </tr>`).join('');
-  }
-  function renderElig(){
-    document.getElementById('admEligBody').innerHTML = state.eligibility.map(e=>`
-      <tr>
-        <td>${e.student_name}</td><td>${e.cluster_points}</td>
-        <td>${e.course}</td><td>${e.university}</td>
-        <td>${e.cutoff}</td><td>${(e.cluster_points-e.cutoff).toFixed(2)}</td>
-        <td><span class="adm-tag ${e.status==='eligible'?'adm-tag-green':e.status==='close'?'adm-tag-amber':'adm-tag-red'}">${e.status}</span></td>
-      </tr>`).join('');
-    const eligCtx = document.getElementById('eligBarChart').getContext('2d');
-    if (state.charts.elig) state.charts.elig.destroy();
-    state.charts.elig = new Chart(eligCtx,{
-      type:'bar',
-      data:{ labels:['Eligible','Close','Not Eligible'],
-        datasets:[{ data:[
-          state.eligibility.filter(e=>e.status==='eligible').length,
-          state.eligibility.filter(e=>e.status==='close').length,
-          state.eligibility.filter(e=>e.status==='not').length
-        ], backgroundColor:['#16A36A','#F59E0B','#DC3545'] }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-    });
-    const uniCount = {};
-    state.eligibility.forEach(e=>{ uniCount[e.university]=(uniCount[e.university]||0)+1; });
-    const uCtx = document.getElementById('uniDistChart').getContext('2d');
-    if (state.charts.uni) state.charts.uni.destroy();
-    state.charts.uni = new Chart(uCtx,{
-      type:'bar',
-      data:{ labels:Object.keys(uniCount),
-        datasets:[{ data:Object.values(uniCount), backgroundColor:'#7952C7' }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
-    });
-  }
-  function renderInvoices(){
-    document.getElementById('admInvoicesBody').innerHTML = state.invoices.map(i=>`
-      <tr><td>${i.number}</td><td>${i.student_name}</td><td>${i.tx_id}</td>
-        <td>KES ${n(i.amount)}</td><td>${dt(i.generated_at)}</td>
-        <td>${i.email_ts?dt(i.email_ts):'—'}</td>
-        <td><span class="adm-tag ${i.delivery==='delivered'?'adm-tag-green':i.delivery==='queued'?'adm-tag-amber':'adm-tag-red'}">${i.delivery}</span></td>
-        <td><button class="adm-action-btn" onclick="Adm.previewInvoice('${i.number}')">Preview</button>
-            <button class="adm-action-btn" onclick="Adm.resendInvoice('${i.number}')">Resend</button></td>
-      </tr>`).join('');
-  }
-  function renderReports(){
-    document.getElementById('admReportsBody').innerHTML = state.reports.map(r=>`
-      <tr><td>${r.ref}</td><td>${r.student_name}</td><td>${r.calc_ref}</td>
-        <td>${r.cluster_points}</td>
-        <td><span class="adm-tag ${r.pdf_status==='ready'?'adm-tag-green':'adm-tag-amber'}">${r.pdf_status}</span></td>
-        <td><span class="adm-tag ${r.email_status==='delivered'?'adm-tag-green':'adm-tag-red'}">${r.email_status}</span></td>
-        <td>${dt(r.generated_at)}</td><td>${r.retries}</td>
-        <td><button class="adm-action-btn" onclick="Adm.downloadReport('${r.ref}')">PDF</button>
-            <button class="adm-action-btn" onclick="Adm.resendReport('${r.ref}')">Resend</button></td>
-      </tr>`).join('');
-  }
-  function renderEmails(){
-    const f = state.emailFilter;
-    const rows = state.emails.filter(e=>!f || e.type===f);
-    document.getElementById('admEmailsBody').innerHTML = rows.map(e=>`
-      <tr><td>${dt(e.created_at)}</td><td>${e.type}</td><td>${e.recipient}</td>
-        <td>${e.subject}</td>
-        <td><span class="adm-tag ${e.status==='delivered'?'adm-tag-green':e.status==='queued'?'adm-tag-amber':'adm-tag-red'}">${e.status}</span></td>
-        <td>${e.attempts}</td><td>${e.error||'—'}</td>
-        <td><button class="adm-action-btn" onclick="Adm.retryEmail('${e.id}')">Retry</button></td>
-      </tr>`).join('');
-  }
-  function renderReminders(){
-    document.getElementById('admRemindersBody').innerHTML = state.reminders.map(r=>`
-      <tr><td>${r.tx_id}</td><td>${r.student_name}</td><td>KES ${n(r.amount)}</td>
-        <td>${dt(r.pending_since)}</td><td>${r.count}</td><td>${dt(r.last_reminder)}</td>
-        <td><button class="adm-action-btn" onclick="Adm.sendReminder('${r.tx_id}')">Send</button>
-            <button class="adm-action-btn" onclick="Adm.verifyPayment('${r.tx_id}')">Verify</button></td>
-      </tr>`).join('');
-  }
-  function renderAudit(){
-    document.getElementById('admAuditBody').innerHTML = state.audit.map(a=>`
-      <tr><td>${dt(a.created_at)}</td><td>${a.actor}</td><td>${a.role}</td>
-        <td>${a.action}</td><td>${a.target}</td><td>${a.ip}</td><td>${a.details||'—'}</td>
-      </tr>`).join('');
-  }
-  function renderHealth(){
-    const items = [
-      ['PostgreSQL','ok'],['Backend API','ok'],['Payment verification','ok'],
-      ['Email service','ok'],['PDF generator','ok'],['Excel generator','ok'],
-      ['Scheduler','ok'],['File storage','ok'],['Authentication','ok']
-    ];
-    document.getElementById('admHealthList').innerHTML = items.map(([name,st])=>
-      `<li><span class="adm-h-name">${name}</span>
-         <span class="adm-h-state ${st==='ok'?'adm-up':'adm-down'}">${st==='ok'?'Operational':'Degraded'}</span></li>`).join('');
-    const checks = [
-      ['Missing student emails','0 issues'],
-      ['Duplicate transaction references','0 issues'],
-      ['Missing reports','0 issues'],
-      ['Invalid dates','0 issues'],
-      ['Inconsistent payment statuses','0 issues'],
-      ['Failed background jobs','0 issues']
-    ];
-    document.getElementById('admQualityList').innerHTML = checks.map(([name,st])=>
-      `<li><span class="adm-h-name">${name}</span><span class="adm-h-state adm-up">${st}</span></li>`).join('');
-  }
-  function renderXls(){
-    document.getElementById('xlsLastGen').textContent = state.xlsHistory[0]?.date || '—';
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
-    document.getElementById('xlsNextGen').textContent = tomorrow.toLocaleDateString('en-CA',{timeZone:TZ})+' 23:59 EAT';
-    document.getElementById('admXlsHistory').innerHTML = state.xlsHistory.map(x=>`
-      <tr><td>${x.date}</td><td>${x.size}</td><td>${x.sheets}</td>
-        <td><span class="adm-tag adm-tag-green">${x.status}</span></td>
-        <td><button class="adm-action-btn" onclick="Adm.downloadXls('${x.date}')">Download</button></td>
-      </tr>`).join('');
-  }
-
-  function showPage(id){
-    state.currentPage = id;
-    document.querySelectorAll('.adm-page').forEach(p=>p.classList.remove('active'));
-    const el = document.getElementById('adm-page-'+id);
-    if (el) el.classList.add('active');
-    const mod = MODULES.find(m=>m.id===id);
-    document.getElementById('admPageTitle').textContent = mod ? mod.t : 'Overview';
-    document.getElementById('admCrumb').textContent     = mod ? mod.t : 'Overview';
-
-    if (id==='students')     renderStudents();
-    else if (id==='payments')renderPayments();
-    else if (id==='calculations') renderCalcs();
-    else if (id==='eligibility')  renderElig();
-    else if (id==='invoices')renderInvoices();
-    else if (id==='reports') renderReports();
-    else if (id==='emails')  renderEmails();
-    else if (id==='reminders') renderReminders();
-    else if (id==='audit')   renderAudit();
-    else if (id==='health')  renderHealth();
-    else if (id==='excel')   renderXls();
-    else if (id==='overview') renderAll();
-  }
-
-  async function refreshAll(){
-    await loadAll();
-    renderAll();
-    notify('Data refreshed successfully','success');
-  }
-
-  function renderAll(){
-    renderStats();
-    renderTrend();
-    renderDoughnuts();
-    renderExtraCharts();
-    renderRecent();
-    renderModules();
-  }
-
-  function updateClock(){
-    const d = new Date();
-    document.getElementById('admDate').textContent =
-      d.toLocaleDateString('en-KE',{timeZone:TZ,weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-    document.getElementById('admTime').textContent =
-      d.toLocaleTimeString('en-KE',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  }
-
-  function notify(msg, kind='info'){
-    state.notifications.unshift({msg, kind, at:new Date().toISOString()});
-    renderNotifications();
-    const badge = document.getElementById('admNotifBadge');
-    badge.textContent = state.notifications.length;
-  }
-  function renderNotifications(){
-    const list = document.getElementById('admNotifList');
-    if (!state.notifications.length) { list.innerHTML='<div class="adm-notif-item">No new notifications</div>'; return; }
-    list.innerHTML = state.notifications.slice(0,20).map(x=>`
-      <div class="adm-notif-item"><div class="adm-n-type">${x.kind}</div>${x.msg}</div>`).join('');
-  }
-  function toggleNotifications(){
-    document.getElementById('admNotifPanel').classList.toggle('open');
-  }
-
-  function exportModule(mod){
-    if (!window.XLSX) { alert('SheetJS not loaded yet. Please retry.'); return; }
-    const { data, file } = pickData(mod);
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, mod.charAt(0).toUpperCase()+mod.slice(1));
-    XLSX.writeFile(wb, file);
-    notify(`Excel exported: ${file}`, 'success');
-  }
-  function pickData(mod){
-    switch(mod){
-      case 'students':    return {data:state.students, file:`edupoint-students-${todayKey()}.xlsx`};
-      case 'payments':    return {data:state.payments, file:`edupoint-payments-${todayKey()}.xlsx`};
-      case 'calculations':return {data:state.calculations, file:`edupoint-calculations-${todayKey()}.xlsx`};
-      case 'invoices':    return {data:state.invoices, file:`edupoint-invoices-${todayKey()}.xlsx`};
-      case 'reports':     return {data:state.reports, file:`edupoint-reports-${todayKey()}.xlsx`};
-      case 'emails':      return {data:state.emails, file:`edupoint-emails-${todayKey()}.xlsx`};
-      case 'analytics':   return {data:[computeStats()], file:`edupoint-analytics-${todayKey()}.xlsx`};
-      default:            return {data:[], file:`edupoint-${mod}-${todayKey()}.xlsx`};
-    }
-  }
-
-  const Adm = {
-    showPage, refreshAll, toggleNotifications, exportModule,
-    studentsFilter(v){ state.studentFilter=v; renderStudents(); },
-    payTab(t){
-      state.payTab=t;
-      document.querySelectorAll('#admPayTabs .adm-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
-      renderPayments();
-    },
-    emailFilter(v){ state.emailFilter=v; renderEmails(); },
-    setTrendRange(v){ state.trendRange=Number(v); renderTrend(); },
-    setTrendGroup(v){ state.trendGroup=v; renderTrend(); },
-    setRevenueRange(v){ state.revenueRange=Number(v); renderExtraCharts(); },
-
-    async verifyPayment(tx){
-      if (DEV_MODE) return notify(`Demo: verified ${tx}`,'info');
-      await api('/payments/'+tx+'/verify',{method:'POST'});
-      await refreshAll();
-      notify(`Payment ${tx} verified`,'success');
-    },
-    viewReceipt(tx){ window.open(`/api/admin/payments/${tx}/receipt.pdf`, '_blank'); },
-    viewStudent(id){ notify(`Opening ${id} (implement detail route)`,'info'); },
-    async toggleStudent(id, newStatus){
-      if (!confirm(`Change student ${id} → ${newStatus}?`)) return;
-      if (!DEV_MODE) await api('/students/'+id+'/status',{method:'PATCH',body:JSON.stringify({status:newStatus})});
-      await refreshAll();
-      notify(`Student ${id} → ${newStatus}`,'success');
-    },
-    downloadReport(ref){ window.open(`/api/admin/reports/${ref}.pdf`,'_blank'); },
-    resendReport(ref){ if (!DEV_MODE) api('/reports/'+ref+'/resend',{method:'POST'}); notify(`Report ${ref} resent`,'success'); },
-    previewInvoice(num){ window.open(`/api/admin/invoices/${num}.pdf`,'_blank'); },
-    resendInvoice(num){ if (!DEV_MODE) api('/invoices/'+num+'/resend',{method:'POST'}); notify(`Invoice ${num} resent`,'success'); },
-    retryEmail(id){ if (!DEV_MODE) api('/emails/'+id+'/retry',{method:'POST'}); notify(`Email ${id} retry queued`,'success'); },
-    sendReminder(tx){ if (!DEV_MODE) api('/reminders/'+tx+'/send',{method:'POST'}); notify(`Reminder sent for ${tx}`,'success'); },
-    async refreshPayments(){
-      if (!DEV_MODE) await api('/payments/refresh',{method:'POST'});
-      await refreshAll();
-      notify('Payment statuses refreshed','success');
-    },
-    downloadXls(date){ window.open(`/api/admin/excel/${date}.xlsx`,'_blank'); },
-    async generateTodayXls(){
-      if (!DEV_MODE) await api('/excel/generate',{method:'POST'});
-      notify(`Today's workbook generated`,'success');
-      await refreshAll();
-    },
-    exportOverview(){
-      if (!window.XLSX) return alert('SheetJS not loaded');
-      const s = computeStats();
-      const ws = XLSX.utils.json_to_sheet([s]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Overview');
-      XLSX.writeFile(wb, `edupoint-overview-${todayKey()}.xlsx`);
-    },
-    exportChartsPng(){
-      Object.entries(state.charts).forEach(([k,ch])=>{
-        if (ch && ch.toBase64Image){
-          const a=document.createElement('a');
-          a.href=ch.toBase64Image();
-          a.download=`chart-${k}-${todayKey()}.png`;
-          a.click();
-        }
-      });
-    },
-    statClick(key){
-      if (key==='stu'||key==='calc') Adm.showPage(key==='stu'?'students':'calculations');
-      else Adm.showPage('payments');
-    },
-    notify,
-    _state: state
-  };
-  window.Adm = Adm;
-
-  async function boot(){
-    const v = document.getElementById('view-admin');
-    if (!v) return;
-    const obs = new MutationObserver(()=>{
-      if (v.classList.contains('active') && !v.dataset.booted){
-        v.dataset.booted = '1';
-        loadAll().then(()=>{ renderAll(); showPage('overview'); });
+    } catch (e) {
+      if (e.status === 401) {
+        clearToken();
+        showView("public");
+        initAuth();
+      } else {
+        showView("public");
+        showConnectionError("Could not connect to server. Please check your internet or try again later.");
       }
-    });
-    obs.observe(v,{attributes:true,attributeFilter:['class']});
-    updateClock();
-    setInterval(updateClock, 1000);
-    renderNotifications();
-    if (v.classList.contains('active')){
-      v.dataset.booted='1';
-      await loadAll();
-      renderAll();
-      showPage('overview');
     }
+  } else {
+    showView("public");
+    initAuth();
   }
-  window.addEventListener('DOMContentLoaded', boot);
-})();
+}
+init();
 
-/* ---- Info modal helpers ---- */
-function openInfoModal(section){
-  const modal = document.getElementById('infoModal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  ['about','rules','terms','privacy'].forEach(s=>{
-    const el = document.getElementById('info-content-'+s);
-    if (el) el.style.display = (s===section) ? 'block' : 'none';
+function showView(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${viewId}`).classList.add('active');
+  window.scrollTo(0,0);
+  
+  if(viewId === 'admin') {
+      document.getElementById('mainFooter').style.display = 'none';
+      loadAdminData();
+  } else {
+      document.getElementById('mainFooter').style.display = 'block';
+  }
+}
+
+function logout() { clearToken(); location.reload(); }
+
+function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+function showConnectionError(msg) { 
+    document.getElementById('errorMessageText').innerText = msg;
+    document.getElementById('connectionErrorModal').style.display = 'flex'; 
+}
+function hideConnectionError() { document.getElementById('connectionErrorModal').style.display = 'none'; }
+function retryLogin() {
+    hideConnectionError();
+    if (typeof google !== 'undefined') google.accounts.id.prompt();
+    else location.reload();
+}
+
+function setupCalculator() {
+  if(document.getElementById("subjectList").innerHTML !== "") return;
+  const subjects = ["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "Business", "Agriculture", "Computer Studies"];
+  const grades = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "E"];
+  let html = "";
+  for (let i = 0; i < 7; i++) {
+    html += `<div class="subject-row">
+      <select class="sub-select" onchange="preventDuplicates()"><option value="">Subject ${i+1}</option>${subjects.map(s => `<option value="${s}">${s}</option>`).join("")}</select>
+      <select class="grade-select"><option value="">Grade</option>${grades.map(g => `<option value="${g}">${g}</option>`).join("")}</select>
+    </div>`;
+  }
+  document.getElementById("subjectList").innerHTML = html;
+}
+
+function preventDuplicates() {
+  const selects = document.querySelectorAll('.sub-select');
+  const selected = Array.from(selects).map(s => s.value).filter(v => v);
+  selects.forEach(select => {
+    const cur = select.value;
+    Array.from(select.options).forEach(opt => {
+      if (opt.value === "") return;
+      opt.disabled = (opt.value !== cur && selected.includes(opt.value));
+    });
   });
 }
-function closeInfoModal(){
-  const modal = document.getElementById('infoModal');
-  if (modal) modal.style.display = 'none';
-}
-document.addEventListener('click', function(e){
-  const modal = document.getElementById('infoModal');
-  if (modal && e.target === modal) closeInfoModal();
-});
-</script>
 
+document.getElementById("btnCalculate").onclick = async () => {
+  const subjects = {}, grades = {};
+  let count = 0;
+  document.querySelectorAll('.sub-select').forEach((s, i) => {
+    if(s.value && document.querySelectorAll('.grade-select')[i].value) {
+      subjects[i] = s.value; grades[i] = document.querySelectorAll('.grade-select')[i].value; count++;
+    }
+  });
+  
+  if(count < 7) return alert("Please select all 7 subjects and grades.");
+  
+  const btn = document.getElementById("btnCalculate");
+  const msg = document.getElementById("calcMessage");
+  
+  const payWindow = window.open('', '_blank');
+  if (payWindow) {
+    payWindow.document.write(`<html><body style="background:#05081c;color:#fff;font-family:sans-serif;text-align:center;padding-top:50px;"><h2 style="color:#00d4ff;">Connecting to Pesapal...</h2><p>Please wait...</p></body></html>`);
+  }
+  
+  btn.disabled = true;
+  btn.textContent = "Connecting...";
+  msg.innerHTML = '<span style="color:#fbbf24;">Opening secure payment window...</span>';
+
+  try {
+    const phone = me.phone || "0700000000";
+    const j = await api("/api/payment/initiate", { method: "POST", body: JSON.stringify({ plan: "standard", provider: "pesapal", phone, subjects, grades }) });
+
+    if (j.redirect_url) {
+      if (payWindow) payWindow.location.href = j.redirect_url;
+      else window.location.href = j.redirect_url; 
+      
+      msg.innerHTML = '<span style="color:#fbbf24;">Complete the payment. Waiting for confirmation...</span>';
+      btn.textContent = "Waiting for Payment...";
+      
+      let n = 0;
+      const t = setInterval(async () => {
+        try {
+            const x = await api("/api/payment/status/" + j.transaction_id);
+            if (x.payment.status === "paid" || x.payment.status === "completed") {
+              clearInterval(t); if (payWindow) payWindow.close(); renderResults(x.calculation_results); alert("Payment Confirmed!");
+            }
+            if (x.payment.status === "failed" || n >= 60) { 
+              clearInterval(t); msg.textContent = "Payment failed or timed out."; btn.disabled = false; btn.textContent = "⚡ Calculate My Cluster Points"; 
+            }
+        } catch(e) {}
+        n++;
+      }, 3000);
+    }
+  } catch (err) {
+    if (payWindow) payWindow.close();
+    msg.innerHTML = `<span style="color:#ff7b7b;">${err.message}</span>`; btn.disabled = false; btn.textContent = "⚡ Calculate My Cluster Points";
+  }
+};
+
+function renderResults(data) {
+  document.getElementById("resultsSection").style.display = "block";
+  document.getElementById("calcMessage").textContent = "";
+  const qualified = data.results.filter(r => r.match === "qualified");
+  const close = data.results.filter(r => r.match === "close");
+  const not = data.results.filter(r => r.match === "not_qualified");
+  
+  document.getElementById("resPoints").textContent = data.cluster_points;
+  document.getElementById("resQualified").textContent = qualified.length;
+  document.getElementById("resClose").textContent = close.length;
+  document.getElementById("resNot").textContent = not.length;
+  document.getElementById("resRate").textContent = ((qualified.length / data.results.length) * 100).toFixed(1) + "%";
+  document.getElementById("qualCountTitle").textContent = qualified.length;
+  document.getElementById("closeCountTitle").textContent = close.length;
+  
+  document.getElementById("qualifiedTableBody").innerHTML = qualified.map(c => `<tr><td>💰 ${c.n}</td><td>${c.u}</td></tr>`).join("");
+  document.getElementById("closeTableBody").innerHTML = close.map(c => `<tr><td>🌐 ${c.n}</td><td>${c.u}</td></tr>`).join("");
+  renderAllCourses(data.results);
+  document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth" });
+  
+  document.getElementById("btnCalculate").disabled = false;
+  document.getElementById("btnCalculate").textContent = "⚡ Calculate My Cluster Points — KES 100";
+}
+
+function renderAllCourses(data) {
+  const term = document.getElementById("courseFilter").value.toLowerCase();
+  const filtered = term ? data.filter(c => c.n.toLowerCase().includes(term) || c.u.toLowerCase().includes(term)) : data;
+  document.getElementById("allCoursesBody").innerHTML = filtered.map((c, i) => {
+    let badge = `<span class="badge-red">✖ Not</span>`;
+    if (c.match === "qualified") badge = `<span class="badge-green">✅ Qualified</span>`;
+    if (c.match === "close") badge = `<span class="badge-yellow">⚠ Close</span>`;
+    return `<tr><td>${i+1}</td><td>${c.n}</td><td>${c.u}</td><td>${c.c}</td><td style="color:${c.difference > 0 ? '#4ade80' : '#ff7b7b'}">${c.difference > 0 ? '+' : ''}${c.difference.toFixed(1)}</td><td>${badge}</td></tr>`;
+  }).join("");
+}
+
+function filterCourses() { renderAllCourses(allResultsData); }
+
+function showCareer(field) {
+  const advice = {
+    "Medicine": "Top courses: Medicine, Pharmacy, Nursing.",
+    "Technology": "Top courses: Computer Science, IT.",
+    "Engineering": "Top courses: Civil, Electrical.",
+    "Business": "Top courses: Commerce, Economics.",
+    "Education": "Top courses: Education (Arts/Science).",
+    "Arts": "Top courses: Law, Journalism."
+  };
+  document.getElementById("careerResult").innerHTML = `<b>${field}:</b> ${advice[field]}`;
+}
+
+function findScholarships() {
+  const resDiv = document.getElementById("scholarshipResults");
+  resDiv.innerHTML = `<p style="color: #4ade80;">Searching...</p>`;
+  setTimeout(() => {
+    resDiv.innerHTML = `
+      <p style="color: #4ade80; font-weight: bold; font-size:14px; margin-bottom:10px;">✅ 6 scholarships found</p>
+      <div class="table-wrap"><table><thead><tr><th>Scholarship</th><th>Amount</th><th>Min GPA</th></tr></thead><tbody>
+        <tr><td>Zawadi Africa</td><td>KES 200,000/yr</td><td>3.5</td></tr>
+        <tr><td>Mastercard Foundation</td><td>Full scholarship</td><td>3.2</td></tr>
+        <tr><td>Equity Bank Wings to Fly</td><td>Full tuition</td><td>3.0</td></tr>
+        <tr><td>DAAD Kenya</td><td>KES 150K–300K</td><td>3.0</td></tr>
+        <tr><td>HELB Undergraduate</td><td>Up to 60K/yr</td><td>2.5</td></tr>
+        <tr><td>KCB Foundation</td><td>KES 100,000</td><td>2.0</td></tr>
+      </tbody></table></div>`;
+  }, 800);
+}
+
+async function sendChat(msgText = null) {
+  const input = document.getElementById("chatInput");
+  const msg = msgText || input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  
+  const messages = document.getElementById("chatMessages");
+  messages.innerHTML += `<div style="color: var(--cyan); text-align: right; margin-bottom: 5px; margin-top: 10px;"><b>You:</b> ${msg}</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  const typingId = "typing-" + Date.now();
+  messages.innerHTML += `<div id="${typingId}" style="color: var(--text-muted); font-style: italic; margin-top: 5px;">EduBot is typing...</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const res = await api("/api/chat", { method: "POST", body: JSON.stringify({ question: msg }) });
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    messages.innerHTML += `<div style="color: #4ade80; margin-bottom: 5px; margin-top: 10px;"><b>EduBot:</b> ${res.answer}</div>`;
+    messages.scrollTop = messages.scrollHeight;
+  } catch (err) {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    messages.innerHTML += `<div style="color: #ff7b7b; margin-top: 5px;"><b>Error:</b> ${err.message}</div>`;
+  }
+}
+
+async function loadAdminData() {
+    try {
+        const res = await api("/api/admin/overview");
+        if(res.ok) {
+            document.getElementById('admStatGrid').innerHTML = res.stats.slice(0,4).map(s => `
+                <div class="adm-stat-card">
+                    <div class="adm-stat-value">${s.value}</div>
+                    <div class="adm-stat-label">${s.label}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('recentStudents').innerHTML = res.recent_students.map(s => `
+                <tr><td>${s.name}</td><td>${s.email}</td></tr>
+            `).join('');
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: res.activity.labels,
+                    datasets: [
+                        { label: 'Applications', data: res.activity.applications, borderColor: '#16A36A', tension: 0.3 },
+                        { label: 'Payments', data: res.activity.payments, borderColor: '#DC3545', tension: 0.3 },
+                        { label: 'Calculations', data: res.activity.calculations, borderColor: '#F59E0B', tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    } catch(e) {
+        console.error("Admin data failed to load", e);
+    }
+}
+
+function openInfoModal(section){
+  document.getElementById('infoModal').style.display = 'flex';
+  ['about','rules','terms','privacy'].forEach(s=>{
+    document.getElementById('info-content-'+s).style.display = (s===section) ? 'block' : 'none';
+  });
+}
+function closeInfoModal(){ document.getElementById('infoModal').style.display = 'none'; }
+</script>
 </body>
 </html>
