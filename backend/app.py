@@ -36,7 +36,7 @@ from services.payments import PaymentService, normalize_phone, validate_provider
 from services.reports import generate_and_send_reports
 from services.invoices import generate_invoice_pdf
 
-# Safely import admin analytics (will not crash if file is missing)
+# Safely import admin analytics
 try:
     from services import admin_analytics as aa
 except ImportError:
