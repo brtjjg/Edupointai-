@@ -1,4 +1,4 @@
-// app.js
+// js/app.js
 let currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -6,9 +6,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (publicView) publicView.classList.add('active');
 });
 
-// This is called automatically by the Google script in index.html
 function initAuth() {
-    if (typeof google === 'undefined') return; // Keep fallback buttons if Google fails
+    if (typeof google === 'undefined') return; 
     
     try {
         google.accounts.id.initialize({
@@ -16,13 +15,11 @@ function initAuth() {
             callback: handleCredentialResponse
         });
         
-        // 1. Clear the fallback buttons
         document.getElementById("google-buttons-container").innerHTML = `
             <div id="google-signin-btn"></div>
             <div id="google-signup-btn"></div>
         `;
         
-        // 2. Render the official Google buttons
         google.accounts.id.renderButton(
             document.getElementById("google-signin-btn"),
             { theme: "outline", size: "large", text: "signin_with", width: 220 }
@@ -34,18 +31,16 @@ function initAuth() {
         );
     } catch (e) {
         console.error("Google Auth Error:", e);
-        // If there's an error, the fallback buttons stay on screen
     }
 }
 
-// Alert user if they click the fallback buttons
 function manualGoogleAlert() {
     alert("Google Sign-In is currently restricted. Please ensure https://edupointai-frontend.vercel.app is added to your Authorized JavaScript Origins in the Google Cloud Console.");
 }
 
 async function handleCredentialResponse(response) {
+    showLoading();
     try {
-        // Replace with your actual backend URL
         const API_BASE = window.EDUPOINT_API_BASE || 'https://edupointai-backend.onrender.com'; 
         
         const res = await fetch(`${API_BASE}/api/auth/google`, {
@@ -53,6 +48,9 @@ async function handleCredentialResponse(response) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ credential: response.credential })
         });
+        
+        if (!res.ok) throw new Error("Server responded with an error");
+        
         const data = await res.json();
         
         if (data.ok) {
@@ -67,11 +65,45 @@ async function handleCredentialResponse(response) {
                 setTimeout(() => showView('student'), 10500);
             }
         } else {
-            alert('Login failed: ' + (data.error || 'Unknown error'));
+            showConnectionError(data.error || "Incorrect email or password.");
         }
     } catch (err) {
         console.error(err);
-        alert('Login error. Please ensure your backend is running.');
+        showConnectionError("We're temporarily unable to connect. Please try again shortly.");
+    } finally {
+        hideLoading();
+    }
+}
+
+function showLoading() {
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) loader.style.display = 'flex';
+}
+
+function hideLoading() {
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) loader.style.display = 'none';
+}
+
+function showConnectionError(msg) {
+    const modal = document.getElementById('connectionErrorModal');
+    const text = document.getElementById('errorMessageText');
+    if (msg) text.textContent = msg;
+    if (modal) modal.style.display = 'flex';
+}
+
+function hideConnectionError() {
+    const modal = document.getElementById('connectionErrorModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function retryLogin() {
+    hideConnectionError();
+    // Trigger Google Sign-In again
+    if (typeof google !== 'undefined') {
+        google.accounts.id.prompt();
+    } else {
+        location.reload();
     }
 }
 
