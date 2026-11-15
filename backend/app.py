@@ -68,9 +68,11 @@ def ensure_admin():
     email = os.getenv("ADMIN_EMAIL", "").strip().lower()
     password = os.getenv("ADMIN_PASSWORD", "")
     if not email or not password: return
+    
     with connect() as conn:
         row = conn.execute("SELECT id FROM users WHERE email=%s", (email,)).fetchone()
         if row:
+            # Safe update - only updates what exists
             conn.execute("UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", (hash_password(password), row["id"]))
         else:
             conn.execute(
