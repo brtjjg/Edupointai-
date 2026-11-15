@@ -6,9 +6,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (publicView) publicView.classList.add('active');
 });
 
-// This is called automatically by the Google script in index.html
 function initAuth() {
-    if (typeof google === 'undefined') return; // Keep fallback buttons if Google fails
+    if (typeof google === 'undefined') return; 
     
     try {
         google.accounts.id.initialize({
@@ -16,13 +15,11 @@ function initAuth() {
             callback: handleCredentialResponse
         });
         
-        // 1. Clear the fallback buttons
         document.getElementById("google-buttons-container").innerHTML = `
             <div id="google-signin-btn"></div>
             <div id="google-signup-btn"></div>
         `;
         
-        // 2. Render the official Google buttons
         google.accounts.id.renderButton(
             document.getElementById("google-signin-btn"),
             { theme: "outline", size: "large", text: "signin_with", width: 220 }
@@ -34,20 +31,18 @@ function initAuth() {
         );
     } catch (e) {
         console.error("Google Auth Error:", e);
-        // If there's an error, the fallback buttons stay on screen
     }
 }
 
-// Alert user if they click the fallback buttons
+// This is called when the grey fallback button is clicked
 function manualGoogleAlert() {
-    alert("Google Sign-In is currently restricted. Please ensure https://edupointai-frontend.vercel.app is added to your Authorized JavaScript Origins in the Google Cloud Console.");
+    showConnectionError("Google Sign-In is temporarily restricted on this domain. Please contact support to activate your account.");
 }
 
 async function handleCredentialResponse(response) {
     showLoading();
     
     try {
-        // ✅ FIXED: Using your actual Render backend URL
         const API_BASE = window.EDUPOINT_API_BASE || 'https://edupoint-api.onrender.com'; 
         
         const res = await fetch(`${API_BASE}/api/auth/google`, {
@@ -56,9 +51,7 @@ async function handleCredentialResponse(response) {
             body: JSON.stringify({ credential: response.credential })
         });
         
-        if (!res.ok) {
-            throw new Error("Server responded with an error");
-        }
+        if (!res.ok) throw new Error("Server responded with an error");
         
         const data = await res.json();
         
@@ -97,7 +90,10 @@ function hideLoading() {
 function showConnectionError(msg) {
     const modal = document.getElementById('connectionErrorModal');
     const text = document.getElementById('errorMessageText');
-    if (msg) text.textContent = msg;
+    // Update the text to match the specific error
+    if (text) {
+        text.innerHTML = msg; 
+    }
     if (modal) modal.style.display = 'flex';
 }
 
@@ -108,7 +104,6 @@ function hideConnectionError() {
 
 function retryLogin() {
     hideConnectionError();
-    // Trigger Google Sign-In again
     if (typeof google !== 'undefined') {
         google.accounts.id.prompt();
     } else {
