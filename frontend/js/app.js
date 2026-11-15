@@ -1,4 +1,4 @@
-// js/app.js
+// frontend/js/app.js
 let currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -6,8 +6,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (publicView) publicView.classList.add('active');
 });
 
+// This is called automatically by the Google script in index.html
 function initAuth() {
-    if (typeof google === 'undefined') return; 
+    if (typeof google === 'undefined') return; // Keep fallback buttons if Google fails
     
     try {
         google.accounts.id.initialize({
@@ -15,11 +16,13 @@ function initAuth() {
             callback: handleCredentialResponse
         });
         
+        // 1. Clear the fallback buttons
         document.getElementById("google-buttons-container").innerHTML = `
             <div id="google-signin-btn"></div>
             <div id="google-signup-btn"></div>
         `;
         
+        // 2. Render the official Google buttons
         google.accounts.id.renderButton(
             document.getElementById("google-signin-btn"),
             { theme: "outline", size: "large", text: "signin_with", width: 220 }
@@ -31,17 +34,21 @@ function initAuth() {
         );
     } catch (e) {
         console.error("Google Auth Error:", e);
+        // If there's an error, the fallback buttons stay on screen
     }
 }
 
+// Alert user if they click the fallback buttons
 function manualGoogleAlert() {
     alert("Google Sign-In is currently restricted. Please ensure https://edupointai-frontend.vercel.app is added to your Authorized JavaScript Origins in the Google Cloud Console.");
 }
 
 async function handleCredentialResponse(response) {
     showLoading();
+    
     try {
-        const API_BASE = window.EDUPOINT_API_BASE || 'https://edupointai-backend.onrender.com'; 
+        // ✅ FIXED: Using your actual Render backend URL
+        const API_BASE = window.EDUPOINT_API_BASE || 'https://edupoint-api.onrender.com'; 
         
         const res = await fetch(`${API_BASE}/api/auth/google`, {
             method: 'POST',
@@ -49,7 +56,9 @@ async function handleCredentialResponse(response) {
             body: JSON.stringify({ credential: response.credential })
         });
         
-        if (!res.ok) throw new Error("Server responded with an error");
+        if (!res.ok) {
+            throw new Error("Server responded with an error");
+        }
         
         const data = await res.json();
         
@@ -68,7 +77,7 @@ async function handleCredentialResponse(response) {
             showConnectionError(data.error || "Incorrect email or password.");
         }
     } catch (err) {
-        console.error(err);
+        console.error("Login Error:", err);
         showConnectionError("We're temporarily unable to connect. Please try again shortly.");
     } finally {
         hideLoading();
