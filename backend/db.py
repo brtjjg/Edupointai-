@@ -32,7 +32,7 @@ def init_db():
                 credits INT DEFAULT 0, created_at TIMESTAMPTZ DEFAULT now()
             );
         """)
-        # Safely add missing columns if they don't exist (Fixes the Render error)
+        # Safely add missing columns if they don't exist
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS active INT DEFAULT 1;")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INT DEFAULT 0;")
@@ -80,7 +80,7 @@ def init_db():
         """)
         
         # ==========================================
-        # 4. SESSIONS
+        # 4. SESSIONS (FIXED FOR AUTH.PY)
         # ==========================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
@@ -88,6 +88,10 @@ def init_db():
                 created_at TIMESTAMPTZ DEFAULT now()
             );
         """)
+        # Safely add missing columns that auth.py expects
+        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS token TEXT UNIQUE;")
+        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;")
+        conn.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();")
 
         # ==========================================
         # 5. ADMIN DASHBOARD TABLES
