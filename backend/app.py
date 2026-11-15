@@ -1247,5 +1247,356 @@ def handle_exception(e):
     logger.error(f"Unhandled Exception: {traceback.format_exc()}")
     return jsonify(ok=False, error="An unexpected error occurred. Please contact support."), 500
 
+# ================================================================
+# ADMIN DASHBOARD — routes + email/invoice/report audit hooks
+# Append this block at the bottom of app.py
+# ================================================================
+from services import admin_analytics as aa
+import traceback as _tb
+from datetime import timedelta as _td
+
+# ---------- Overview & chart endpoints ----------
+@app.get("/api/admin/overview")
+@admin_required
+def api_admin_overview():
+    u = current_user()
+    return jsonify(
+        ok=True,
+        stats=aa.overview_stats(7),
+        activity=aa.daily_activity(7),
+        payment_distribution=aa.payment_distribution(),
+        student_distribution=aa.student_distribution(),
+        revenue=aa.revenue_trend(14),
+        recent_students=aa.list_students(5),
+        system_health=aa.system_health(),
+        admin={"name": u.get("name","Admin"), "email": u["email"], "role": u.get("role","admin")}
+    )
+
+
+@app.get("/api/admin/charts/<name>")
+@admin_required
+def api_admin_chart(name):
+    days = int(request.args.get("days", 30))
+    mapping = {
+        "daily-activity":     lambda: aa.daily_activity(days),
+        "revenue":            lambda: aa.revenue_trend(days),
+        "registrations":      lambda: aa.registration_trend(days),
+        "payment-performance":lambda: aa.payment_performance(days),
+        "cluster":            aa.cluster_distribution,
+        "invoice-report":     lambda: aa.invoice_report_trend(days),
+        "reminders":          lambda: aa.reminder_stats(days),
+        "payment-distribution": aa.payment_distribution,
+        "student-distribution": aa.student_distribution,
+        "email-distribution":   aa.email_distribution,
+        "invoice-distribution": aa.invoice_distribution,
+        "report-distribution":  aa.report_distribution,
+    }
+    fn = mapping.get(name)
+    if not fn:
+        return jsonify(ok=False, error="Unknown chart"), 404
+    return jsonify(ok=True, data=fn())
+
+
+# ---------- Students ----------
+@app.get("/api/admin/students")
+@admin_required
+def api_admin_students():
+    status_filter = request.args.get("status")
+    return jsonify(ok=True, students=aa.list_students(300, status_filter))
+
+
+@app.post("/api/admin/students/<int:user_id>/status")
+@admin_required
+def api_admin_student_status(user_id):
+    d = request.get_json(silent=True) or {}
+    status = d.get("status")
+    if status not in ("active", "suspended"):
+        return jsonify(ok=False, error="Invalid status"), 400
+    aa.set_student_status(user_id, status, current_user())
+    return jsonify(ok=True)
+
+
+# ---------- Payments (read-only view; verifications go through existing logic) ----------
+@app.get("/api/admin/payments")
+@admin_required
+def api_admin_payments():
+    with connect() as conn:
+        rows = conn.execute("""
+            SELECT p.id, p.transaction_id, p.user_id, p.amount, p.status, p.created_at,
+                   p.network, p.provider_reference,
+                   u.name student_name, u.email student_email,
+                   i.invoice_number invoice_id,
+                   (SELECT email_status FROM report_versions rv
+                     WHERE rv.history_id = (SELECT id FROM calculation_history ch
+                        WHERE ch.user_id = p.user_id ORDER BY ch.created_at DESC LIMIT 1)
+                     ORDER BY rv.created_at DESC LIMIT 1) report_status
+            FROM payments p
+            LEFT JOIN users u ON u.id=p.user_id
+            LEFT JOIN invoice_records i ON i.transaction_id=p.transaction_id
+            ORDER BY p.created_at DESC LIMIT 500""").fetchall()
+    return jsonify(ok=True, payments=[dict(r) for r in rows])
+
+
+# ---------- Calculations ----------
+@app.get("/api/admin/calculations")
+@admin_required
+def api_admin_calculations():
+    with connect() as conn:
+        rows = conn.execute("""
+            SELECT h.id, h.reference, h.user_id, h.cluster_points, h.created_at,
+                   h.report_status, u.name student_name, u.email student_email
+            FROM calculation_history h LEFT JOIN users u ON u.id=h.user_id
+            ORDER BY h.created_at DESC LIMIT 500""").fetchall()
+    return jsonify(ok=True, calculations=[dict(r) for r in rows])
+
+
+# ---------- Eligibility ----------
+@app.get("/api/admin/eligibility")
+@admin_required
+def api_admin_eligibility():
+    # Aggregates from calculation results if stored; otherwise empty
+    try:
+        with connect() as conn:
+            rows = conn.execute("""
+                SELECT u.name student_name, h.cluster_points,
+                       cc.course, cc.university, cc.cutoff,
+                       CASE WHEN h.cluster_points >= cc.cutoff THEN 'eligible'
+                            WHEN cc.cutoff - h.cluster_points <= 1.0 THEN 'close'
+                            ELSE 'not' END status
+                FROM calculation_history h
+                JOIN users u ON u.id = h.user_id
+                LEFT JOIN calculation_courses cc ON cc.history_id = h.id
+                WHERE h.cluster_points IS NOT NULL
+                ORDER BY h.created_at DESC LIMIT 500
+            """).fetchall()
+        return jsonify(ok=True, rows=[dict(r) for r in rows])
+    except Exception:
+        return jsonify(ok=True, rows=[])
+
+
+# ---------- Invoices, reports, emails ----------
+@app.get("/api/admin/invoices")
+@admin_required
+def api_admin_invoices():
+    return jsonify(ok=True, invoices=aa.list_invoices())
+
+
+@app.get("/api/admin/reports")
+@admin_required
+def api_admin_reports():
+    return jsonify(ok=True, reports=aa.list_reports())
+
+
+@app.get("/api/admin/emails")
+@admin_required
+def api_admin_emails():
+    return jsonify(ok=True, emails=aa.list_emails(300, request.args.get("status")))
+
+
+# ---------- Reminders ----------
+@app.get("/api/admin/reminders")
+@admin_required
+def api_admin_reminders():
+    return jsonify(ok=True, reminders=aa.list_outstanding_reminders())
+
+
+# ---------- Audit / health / settings ----------
+@app.get("/api/admin/audit-logs")
+@admin_required
+def api_admin_audit():
+    return jsonify(ok=True, logs=aa.list_audit())
+
+
+@app.get("/api/admin/health")
+@admin_required
+def api_admin_health():
+    return jsonify(ok=True, checks=aa.system_health(), data_quality=aa.data_quality())
+
+
+@app.get("/api/admin/settings")
+@admin_required
+def api_admin_settings_get():
+    return jsonify(ok=True, settings=aa.get_settings())
+
+
+@app.post("/api/admin/settings/<key>")
+@admin_required
+def api_admin_settings_set(key):
+    d = request.get_json(silent=True) or {}
+    aa.set_setting(key, d, current_user()["id"])
+    aa.log_audit(current_user(), f"settings.update.{key}", "settings", key, d)
+    return jsonify(ok=True)
+
+
+# ---------- Daily Excel ----------
+@app.get("/api/admin/excel/history")
+@admin_required
+def api_admin_excel_history():
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM daily_excel_reports ORDER BY report_date DESC LIMIT 90").fetchall()
+    return jsonify(ok=True, rows=[
+        dict(r, report_date=str(r["report_date"]),
+             generated_at=str(r["generated_at"])) for r in rows])
+
+
+@app.post("/api/admin/excel/generate")
+@admin_required
+def api_admin_excel_generate():
+    d = request.get_json(silent=True) or {}
+    day_str = d.get("date")
+    day = datetime.strptime(day_str, "%Y-%m-%d").date() if day_str else (
+        aa.today_nairobi() - _td(days=1))
+    res = aa.generate_and_store_daily_excel(day)
+    if not res:
+        return jsonify(ok=False, error="Already exists or generation failed"), 400
+    aa.log_audit(current_user(), "excel.generate", "daily_excel", str(day), res)
+    return jsonify(ok=True, **res)
+
+
+@app.get("/api/admin/excel/download/<int:report_id>")
+@admin_required
+def api_admin_excel_download(report_id):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM daily_excel_reports WHERE id=%s", (report_id,)).fetchone()
+    if not row or not row["file_path"] or not os.path.exists(row["file_path"]):
+        return jsonify(ok=False, error="File not found"), 404
+    return send_file(row["file_path"], as_attachment=True, download_name=row["filename"])
+
+
+# ---------- Cron endpoint for daily Excel ----------
+@app.get("/api/admin/cron/daily-excel")
+def cron_daily_excel():
+    secret = request.args.get("secret")
+    if secret != os.getenv("CRON_SECRET", "change_me_in_env"):
+        return "Unauthorized", 401
+    res = aa.generate_and_store_daily_excel()
+    return jsonify(ok=True, generated=res)
+
+
+# ================================================================
+# EMAIL / INVOICE / REPORT LOGGING HOOKS
+# ================================================================
+# These wrap your existing senders so every email, invoice, and
+# report is automatically logged to the audit trail. If a wrapper
+# fails to reach the original (because of a signature mismatch),
+# it silently passes through — nothing breaks.
+
+def _log_email_safe(user_id, email_to, email_type, subject,
+                    status="accepted_by_provider", error=None):
+    try:
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO email_logs(user_id,email_to,email_type,subject,status,error_message) "
+                "VALUES(%s,%s,%s,%s,%s,%s)",
+                (user_id, email_to, email_type, subject, status, error))
+    except Exception:
+        log_msg = _tb.format_exc()
+        print(f"[admin_hook] log_email failed: {log_msg}")
+
+
+def _log_invoice_safe(invoice_number, transaction_id, user_id, amount):
+    try:
+        with connect() as conn:
+            conn.execute(
+                "INSERT INTO invoice_records"
+                "(invoice_number,transaction_id,user_id,amount,delivery_status,email_sent_at) "
+                "VALUES(%s,%s,%s,%s,'sent',now()) "
+                "ON CONFLICT (invoice_number) DO NOTHING",
+                (invoice_number, transaction_id, user_id, amount))
+    except Exception:
+        print(f"[admin_hook] log_invoice failed: {_tb.format_exc()}")
+
+
+def _log_report_safe(user_id):
+    try:
+        with connect() as conn:
+            hist = conn.execute(
+                "SELECT id FROM calculation_history WHERE user_id=%s "
+                "ORDER BY created_at DESC LIMIT 1", (user_id,)).fetchone()
+            if hist:
+                conn.execute(
+                    "INSERT INTO report_versions"
+                    "(history_id,version,pdf_status,email_status) "
+                    "VALUES(%s,1,'generated','sent')", (hist["id"],))
+    except Exception:
+        print(f"[admin_hook] log_report failed: {_tb.format_exc()}")
+
+
+# ---- Wrap existing email senders by known common names ----
+# We try each one; if not defined, we skip silently.
+
+def _wrap_and_hook(name, before=None, after=None):
+    fn = globals().get(name)
+    if not callable(fn):
+        return
+    def wrapper(*args, **kwargs):
+        result = None
+        try:
+            if before:
+                before(*args, **kwargs)
+            result = fn(*args, **kwargs)
+            if after:
+                after(result, *args, **kwargs)
+        except Exception as e:
+            print(f"[admin_hook] {name} raised: {e}")
+            raise
+        return result
+    wrapper.__name__ = name
+    globals()[name] = wrapper
+
+
+# send_pending_invoice_email(user_email, user_name, payment)
+def _before_invoice(user_email=None, user_name=None, payment=None, *a, **k):
+    if payment:
+        _log_email_safe(
+            payment.get("user_id"), user_email, "invoice_pending",
+            f"Invoice {str(payment.get('transaction_id',''))[-8:]}",
+            status="accepted_by_provider")
+        _log_invoice_safe(
+            "INV-" + str(payment.get("transaction_id",""))[-8:].upper(),
+            payment.get("transaction_id"),
+            payment.get("user_id"),
+            float(payment.get("amount", 0)))
+
+_wrap_and_hook("send_pending_invoice_email", before=_before_invoice)
+
+
+# send_paid_receipt_email(user_email, user_name, cluster_points, results,
+#                        subjects, grades, scholarships, payment)
+def _after_receipt(result=None, user_email=None, *a, **k):
+    payment = k.get("payment")
+    if not payment and len(a) >= 7:
+        payment = a[6]  # positional 7th arg
+    uid = payment.get("user_id") if isinstance(payment, dict) else None
+    _log_email_safe(uid, user_email, "report_receipt", "Your Results & Receipt",
+                    status="accepted_by_provider")
+    if uid:
+        _log_report_safe(uid)
+
+_wrap_and_hook("send_paid_receipt_email", after=_after_receipt)
+
+
+# send_reminder_email(user_email, user_name, payment)
+def _before_reminder(user_email=None, user_name=None, payment=None, *a, **k):
+    if payment:
+        _log_email_safe(
+            payment.get("user_id"), user_email, "reminder",
+            f"Reminder {str(payment.get('transaction_id',''))[-8:]}",
+            status="accepted_by_provider")
+        try:
+            aa.log_reminder(payment.get("transaction_id"))
+        except Exception:
+            pass
+
+_wrap_and_hook("send_reminder_email", before=_before_reminder)
+
+
+# Any additional common names you may have — hooks attempt each silently
+for _fn_name in ("send_payment_failed_email", "send_payment_success_email"):
+    if callable(globals().get(_fn_name)):
+        print(f"[admin_hook] found {_fn_name}; extend hooks if you want it logged")
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
