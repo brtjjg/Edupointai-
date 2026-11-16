@@ -23,7 +23,7 @@ from brevo.transactional_emails import (
     SendTransacEmailRequestAttachmentItem,
 )
 from db import connect
-from invoices import send_success_email_with_receipt # Imports the email function from invoices.py
+from services.invoices import send_success_email_with_receipt  # FIXED: was `from invoices import ...`
 
 logger = logging.getLogger(__name__)
 
