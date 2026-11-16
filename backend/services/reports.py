@@ -162,7 +162,7 @@ def generate_and_send_reports():
 
         api_key = os.getenv("BREVO_API_KEY")
         sender_email = os.getenv("SENDER_EMAIL")
-        admin_email = os.getenv("ADMIN_EMAIL", "brayondueki815@gmail.com")
+        admin_email = os.getenv("ADMIN_EMAIL", "nexoraacademyhelpdesk@gmail.com")
         
         if not api_key or not sender_email:
             logger.error("Brevo credentials missing.")
