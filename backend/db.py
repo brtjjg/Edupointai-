@@ -95,7 +95,20 @@ def init_db():
     with connect() as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA)
-            # Migrate: add columns to existing deployments
             for col, col_type in [
                 ("calculation_data", "JSONB"),
-                ("results_json
+                ("results_json", "JSONB"),
+                ("invoice_sent_at", "TIMESTAMPTZ"),
+                ("last_reminder_at", "TIMESTAMPTZ"),
+                ("reminder_count", "INTEGER NOT NULL DEFAULT 0"),
+            ]:
+                cur.execute(f"""
+                    DO $$ 
+                    BEGIN 
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                       WHERE table_schema='edupoint' AND table_name='payments' 
+                                         AND column_name='{col}') THEN
+                            ALTER TABLE edupoint.payments ADD COLUMN {col} {col_type};
+                        END IF;
+                    END $$;
+                """)
