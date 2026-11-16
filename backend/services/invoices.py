@@ -10,6 +10,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.lib.colors import HexColor
 import qrcode
+import logging
 
 # Brevo v4 Imports
 from brevo import Brevo
@@ -18,6 +19,8 @@ from brevo.transactional_emails import (
     SendTransacEmailRequestToItem,
     SendTransacEmailRequestAttachmentItem,
 )
+
+logger = logging.getLogger(__name__)
 
 # Brand Colors
 NAVY = HexColor("#0A1C3A")
@@ -39,6 +42,71 @@ _STATUS_DISPLAY = {
     "INVALID": "Invalid",
 }
 
+# ==========================================
+# HTML EMAIL TEMPLATE BUILDER
+# ==========================================
+def _build_email_html(status_type, title, subtitle, invoice_number, amount, button_text, button_link, extra_html=""):
+    """Helper to build the exact card layout from the screenshots."""
+    
+    if status_type == "PENDING":
+        pill_bg = "#f59e0b" # Amber
+        pill_text = "AWAITING PAYMENT"
+    elif status_type == "FAILED":
+        pill_bg = "#ef4444" # Red
+        pill_text = "PAYMENT FAILED"
+    elif status_type == "REMINDER":
+        pill_bg = "#f59e0b" # Amber
+        pill_text = "PAYMENT REMINDER"
+    else:
+        pill_bg = "#10b981" # Green
+        pill_text = "PAYMENT CONFIRMATION"
+        
+    title_color = "#0b1530"
+
+    return f"""
+    <div style="background-color: #f4f6f8; padding: 30px 15px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            
+            <!-- Header -->
+            <div style="background-color: #0b1530; padding: 25px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding: 40px 30px; text-align: center;">
+                <div style="background-color: {pill_bg}; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-bottom: 25px; letter-spacing: 0.5px;">
+                    {pill_text}
+                </div>
+                
+                <h2 style="color: {title_color}; margin: 0 0 10px 0; font-size: 26px;">{title}</h2>
+                <p style="color: #64748b; font-size: 15px; margin: 0 0 30px 0;">{subtitle}</p>
+                
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+                
+                <p style="color: #7952c7; font-size: 14px; font-weight: bold; margin: 0 0 10px 0; letter-spacing: 0.5px;">INVOICE {invoice_number}</p>
+                <h1 style="color: #0b1530; font-size: 36px; margin: 0 0 25px 0; font-weight: 800;">KES {amount:,.2f}</h1>
+                
+                {extra_html}
+                
+                <a href="{button_link}" style="background-color: #7952c7; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; margin-bottom: 25px;">
+                    {button_text}
+                </a>
+                
+                <p style="color: #64748b; font-size: 13px; margin: 0;">You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.</p>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 13px; margin: 0 0 5px 0;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7952c7; text-decoration: none;">academichelpdesk1@gmail.com</a></p>
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2026 EduPointAI. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+    """
+
+# ==========================================
+# PDF GENERATION
+# ==========================================
 def generate_invoice_pdf(user, payment):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
@@ -56,7 +124,6 @@ def generate_invoice_pdf(user, payment):
     styles.add(ParagraphStyle(name="PayBtn", fontName="Helvetica-Bold", fontSize=15, textColor=colors.white, alignment=1))
     styles.add(ParagraphStyle(name="PayLink", fontName="Helvetica", fontSize=8, textColor=DARK_GRAY, alignment=1, leading=11))
 
-    # Format dates safely
     created_at = payment.get("created_at")
     if created_at is None:
         created_at = datetime.now(nairobi_tz)
@@ -81,9 +148,6 @@ def generate_invoice_pdf(user, payment):
     payment_link = (payment.get("redirect_url") or payment.get("payment_link") or "").strip()
     amount = float(payment.get("amount", 0))
 
-    # ==========================================
-    # 1. HEADER
-    # ==========================================
     header_data = [[
         Paragraph("<b>🎓 EduPoint AI</b><br/><font size=8 color='#4B5563'>Your Education. Your Future.</font>", styles["Normal"]),
         Paragraph(
@@ -102,9 +166,6 @@ def generate_invoice_pdf(user, payment):
     story.append(header_table)
     story.append(Spacer(1, 10*mm))
 
-    # ==========================================
-    # 2. BILL TO & DETAILS
-    # ==========================================
     billing_data = [
         [Paragraph("<b>BILL TO:</b>", styles["SectionHeader"]), Paragraph("<b>DETAILS:</b>", styles["SectionHeader"])],
         [
@@ -125,9 +186,6 @@ def generate_invoice_pdf(user, payment):
     story.append(billing_table)
     story.append(Spacer(1, 10*mm))
 
-    # ==========================================
-    # 3. SERVICE DESCRIPTION
-    # ==========================================
     service_data = [
         [Paragraph("<b>DESCRIPTION</b>", styles["Normal"]), Paragraph("<b>AMOUNT</b>", styles["Normal"])],
         [
@@ -155,9 +213,6 @@ def generate_invoice_pdf(user, payment):
     story.append(service_table)
     story.append(Spacer(1, 5*mm))
 
-    # ==========================================
-    # 4. FINANCIAL SUMMARY
-    # ==========================================
     summary_data = [
         [Paragraph("Subtotal:", styles["InvBody"]), Paragraph(f"KES {amount:,.2f}", styles["InvBody"])],
         [Paragraph("Tax (0%):", styles["InvBody"]), Paragraph("KES 0.00", styles["InvBody"])],
@@ -177,11 +232,7 @@ def generate_invoice_pdf(user, payment):
     story.append(summary_table)
     story.append(Spacer(1, 12*mm))
 
-    # ==========================================
-    # 5. PAYMENT SECTION
-    # ==========================================
     if is_paid:
-        # -------- PAID / RECEIPT --------
         qr = qrcode.QRCode(version=1, box_size=4, border=1)
         qr.add_data(f"https://edupointai-frontend.vercel.app/verify?inv={inv_number}&tx={payment['transaction_id']}")
         qr.make(fit=True)
@@ -212,7 +263,6 @@ def generate_invoice_pdf(user, payment):
         story.append(paid_table)
 
     else:
-        # -------- PENDING / PAY NOW --------
         story.append(Paragraph("<b>PAYMENT REQUIRED</b>", styles["SectionHeader"]))
         story.append(Spacer(1, 3*mm))
 
@@ -273,48 +323,144 @@ def generate_invoice_pdf(user, payment):
     buffer.seek(0)
     return buffer
 
-def send_success_email_with_receipt(user, payment, results_pdf_buffer):
-    """
-    Sends the successful payment email with both the Receipt and the Results PDF.
-    """
+# ==========================================
+# EMAIL SENDING FUNCTIONS
+# ==========================================
+
+def _send_invoice_email(user, payment, payment_link, status_type, title, subtitle, subject):
+    """Base function to send all invoice-related emails."""
     api_key = os.getenv("BREVO_API_KEY")
     sender_email = os.getenv("SENDER_EMAIL")
-    
     if not api_key or not sender_email:
-        print("Missing Brevo credentials")
+        logger.error("Missing Brevo credentials")
         return False
 
-    # 1. Generate the invoice PDF using the function above
-    invoice_buffer = generate_invoice_pdf(user, payment)
+    amount = float(payment.get("amount", 100))
+    inv_number = f"INV-{payment['transaction_id'][-8:].upper()}"
     
-    # 2. Encode both PDFs to base64 for Brevo
+    html_content = _build_email_html(
+        status_type=status_type,
+        title=title,
+        subtitle=subtitle,
+        invoice_number=inv_number,
+        amount=amount,
+        button_text=f"PAY NOW - KES {amount:,.0f}" if status_type in ["PENDING", "REMINDER", "FAILED"] else "VIEW MY REPORT",
+        button_link=payment_link
+    )
+
+    try:
+        client = Brevo(api_key=api_key)
+        client.transactional_emails.send_transac_email(
+            subject=subject,
+            html_content=html_content,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
+            to=[SendTransacEmailRequestToItem(email=user['email'])],
+            attachment=[
+                SendTransacEmailRequestAttachmentItem(
+                    content=base64.b64encode(generate_invoice_pdf(user, payment).getvalue()).decode('utf-8'), 
+                    name=f"Invoice_{inv_number}.pdf"
+                )
+            ]
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send {status_type} email: {e}")
+        return False
+
+
+def send_pending_invoice_email(user, payment, payment_link):
+    inv_no = payment['transaction_id'][-8:].upper()
+    return _send_invoice_email(
+        user, payment, payment_link, 
+        status_type="PENDING",
+        title="Your invoice is ready!",
+        subtitle="One step closer to unlocking your academic opportunities.",
+        subject=f"EduPointAI Invoice {inv_no} — KES 100"
+    )
+
+
+def send_failed_invoice_email(user, payment, payment_link):
+    inv_no = payment['transaction_id'][-8:].upper()
+    return _send_invoice_email(
+        user, payment, payment_link, 
+        status_type="FAILED",
+        title="Payment Failed",
+        subtitle="Your recent transaction could not be completed. Please try again.",
+        subject=f"Action Required: Payment Failed for Invoice {inv_no}"
+    )
+
+
+def send_invoice_reminder_email(user, payment, payment_link):
+    inv_no = payment['transaction_id'][-8:].upper()
+    return _send_invoice_email(
+        user, payment, payment_link, 
+        status_type="REMINDER",
+        title="Reminder: Invoice Pending",
+        subtitle="Just a friendly reminder to complete your payment to unlock your report.",
+        subject=f"Reminder: Your EduPointAI Invoice {inv_no} is awaiting payment"
+    )
+
+
+def send_success_email_with_receipt(user, payment, results_pdf_buffer, cluster_points=None):
+    api_key = os.getenv("BREVO_API_KEY")
+    sender_email = os.getenv("SENDER_EMAIL")
+    if not api_key or not sender_email:
+        logger.error("Missing Brevo credentials")
+        return False
+
+    invoice_buffer = generate_invoice_pdf(user, payment)
+    inv_number = f"INV-{payment['transaction_id'][-8:].upper()}"
+    
     def to_b64(buf):
         return base64.b64encode(buf.getvalue()).decode('utf-8')
 
     invoice_b64 = to_b64(invoice_buffer)
     results_b64 = to_b64(results_pdf_buffer)
 
-    # 3. Send via Brevo API
+    cluster_html = f'<p style="color: #0b1530; font-size: 16px; font-weight: bold; margin: 0 0 25px 0;">Cluster Points: {cluster_points}</p>' if cluster_points else ""
+    
+    html_content = f"""
+    <div style="background-color: #f4f6f8; padding: 30px 15px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="background-color: #0b1530; padding: 25px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
+            </div>
+            <div style="padding: 40px 30px; text-align: center;">
+                <div style="background-color: #10b981; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-bottom: 25px; letter-spacing: 0.5px;">
+                    PAYMENT CONFIRMATION
+                </div>
+                <h2 style="color: #0b1530; margin: 0 0 15px 0; font-size: 26px;">Payment successful! ✔️</h2>
+                <p style="color: #334155; font-size: 15px; margin: 0 0 30px 0;">Thank you! Your payment has been confirmed.</p>
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+                <h3 style="color: #7952c7; font-size: 20px; margin: 0 0 10px 0;">Your report is ready! 🎓</h3>
+                <p style="color: #334155; font-size: 15px; margin: 0 0 10px 0;">Your next academic chapter starts here.</p>
+                {cluster_html}
+                <a href="https://edupointai-frontend.vercel.app" style="background-color: #7952c7; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; margin-bottom: 25px;">
+                    VIEW MY REPORT
+                </a>
+                <p style="color: #64748b; font-size: 13px; margin: 0;">Your official Results Report and Payment Receipt are attached to this email.</p>
+            </div>
+            <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 13px; margin: 0 0 5px 0;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7952c7; text-decoration: none;">academichelpdesk1@gmail.com</a></p>
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2026 EduPointAI. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+    """
+
     try:
         client = Brevo(api_key=api_key)
         client.transactional_emails.send_transac_email(
-            subject="Your EduPoint AI Results & Receipt",
-            html_content=f"""
-                <h2>Hello {user.get('name', 'Student')},</h2>
-                <p>Thank you for your payment of KES {payment.get('amount', 100)}.</p>
-                <p>Please find attached your official receipt and your personalized Results Report.</p>
-                <br>
-                <p>Best regards,<br>EduPoint AI Team</p>
-            """,
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI"),
+            subject="Your EduPointAI Results & Receipt",
+            html_content=html_content,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
             to=[SendTransacEmailRequestToItem(email=user['email'])],
             attachment=[
-                SendTransacEmailRequestAttachmentItem(content=invoice_b64, name="Receipt.pdf"),
-                SendTransacEmailRequestAttachmentItem(content=results_b64, name="Results_Report.pdf"),
+                SendTransacEmailRequestAttachmentItem(content=results_b64, name="EduPointAI_Results.pdf"),
+                SendTransacEmailRequestAttachmentItem(content=invoice_b64, name=f"Receipt_{inv_number}.pdf"),
             ]
         )
-        print(f"Successfully sent results and receipt to {user['email']}")
         return True
     except Exception as e:
-        print(f"Failed to send receipt email: {e}")
+        logger.error(f"Failed to send receipt email: {e}")
         return False
