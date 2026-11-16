@@ -10,16 +10,13 @@ from werkzeug.exceptions import HTTPException
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from brevo import Brevo
-from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image as RLImage
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.colors import HexColor
-import qrcode
 
 from data import (
     W, BEST, MAX, P, SCHOLARSHIPS, PAYMENT_PLANS, CHATBOT_QA,
@@ -28,11 +25,21 @@ from data import (
 from db import connect, init_db
 from auth import (
     current_user, public_user, login_required, admin_required,
-    hash_password, verify_password, create_session, destroy_session, bearer_token,
+    hash_password, create_session, destroy_session, bearer_token,
 )
 from services.payments import PaymentService, normalize_phone, validate_provider
 from services.reports import generate_and_send_reports
 from services.invoices import generate_invoice_pdf
+
+# Import the Centralized Notification Engine
+from services.notifications import (
+    send_msg_invoice_generated,
+    send_msg_payment_reminder,
+    send_msg_payment_failed,
+    send_msg_payment_successful,
+    send_msg_report_processing,
+    send_msg_report_ready
+)
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -52,20 +59,29 @@ payments = PaymentService()
 # ==========================================
 
 def ensure_admin():
+    """Ensures the admin user exists. Uses Google-only auth (no password)."""
     email = os.getenv("ADMIN_EMAIL", "").strip().lower()
-    password = os.getenv("ADMIN_PASSWORD", "")
-    if not email or not password: return
+    if not email: 
+        logger.warning("ADMIN_EMAIL environment variable is not set.")
+        return
+        
     with connect() as conn:
         row = conn.execute("SELECT id FROM users WHERE email=%s", (email,)).fetchone()
         if row:
-            conn.execute("UPDATE users SET role='admin', active=1, password_hash=%s WHERE id=%s", (hash_password(password), row["id"]))
+            # Upgrade existing user to admin
+            conn.execute("UPDATE users SET role='admin', active=1 WHERE id=%s", (row["id"],))
         else:
+            # Create placeholder admin account. They will log in via Google.
             conn.execute(
                 """INSERT INTO users(name,email,phone,password_hash,referral_code,role,active) 
                    VALUES(%s,%s,%s,%s,%s,'admin',1)""",
-                ("EduPoint Administrator", email, "", hash_password(password), "ADMIN"),
+                ("Nexora Admin", email, "", "GOOGLE_AUTH_ONLY", "ADMIN"),
             )
 ensure_admin()
+
+def add_credit(user_id, amount=1):
+    with connect() as conn:
+        conn.execute("UPDATE users SET credits = credits + %s WHERE id = %s", (amount, user_id))
 
 # ==========================================
 # CALCULATION LOGIC
@@ -110,7 +126,7 @@ def process_calculation(u, subjects, grades):
 
 
 # ==========================================
-# ATOMIC CLAIM + PROCESS
+# ATOMIC CLAIM + PROCESS (Triggers Processing & Ready Emails)
 # ==========================================
 
 def _claim_and_process(tx_id):
@@ -134,17 +150,26 @@ def _claim_and_process(tx_id):
         u = conn.execute("SELECT * FROM users WHERE id = %s", (row["user_id"],)).fetchone()
 
     try:
+        # 1. Send Processing Email (Trigger 6)
+        send_msg_report_processing(u)
+        
+        # 2. Do the calculation
         calc_results = process_calculation(u, calc_data["subjects"], calc_data["grades"])
         add_credit(row["user_id"])
-        send_paid_receipt_email(
-            u["email"], u["name"],
-            calc_results["cluster_points"], calc_results["results"],
-            calc_data["subjects"], calc_data["grades"],
-            SCHOLARSHIPS, row
+        
+        # 3. Generate the PDF buffer
+        pdf_buffer = generate_report_pdf(
+            u["name"], u["email"], calc_results["cluster_points"], 
+            calc_results["results"], calc_data["subjects"], 
+            calc_data["grades"], SCHOLARSHIPS
         )
+        
+        # 4. Send the Report Ready Email with the PDF (Trigger 5)
+        send_msg_report_ready(u, row, calc_results["cluster_points"], pdf_buffer)
+        
         with connect() as conn:
             conn.execute("UPDATE payments SET calculation_data = NULL WHERE transaction_id = %s", (tx_id,))
-        logger.info(f"Processed results for {tx_id} and sent email to {u['email']}")
+        logger.info(f"Processed results for {tx_id} and sent report to {u['email']}")
         return calc_results
     except Exception as e:
         with connect() as conn:
@@ -154,7 +179,7 @@ def _claim_and_process(tx_id):
 
 
 # ==========================================
-# PDF GENERATION (UNTOUCHED)
+# PDF GENERATION (Academic Report)
 # ==========================================
 
 def generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships):
@@ -357,305 +382,45 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
 
 
 # ==========================================
-# EMAIL SENDERS (UPDATED MATCHING LAYOUTS)
-# ==========================================
-
-def _get_brevo():
-    api_key = os.getenv("BREVO_API_KEY")
-    sender_email = os.getenv("SENDER_EMAIL")
-    if not api_key or not sender_email:
-        return None, None
-    return Brevo(api_key=api_key), sender_email
-
-def _base_email_template(pill_text, pill_bg, title, subtitle, invoice_short, amount, button_text, button_link, extra_html=""):
-    """Generates the base HTML for all emails to match the exact requested screenshots."""
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>EduPointAI</title>
-    </head>
-    <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
-            <tr>
-                <td align="center">
-                    <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
-                        
-                        <!-- Header -->
-                        <tr>
-                            <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
-                            </td>
-                        </tr>
-                        
-                        <!-- Body -->
-                        <tr>
-                            <td style="padding: 40px;">
-                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 20px;">
-                                            <span style="display: inline-block; background-color: {pill_bg}; color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">{pill_text}</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 15px;">
-                                            <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">{title}</h2>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 30px;">
-                                            <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">{subtitle}</p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 30px;">
-                                            <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
-                                        </td>
-                                    </tr>
-                                    
-                                    <!-- Details -->
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 30px;">
-                                            <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">INVOICE {invoice_short}</p>
-                                            <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
-                                        </td>
-                                    </tr>
-
-                                    {extra_html}
-
-                                    <!-- Action Button -->
-                                    <tr>
-                                        <td align="center" style="padding-bottom: 20px;">
-                                            <a href="{button_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">{button_text}</a>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        
-                        <!-- Footer -->
-                        <tr>
-                            <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                                <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
-                                <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
-    """
-
-
-def send_pending_invoice_email(user_email, user_name, payment):
-    try:
-        client, sender_email = _get_brevo()
-        if not client:
-            logger.warning("Brevo not configured, skipping invoice email")
-            return
-
-        inv_buffer = generate_invoice_pdf(
-            {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
-        )
-        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
-
-        pay_link = (payment.get("redirect_url") or "").strip()
-        amount = float(payment.get("amount", 0))
-        inv_short = payment["transaction_id"][-8:].upper()
-
-        html = _base_email_template(
-            pill_text="Awaiting Payment",
-            pill_bg="#F2A93B", # Amber
-            title="Your invoice is ready!",
-            subtitle="One step closer to unlocking your academic opportunities.",
-            invoice_short=inv_short,
-            amount=amount,
-            button_text=f"PAY NOW — KES {amount:.0f}",
-            button_link=pay_link,
-            extra_html='<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.</p></td></tr>'
-        )
-
-        client.transactional_emails.send_transac_email(
-            subject=f"EduPointAI Invoice {inv_short} — KES {amount:.0f}",
-            html_content=html,
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
-            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=[{"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"}],
-        )
-        logger.info(f"Sent pending invoice with Pay Now to {user_email}")
-    except Exception:
-        logger.error(f"Failed to send invoice email: {traceback.format_exc()}")
-
-
-def send_reminder_email(user_email, user_name, payment):
-    try:
-        client, sender_email = _get_brevo()
-        if not client:
-            return
-
-        pay_link = (payment.get("redirect_url") or "").strip()
-        if not pay_link:
-            return
-
-        inv_buffer = generate_invoice_pdf(
-            {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
-        )
-        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
-
-        amount = float(payment.get("amount", 0))
-        inv_short = payment["transaction_id"][-8:].upper()
-
-        html = _base_email_template(
-            pill_text="Payment Reminder",
-            pill_bg="#F2A93B", # Amber
-            title="A friendly reminder!",
-            subtitle="Your EduPointAI Comprehensive Results Report is waiting for you.",
-            invoice_short=inv_short,
-            amount=amount,
-            button_text=f"PAY NOW — KES {amount:.0f}",
-            button_link=pay_link,
-            extra_html='<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">If you have already paid, please ignore this email — your Results Report will arrive shortly.</p></td></tr>'
-        )
-
-        client.transactional_emails.send_transac_email(
-            subject=f"Reminder: Invoice INV-{inv_short} unpaid — KES {amount:.0f}",
-            html_content=html,
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
-            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=[{"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"}],
-        )
-        logger.info(f"Sent reminder to {user_email}")
-    except Exception:
-        logger.error(f"Failed to send reminder: {traceback.format_exc()}")
-
-
-def send_failed_invoice_email(user_email, user_name, payment):
-    """Sends the Failed Invoice email."""
-    try:
-        client, sender_email = _get_brevo()
-        if not client:
-            return
-
-        pay_link = (payment.get("redirect_url") or "").strip()
-        amount = float(payment.get("amount", 0))
-        inv_short = payment["transaction_id"][-8:].upper()
-
-        html = _base_email_template(
-            pill_text="Payment Failed",
-            pill_bg="#EF4444", # Red
-            title="Payment Failed",
-            subtitle="Your recent transaction could not be completed. Please try again.",
-            invoice_short=inv_short,
-            amount=amount,
-            button_text="TRY AGAIN",
-            button_link=pay_link if pay_link else "https://edupointai-frontend.vercel.app/",
-            extra_html='<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">If you were charged, the amount will be reversed automatically by your bank or mobile money provider.</p></td></tr>'
-        )
-
-        client.transactional_emails.send_transac_email(
-            subject=f"Action Required: Payment Failed for Invoice {inv_short}",
-            html_content=html,
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
-            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-        )
-        logger.info(f"Sent failed invoice email to {user_email}")
-    except Exception:
-        logger.error(f"Failed to send failed invoice email: {traceback.format_exc()}")
-
-
-def send_paid_receipt_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships, payment):
-    try:
-        client, sender_email = _get_brevo()
-        if not client:
-            return
-
-        pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
-        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode("utf-8")
-        attachments = [{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
-
-        inv_buffer = generate_invoice_pdf(
-            {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
-        )
-        inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
-        attachments.append({"content": inv_base64, "name": f"Receipt_{payment['transaction_id']}.pdf"})
-
-        amount = float(payment.get("amount", 0))
-        inv_short = payment["transaction_id"][-8:].upper()
-
-        cluster_html = f'''
-        <tr>
-            <td align="center" style="padding-bottom: 30px;">
-                <h3 style="color: #7047EB; margin: 0 0 10px 0; font-size: 22px; font-weight: 700;">Your report is ready! 🎓</h3>
-                <p style="color: #26324D; margin: 0; font-size: 15px;">Your next academic chapter starts here.</p>
-                <p style="color: #26324D; margin: 10px 0 0 0; font-size: 15px;"><strong>Cluster Points:</strong> {cluster_points}</p>
-            </td>
-        </tr>
-        '''
-
-        html = _base_email_template(
-            pill_text="Payment Confirmation",
-            pill_bg="#0F9D91", # Green
-            title="Payment successful! <span style='color: #0F9D91; font-size: 28px;'>✓</span>",
-            subtitle="Thank you! Your payment has been confirmed.",
-            invoice_short=inv_short,
-            amount=amount,
-            button_text="VIEW MY REPORT",
-            button_link="https://edupointai-frontend.vercel.app/",
-            extra_html=cluster_html + '<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">Your official Results Report and Payment Receipt are attached to this email.</p></td></tr>'
-        )
-
-        client.transactional_emails.send_transac_email(
-            subject="Your EduPointAI Results & Receipt",
-            html_content=html,
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
-            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
-            attachment=attachments,
-        )
-        logger.info(f"Successfully sent results and receipt to {user_email}")
-    except Exception:
-        logger.error(f"Failed to send results email: {traceback.format_exc()}")
-
-
-# ==========================================
-# REMINDER BATCH
+# REMINDER BATCH (24h, 48h, 72h Logic)
 # ==========================================
 
 def send_pending_reminders():
     sent = 0
-    try:
-        with connect() as conn:
-            rows = conn.execute("""
-                SELECT p.*, u.name AS user_name, u.email AS user_email
-                FROM payments p
-                JOIN users u ON u.id = p.user_id
-                WHERE p.status = 'pending'
-                  AND p.redirect_url IS NOT NULL
-                  AND p.created_at < now() - INTERVAL '24 hours'
-                  AND (p.last_reminder_at IS NULL OR p.last_reminder_at < now() - INTERVAL '24 hours')
-                ORDER BY p.created_at ASC
-                LIMIT 100
-            """).fetchall()
-    except Exception:
-        logger.error(f"Reminder query failed: {traceback.format_exc()}")
-        return 0
+    with connect() as conn:
+        rows = conn.execute("""
+            SELECT p.*, u.name AS user_name, u.email AS user_email,
+                   EXTRACT(EPOCH FROM (now() - p.created_at))/3600 AS hours_passed
+            FROM payments p
+            JOIN users u ON u.id = p.user_id
+            WHERE p.status = 'pending'
+              AND p.redirect_url IS NOT NULL
+              AND p.created_at < now() - INTERVAL '23 hours'
+        """).fetchall()
 
     for row in rows:
-        try:
-            send_reminder_email(row["user_email"], row["user_name"], row)
+        hours = int(row['hours_passed'])
+        reminders_sent = row.get('reminder_count') or 0
+        
+        should_send = False
+        if hours >= 24 and reminders_sent == 0: should_send = True
+        elif hours >= 48 and reminders_sent == 1: should_send = True
+        elif hours >= 72 and reminders_sent == 2: should_send = True
+
+        if should_send:
+            user = {"name": row["user_name"], "email": row["user_email"]}
+            threading.Thread(
+                target=send_msg_payment_reminder,
+                args=(user, row, hours),
+                daemon=True
+            ).start()
+            
             with connect() as conn:
                 conn.execute(
-                    "UPDATE payments SET last_reminder_at = now(), "
-                    "reminder_count = COALESCE(reminder_count, 0) + 1 "
-                    "WHERE transaction_id = %s",
+                    "UPDATE payments SET last_reminder_at = now(), reminder_count = COALESCE(reminder_count, 0) + 1 WHERE transaction_id = %s",
                     (row["transaction_id"],)
                 )
             sent += 1
-        except Exception:
-            logger.error(f"Reminder for {row['transaction_id']} failed: {traceback.format_exc()}")
 
     logger.info(f"Reminder batch complete — {sent} sent")
     return sent
@@ -704,6 +469,7 @@ def me():
     u = current_user()
     return jsonify(ok=True, user=public_user(u), calculations_completed=int(u.get("credits", 0) or 0), price_per_calculation=100)
 
+
 @app.post("/api/payment/initiate")
 @login_required
 def initiate_payment():
@@ -720,6 +486,37 @@ def initiate_payment():
     if not validate_provider(provider): return jsonify(ok=False, error="Unsupported provider."), 400
     if not phone: return jsonify(ok=False, error="Invalid phone number."), 400
     if not calc_data: return jsonify(ok=False, error="Subjects and grades are required."), 400
+
+    # ==========================================
+    # IDEMPOTENCY CHECKS (Prevent Double Charging)
+    # ==========================================
+    with connect() as conn:
+        recent_paid = conn.execute("""
+            SELECT transaction_id FROM payments 
+            WHERE user_id = %s AND status IN ('paid', 'completed') 
+            AND created_at > now() - INTERVAL '30 minutes'
+            ORDER BY created_at DESC LIMIT 1
+        """, (u["id"],)).fetchone()
+        
+        if recent_paid:
+            return jsonify(ok=False, error="You recently paid for a calculation. Please wait 30 minutes before trying again, or contact support."), 429
+
+        existing_pending = conn.execute("""
+            SELECT * FROM payments 
+            WHERE user_id = %s AND status = 'pending' AND created_at > now() - INTERVAL '1 hour'
+            ORDER BY created_at DESC LIMIT 1
+        """, (u["id"],)).fetchone()
+        
+        if existing_pending:
+            ed = existing_pending.get("calculation_data")
+            if isinstance(ed, str):
+                try: ed = json.loads(ed)
+                except: ed = {}
+            
+            if ed.get("subjects") == subjects and ed.get("grades") == grades:
+                pending_payment = payments.get(existing_pending["transaction_id"])
+                threading.Thread(target=send_msg_invoice_generated, args=(u, pending_payment), daemon=True).start()
+                return jsonify(ok=True, transaction_id=existing_pending["transaction_id"], redirect_url=existing_pending["redirect_url"], note="Resumed existing payment session.")
 
     amount = PAYMENT_PLANS[plan]["amount"]
     tx = "EDU-" + uuid.uuid4().hex[:16].upper()
@@ -746,9 +543,11 @@ def initiate_payment():
         )
 
         pending_payment = payments.get(tx)
+        
+        # Trigger 1: Invoice Generated
         threading.Thread(
-            target=send_pending_invoice_email,
-            args=(u["email"], u["name"], pending_payment),
+            target=send_msg_invoice_generated,
+            args=(u, pending_payment),
             daemon=True
         ).start()
 
@@ -807,6 +606,10 @@ def pesapal_webhook():
         )
 
         if new_status == "paid":
+            with connect() as conn:
+                u = conn.execute("SELECT * FROM users WHERE id = %s", (row["user_id"],)).fetchone()
+            
+            send_msg_payment_successful(u, row)
             _claim_and_process(row["transaction_id"])
             
         elif new_status in ("failed", "reversed"):
@@ -814,8 +617,8 @@ def pesapal_webhook():
                 u = conn.execute("SELECT * FROM users WHERE id = %s", (row["user_id"],)).fetchone()
             if u:
                 threading.Thread(
-                    target=send_failed_invoice_email,
-                    args=(u["email"], u["name"], row),
+                    target=send_msg_payment_failed,
+                    args=(u, row),
                     daemon=True
                 ).start()
 
@@ -955,6 +758,31 @@ def admin_access(user_id):
             conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
     return jsonify(ok=True, added=credits_to_add)
 
+@app.get("/api/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    with connect() as conn:
+        total_users = conn.execute("SELECT COUNT(*) as c FROM users WHERE role='student'").fetchone()["c"]
+        total_revenue = conn.execute("SELECT COALESCE(SUM(amount),0) as s FROM payments WHERE status IN ('paid', 'completed')").fetchone()["s"]
+        pending_payments = conn.execute("SELECT COUNT(*) as c FROM payments WHERE status='pending'").fetchone()["c"]
+        
+        users = conn.execute("SELECT id, name, email, role, credits, created_at FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
+        
+        payments_list = conn.execute("""
+            SELECT p.transaction_id, p.amount, p.status, p.created_at, u.name as user_name, u.email 
+            FROM payments p JOIN users u ON u.id = p.user_id 
+            ORDER BY p.created_at DESC LIMIT 50
+        """).fetchall()
+
+    return jsonify(ok=True, data={
+        "stats": {
+            "total_students": total_users,
+            "total_revenue_kes": float(total_revenue),
+            "pending_payments": pending_payments
+        },
+        "recent_users": [dict(r) for r in users],
+        "recent_payments": [dict(r) for r in payments_list]
+    })
 
 @app.get("/api/cron/daily-reports")
 def trigger_daily_reports():
