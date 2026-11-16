@@ -11,6 +11,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.colors import HexColor
 import qrcode
 
+# Brevo v4 Imports
+from brevo import Brevo
+from brevo.transactional_emails import (
+    SendTransacEmailRequestSender,
+    SendTransacEmailRequestToItem,
+    SendTransacEmailRequestAttachmentItem,
+)
+
 # Brand Colors
 NAVY = HexColor("#0A1C3A")
 ROYAL_BLUE = HexColor("#2563EB")
@@ -209,7 +217,6 @@ def generate_invoice_pdf(user, payment):
         story.append(Spacer(1, 3*mm))
 
         if payment_link:
-            # Big clickable PAY NOW button
             pay_button_data = [[
                 Paragraph(
                     f'<a href="{payment_link}" color="white"><b>💳  PAY NOW  —  KES {amount:,.0f}</b></a>',
@@ -225,7 +232,6 @@ def generate_invoice_pdf(user, payment):
             story.append(pay_button)
             story.append(Spacer(1, 3*mm))
 
-            # Copy-paste link fallback
             story.append(Paragraph(
                 f'<font size="8" color="#4B5563">Or copy this link into your browser:</font><br/>'
                 f'<a href="{payment_link}"><font size="9" color="#2563EB">{payment_link}</font></a>',
@@ -233,7 +239,6 @@ def generate_invoice_pdf(user, payment):
             ))
             story.append(Spacer(1, 6*mm))
 
-        # QR + instructions
         qr = qrcode.QRCode(version=1, box_size=4, border=1)
         qr.add_data(payment_link or f"https://edupointai-frontend.vercel.app/verify?inv={inv_number}")
         qr.make(fit=True)
@@ -267,3 +272,49 @@ def generate_invoice_pdf(user, payment):
     doc.build(story)
     buffer.seek(0)
     return buffer
+
+def send_success_email_with_receipt(user, payment, results_pdf_buffer):
+    """
+    Sends the successful payment email with both the Receipt and the Results PDF.
+    """
+    api_key = os.getenv("BREVO_API_KEY")
+    sender_email = os.getenv("SENDER_EMAIL")
+    
+    if not api_key or not sender_email:
+        print("Missing Brevo credentials")
+        return False
+
+    # 1. Generate the invoice PDF using the function above
+    invoice_buffer = generate_invoice_pdf(user, payment)
+    
+    # 2. Encode both PDFs to base64 for Brevo
+    def to_b64(buf):
+        return base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    invoice_b64 = to_b64(invoice_buffer)
+    results_b64 = to_b64(results_pdf_buffer)
+
+    # 3. Send via Brevo API
+    try:
+        client = Brevo(api_key=api_key)
+        client.transactional_emails.send_transac_email(
+            subject="Your EduPoint AI Results & Receipt",
+            html_content=f"""
+                <h2>Hello {user.get('name', 'Student')},</h2>
+                <p>Thank you for your payment of KES {payment.get('amount', 100)}.</p>
+                <p>Please find attached your official receipt and your personalized Results Report.</p>
+                <br>
+                <p>Best regards,<br>EduPoint AI Team</p>
+            """,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI"),
+            to=[SendTransacEmailRequestToItem(email=user['email'])],
+            attachment=[
+                SendTransacEmailRequestAttachmentItem(content=invoice_b64, name="Receipt.pdf"),
+                SendTransacEmailRequestAttachmentItem(content=results_b64, name="Results_Report.pdf"),
+            ]
+        )
+        print(f"Successfully sent results and receipt to {user['email']}")
+        return True
+    except Exception as e:
+        print(f"Failed to send receipt email: {e}")
+        return False
