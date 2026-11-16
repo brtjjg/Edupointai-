@@ -784,18 +784,18 @@ def admin_dashboard():
         "recent_payments": [dict(r) for r in payments_list]
     })
 
-@app.get("/api/cron/daily-reports")
-def trigger_daily_reports():
+@app.post("/api/admin/trigger-daily-report")
+@admin_required
+def admin_trigger_daily_report():
     try:
-        secret = request.args.get("secret")
-        expected_secret = os.getenv("CRON_SECRET", "edupoint_secret_123")
-        if secret != expected_secret:
-            return "Unauthorized", 401
+        logger.info("Manual Admin Trigger: Generating daily report...")
         success = generate_and_send_reports()
-        return ("OK", 200) if success else ("Failed to generate", 500)
-    except Exception:
-        logger.error(f"Cron Error: {traceback.format_exc()}")
-        return "Error", 500
+        if success:
+            return jsonify(ok=True, message="Report generated and sent successfully.")
+        return jsonify(ok=False, error="Failed to generate report. Check server logs."), 500
+    except Exception as e:
+        logger.error(f"Admin trigger failed: {traceback.format_exc()}")
+        return jsonify(ok=False, error=str(e)), 500
 
 
 # ==========================================
