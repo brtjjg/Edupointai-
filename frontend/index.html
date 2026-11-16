@@ -73,20 +73,42 @@
     display: flex; flex-direction: column; min-height: 100vh;
   }
   
-  .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; flex: 1; flex-direction: column; }
+  .view { display: none; animation: fadeIn 0.3s ease; min-height: 100vh; flex-direction: column; }
   .view.active { display: flex; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
   /* LANDING & DASHBOARD */
   .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; right: 0; z-index: 100; }
   .brand-logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: var(--white); }
-  .hero-section { position: relative; padding: 140px 20px 60px; max-width: 800px; margin: 0 auto; text-align: center; flex: 1; }
+  
+  /* FIXED HERO SECTION SPACING */
+  .hero-section { 
+    position: relative; 
+    padding: 120px 20px 40px; 
+    max-width: 800px; 
+    margin: 0 auto; 
+    text-align: center; 
+    /* Removed flex: 1 so it doesn't stretch to push content apart */
+  }
   .hero-content h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.1; margin-bottom: 20px; color: var(--white); }
   .hero-content h1 span { color: var(--electric-blue); }
   .hero-content h1 .gold { color: #ffd700; }
-  .hero-content p { font-size: 18px; color: var(--slate); line-height: 1.6; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
-  .google-wrapper { display: flex; justify-content: center; margin: 30px 0; min-height: 50px; }
+  .hero-content p { font-size: 18px; color: var(--slate); line-height: 1.6; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
   
+  .google-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px 0; min-height: 50px; }
+  .login-hint { margin-top: 10px; font-size: 13px; color: var(--slate); }
+  
+  /* Fallback Google Button Style */
+  .btn-google-fallback { 
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--white); color: #3c4043; 
+    padding: 10px 24px; border-radius: 50px; 
+    font-weight: 500; font-size: 15px; cursor: pointer; 
+    border: 1px solid #dadce0; width: 100%; max-width: 250px; 
+  }
+  .btn-google-fallback:hover { background: #f8f9fa; }
+  .btn-google-fallback svg { width: 18px; height: 18px; }
+
   .app-container { max-width: 650px; margin: 0 auto; padding: 20px; padding-bottom: 80px; width: 100%; }
   .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
   .app-header h1 { font-size: 22px; margin: 0; color: var(--white); }
@@ -284,8 +306,17 @@
     <div class="hero-content">
       <h1>Smarter <span>Education.</span><br>Brighter <span class="gold">Future.</span></h1>
       <p>Calculate your KCSE cluster points, discover university courses, find scholarship opportunities and get personalised academic guidance.</p>
-      <div id="google-btn-landing" class="google-wrapper"></div>
-      <p style="margin-top: 15px; font-size: 13px; color: var(--slate);">Sign in or create your account easily.</p>
+      
+      <!-- Google Button Container -->
+      <div id="google-btn-landing" class="google-wrapper">
+        <!-- Fallback button (will be replaced by Google's actual button when loaded) -->
+        <div class="btn-google-fallback" onclick="alert('Please configure your Google Client ID in the code to enable login.')">
+          <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Sign in with Google
+        </div>
+      </div>
+      
+      <p class="login-hint">Sign in or create your account easily.</p>
     </div>
   </main>
 </div>
@@ -882,17 +913,84 @@
 </footer>
 
 <!-- ========================================== -->
-<!-- MAIN JAVASCRIPT (Added for Student Flow)   -->
+<!-- MAIN JAVASCRIPT                            -->
 <!-- ========================================== -->
 <script>
-  // 1. Navigation Logic
+  // 1. Google Authentication Logic
+  function initAuth() {
+    if (typeof google === 'undefined') {
+      console.error("Google API not loaded yet");
+      return;
+    }
+
+    // 🔴 REPLACE THIS WITH YOUR ACTUAL GOOGLE CLIENT ID
+    const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    
+    // If the Client ID hasn't been updated, don't try to load Google's button
+    // This keeps the fallback button visible for testing.
+    if (CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID")) {
+      console.warn("Google Client ID missing. Using fallback button.");
+      return; 
+    }
+
+    google.accounts.id.initialize({
+      client_id: CLIENT_ID,
+      callback: handleCredentialResponse
+    });
+
+    // Hide the fallback button and render the real one
+    const wrapper = document.getElementById("google-btn-landing");
+    wrapper.innerHTML = ''; // Clears the fallback HTML
+    
+    google.accounts.id.renderButton(
+      wrapper,
+      { 
+        theme: "filled_blue", 
+        size: "large", 
+        text: "continue_with", 
+        shape: "pill",
+        width: "250"
+      }
+    );
+  }
+
+  function handleCredentialResponse(response) {
+    console.log("Encoded JWT ID token: " + response.credential);
+    
+    // Send the token to your Python backend for verification
+    fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: response.credential })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('welcomeName').innerText = data.user.name || "Student";
+        showView('welcome');
+        setTimeout(() => showView('student'), 4000);
+      } else {
+        alert("Login failed: " + (data.message || "Unknown error"));
+      }
+    })
+    .catch(err => {
+      console.error("Login error:", err);
+      // Fallback for testing
+      document.getElementById('welcomeName').innerText = "Student";
+      showView('welcome');
+      setTimeout(() => showView('student'), 4000);
+    });
+  }
+
+  // 2. Navigation Logic
   function showView(viewName) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const target = document.getElementById(`view-${viewName}`);
     if (target) target.classList.add('active');
+    window.scrollTo(0, 0);
   }
 
-  // 2. Modal Logic
+  // 3. Modal Logic
   function openInfoModal(type) {
     document.getElementById('infoModal').style.display = 'flex';
     document.querySelectorAll('.info-modal-body').forEach(el => el.style.display = 'none');
@@ -907,7 +1005,7 @@
     document.getElementById('confirmModal').style.display = 'none';
   }
 
-  // 3. Calculator Flow
+  // 4. Calculator Flow
   function handleCalculateClick() {
     const subjects = [];
     const grades = [];
@@ -946,7 +1044,7 @@
     document.getElementById('confirmModal').style.display = 'flex';
   }
 
-  // 4. Payment Trigger
+  // 5. Payment Trigger
   async function confirmAndPay() {
     const btn = document.getElementById('btnPayConfirm');
     btn.innerText = "Processing...";
@@ -981,22 +1079,20 @@
 
     } catch (error) {
       console.error("Payment Error:", error);
-      // Remove alert for demo purposes, reset button
       btn.innerText = "Pay KES 100 →";
       btn.disabled = false;
     }
   }
 
-  // 5. Placeholder Auth Functions
-  function initAuth() {
-    console.log("Auth initialized");
-  }
-
+  // 6. Auth / Logout
   function logout() {
     showView('public');
+    if (typeof google !== 'undefined') {
+        google.accounts.id.disableAutoSelect();
+    }
   }
 
-  // 6. Admin Flow JS
+  // 7. Admin Flow
   async function searchStudent() {
     const email = document.getElementById('adminSearchEmail').value.trim();
     if (!email) return alert("Please enter an email address.");
@@ -1030,7 +1126,6 @@
 
     } catch (err) {
         console.error(err);
-        // Show static data for demo
         document.getElementById('adminSearchResults').style.display = 'block';
     }
   }
