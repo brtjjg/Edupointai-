@@ -20,7 +20,7 @@ from brevo import Brevo
 from brevo.transactional_emails import (
     SendTransacEmailRequestSender,
     SendTransacEmailRequestToItem,
-    SendTransacEmailRequestAttachment,
+    SendTransacEmailRequestAttachmentItem,
 )
 from db import connect
 from invoices import send_success_email_with_receipt # Imports the email function from invoices.py
@@ -171,11 +171,11 @@ def generate_and_send_reports():
         def to_b64(buf): return base64.b64encode(buf.getvalue()).decode('utf-8')
 
         attachments = [
-            SendTransacEmailRequestAttachment(content=to_b64(ex1), name=f"01_Student_Enrollments_{today_str}.xlsx"),
-            SendTransacEmailRequestAttachment(content=to_b64(ex2), name=f"02_Revenue_and_Payments_{today_str}.xlsx"),
-            SendTransacEmailRequestAttachment(content=to_b64(ex3), name=f"03_Daily_Business_Summary_{today_str}.xlsx"),
-            SendTransacEmailRequestAttachment(content=to_b64(pdf1), name=f"Enrollment_Report_{today_str}.pdf"),
-            SendTransacEmailRequestAttachment(content=to_b64(pdf2), name=f"Revenue_Report_{today_str}.pdf"),
+            SendTransacEmailRequestAttachmentItem(content=to_b64(ex1), name=f"01_Student_Enrollments_{today_str}.xlsx"),
+            SendTransacEmailRequestAttachmentItem(content=to_b64(ex2), name=f"02_Revenue_and_Payments_{today_str}.xlsx"),
+            SendTransacEmailRequestAttachmentItem(content=to_b64(ex3), name=f"03_Daily_Business_Summary_{today_str}.xlsx"),
+            SendTransacEmailRequestAttachmentItem(content=to_b64(pdf1), name=f"Enrollment_Report_{today_str}.pdf"),
+            SendTransacEmailRequestAttachmentItem(content=to_b64(pdf2), name=f"Revenue_Report_{today_str}.pdf"),
         ]
 
         html_content = f"""
