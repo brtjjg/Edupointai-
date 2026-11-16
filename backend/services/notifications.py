@@ -1,4 +1,3 @@
-# services/notifications.py
 import os
 import base64
 import logging
@@ -63,7 +62,7 @@ def _build_html_template(pill_text, pill_bg, title, body_html, button_text="", b
                         </tr>
                         <tr>
                             <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                                <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need assistance? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
+                                <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need assistance? Contact us at <a href="mailto:nexoraacademyhelpdesk@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">nexoraacademyhelpdesk@gmail.com</a></p>
                                 <p style="color: #94A3B8; margin: 0; font-size: 12px;">EduPointAI ✦ Your Education. Your Future.</p>
                             </td>
                         </tr>
