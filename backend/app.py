@@ -357,7 +357,7 @@ def generate_report_pdf(user_name, user_email, cluster_points, results, subjects
 
 
 # ==========================================
-# EMAIL SENDERS (UPDATED HTML TEMPLATES)
+# EMAIL SENDERS (UPDATED MATCHING LAYOUTS)
 # ==========================================
 
 def _get_brevo():
@@ -367,6 +367,89 @@ def _get_brevo():
         return None, None
     return Brevo(api_key=api_key), sender_email
 
+def _base_email_template(pill_text, pill_bg, title, subtitle, invoice_short, amount, button_text, button_link, extra_html=""):
+    """Generates the base HTML for all emails to match the exact requested screenshots."""
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>EduPointAI</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
+                        
+                        <!-- Header -->
+                        <tr>
+                            <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
+                                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
+                            </td>
+                        </tr>
+                        
+                        <!-- Body -->
+                        <tr>
+                            <td style="padding: 40px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 20px;">
+                                            <span style="display: inline-block; background-color: {pill_bg}; color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">{pill_text}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 15px;">
+                                            <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">{title}</h2>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 30px;">
+                                            <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">{subtitle}</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 30px;">
+                                            <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Details -->
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 30px;">
+                                            <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">INVOICE {invoice_short}</p>
+                                            <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
+                                        </td>
+                                    </tr>
+
+                                    {extra_html}
+
+                                    <!-- Action Button -->
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 20px;">
+                                            <a href="{button_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">{button_text}</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
+                                <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
+                                <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
 
 def send_pending_invoice_email(user_email, user_name, payment):
     try:
@@ -375,7 +458,6 @@ def send_pending_invoice_email(user_email, user_name, payment):
             logger.warning("Brevo not configured, skipping invoice email")
             return
 
-        # Note: Invoice PDF generation is untouched.
         inv_buffer = generate_invoice_pdf(
             {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
         )
@@ -385,89 +467,17 @@ def send_pending_invoice_email(user_email, user_name, payment):
         amount = float(payment.get("amount", 0))
         inv_short = payment["transaction_id"][-8:].upper()
 
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Your EduPointAI Invoice</title>
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
-                <tr>
-                    <td align="center">
-                        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
-                            
-                            <!-- Header -->
-                            <tr>
-                                <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
-                                </td>
-                            </tr>
-                            
-                            <!-- Body -->
-                            <tr>
-                                <td style="padding: 40px;">
-                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <span style="display: inline-block; background-color: #F2A93B; color: #101B3D; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">Awaiting Payment</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 15px;">
-                                                <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">Your invoice is ready!</h2>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">One step closer to unlocking your academic opportunities.</p>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
-                                            </td>
-                                        </tr>
-                                        
-                                        <!-- Invoice Details -->
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Invoice INV-{inv_short}</p>
-                                                <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Pay Button -->
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <a href="{pay_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">PAY NOW — KES {amount:.0f}</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <p style="color: #64748B; margin: 0; font-size: 13px;">You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.</p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                            
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                                    <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
-                                    <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-        """
+        html = _base_email_template(
+            pill_text="Awaiting Payment",
+            pill_bg="#F2A93B", # Amber
+            title="Your invoice is ready!",
+            subtitle="One step closer to unlocking your academic opportunities.",
+            invoice_short=inv_short,
+            amount=amount,
+            button_text=f"PAY NOW — KES {amount:.0f}",
+            button_link=pay_link,
+            extra_html='<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">You will be redirected to Pesapal to pay via M-Pesa, Airtel Money, T-Kash, or Card.</p></td></tr>'
+        )
 
         client.transactional_emails.send_transac_email(
             subject=f"EduPointAI Invoice {inv_short} — KES {amount:.0f}",
@@ -491,7 +501,6 @@ def send_reminder_email(user_email, user_name, payment):
         if not pay_link:
             return
 
-        # Note: Invoice PDF generation is untouched.
         inv_buffer = generate_invoice_pdf(
             {"name": user_name, "email": user_email, "id": payment.get("user_id")}, payment
         )
@@ -499,91 +508,18 @@ def send_reminder_email(user_email, user_name, payment):
 
         amount = float(payment.get("amount", 0))
         inv_short = payment["transaction_id"][-8:].upper()
-        reminder_num = (payment.get("reminder_count") or 0) + 1
 
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Payment Reminder</title>
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
-                <tr>
-                    <td align="center">
-                        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
-                            
-                            <!-- Header -->
-                            <tr>
-                                <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
-                                </td>
-                            </tr>
-                            
-                            <!-- Body -->
-                            <tr>
-                                <td style="padding: 40px;">
-                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <span style="display: inline-block; background-color: #F2A93B; color: #101B3D; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">Payment Reminder</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 15px;">
-                                                <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">A friendly reminder!</h2>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">Your EduPointAI Comprehensive Results Report is waiting for you.</p>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
-                                            </td>
-                                        </tr>
-                                        
-                                        <!-- Invoice Details -->
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <p style="color: #7047EB; margin: 0 0 10px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Invoice INV-{inv_short} • Reminder #{reminder_num}</p>
-                                                <p style="color: #101B3D; margin: 0; font-size: 32px; font-weight: 800;">KES {amount:,.2f}</p>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Pay Button -->
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <a href="{pay_link}" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">PAY NOW — KES {amount:.0f}</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <p style="color: #64748B; margin: 0; font-size: 13px;">If you have already paid, please ignore this email — your Results Report will arrive shortly.</p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                            
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                                    <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
-                                    <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-        """
+        html = _base_email_template(
+            pill_text="Payment Reminder",
+            pill_bg="#F2A93B", # Amber
+            title="A friendly reminder!",
+            subtitle="Your EduPointAI Comprehensive Results Report is waiting for you.",
+            invoice_short=inv_short,
+            amount=amount,
+            button_text=f"PAY NOW — KES {amount:.0f}",
+            button_link=pay_link,
+            extra_html='<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">If you have already paid, please ignore this email — your Results Report will arrive shortly.</p></td></tr>'
+        )
 
         client.transactional_emails.send_transac_email(
             subject=f"Reminder: Invoice INV-{inv_short} unpaid — KES {amount:.0f}",
@@ -592,9 +528,43 @@ def send_reminder_email(user_email, user_name, payment):
             to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
             attachment=[{"content": inv_base64, "name": f"Invoice_{payment['transaction_id']}.pdf"}],
         )
-        logger.info(f"Sent reminder #{reminder_num} to {user_email}")
+        logger.info(f"Sent reminder to {user_email}")
     except Exception:
         logger.error(f"Failed to send reminder: {traceback.format_exc()}")
+
+
+def send_failed_invoice_email(user_email, user_name, payment):
+    """Sends the Failed Invoice email."""
+    try:
+        client, sender_email = _get_brevo()
+        if not client:
+            return
+
+        pay_link = (payment.get("redirect_url") or "").strip()
+        amount = float(payment.get("amount", 0))
+        inv_short = payment["transaction_id"][-8:].upper()
+
+        html = _base_email_template(
+            pill_text="Payment Failed",
+            pill_bg="#EF4444", # Red
+            title="Payment Failed",
+            subtitle="Your recent transaction could not be completed. Please try again.",
+            invoice_short=inv_short,
+            amount=amount,
+            button_text="TRY AGAIN",
+            button_link=pay_link if pay_link else "https://edupointai-frontend.vercel.app/",
+            extra_html='<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">If you were charged, the amount will be reversed automatically by your bank or mobile money provider.</p></td></tr>'
+        )
+
+        client.transactional_emails.send_transac_email(
+            subject=f"Action Required: Payment Failed for Invoice {inv_short}",
+            html_content=html,
+            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPointAI"),
+            to=[SendTransacEmailRequestToItem(email=user_email, name=user_name)],
+        )
+        logger.info(f"Sent failed invoice email to {user_email}")
+    except Exception:
+        logger.error(f"Failed to send failed invoice email: {traceback.format_exc()}")
 
 
 def send_paid_receipt_email(user_email, user_name, cluster_points, results, subjects, grades, scholarships, payment):
@@ -603,7 +573,6 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
         if not client:
             return
 
-        # Note: Report PDF and Receipt PDF generation are untouched.
         pdf_buffer = generate_report_pdf(user_name, user_email, cluster_points, results, subjects, grades, scholarships)
         pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode("utf-8")
         attachments = [{"content": pdf_base64, "name": "EduPointAI_Results.pdf"}]
@@ -614,90 +583,30 @@ def send_paid_receipt_email(user_email, user_name, cluster_points, results, subj
         inv_base64 = base64.b64encode(inv_buffer.getvalue()).decode("utf-8")
         attachments.append({"content": inv_base64, "name": f"Receipt_{payment['transaction_id']}.pdf"})
 
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Your Report is Ready</title>
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #F3F5FC; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F3F5FC; padding: 40px 20px;">
-                <tr>
-                    <td align="center">
-                        <table width="100%" max-width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(16, 27, 61, 0.08);">
-                            
-                            <!-- Header -->
-                            <tr>
-                                <td style="background-color: #101B3D; padding: 30px 40px; text-align: center; border-bottom: 4px solid #7047EB;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">EduPointAI ✦</h1>
-                                </td>
-                            </tr>
-                            
-                            <!-- Body -->
-                            <tr>
-                                <td style="padding: 40px;">
-                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <span style="display: inline-block; background-color: #0F9D91; color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; padding: 6px 14px; border-radius: 20px; text-transform: uppercase;">Payment Confirmation</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 15px;">
-                                                <h2 style="color: #26324D; margin: 0; font-size: 26px; font-weight: 700;">Payment successful! <span style="color: #0F9D91; font-size: 28px;">✓</span></h2>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <p style="color: #26324D; margin: 0; font-size: 16px; line-height: 1.6;">Thank you! Your payment has been confirmed.</p>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <hr style="border: 0; border-top: 1px solid #E2E8F0; width: 60%; margin: 0 auto;">
-                                            </td>
-                                        </tr>
-                                        
-                                        <!-- Success Details -->
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 30px;">
-                                                <h3 style="color: #7047EB; margin: 0 0 10px 0; font-size: 22px; font-weight: 700;">Your report is ready! 🎓</h3>
-                                                <p style="color: #26324D; margin: 0; font-size: 15px;">Your next academic chapter starts here.</p>
-                                                <p style="color: #26324D; margin: 10px 0 0 0; font-size: 15px;"><strong>Cluster Points:</strong> {cluster_points}</p>
-                                            </td>
-                                        </tr>
+        amount = float(payment.get("amount", 0))
+        inv_short = payment["transaction_id"][-8:].upper()
 
-                                        <!-- Action Button -->
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <a href="https://edupointai-frontend.vercel.app/" target="_blank" style="display: inline-block; background: linear-gradient(90deg, #7047EB 0%, #5a35d6 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(112, 71, 235, 0.3);">VIEW MY REPORT</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td align="center" style="padding-bottom: 20px;">
-                                                <p style="color: #64748B; margin: 0; font-size: 13px;">Your official Results Report and Payment Receipt are attached to this email.</p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                            
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color: #F8FAFC; padding: 30px 40px; text-align: center; border-top: 1px solid #E2E8F0;">
-                                    <p style="color: #64748B; margin: 0 0 15px 0; font-size: 13px; line-height: 1.5;">Need help? Contact us at <a href="mailto:academichelpdesk1@gmail.com" style="color: #7047EB; text-decoration: none; font-weight: 600;">academichelpdesk1@gmail.com</a></p>
-                                    <p style="color: #94A3B8; margin: 0; font-size: 12px;">© 2026 EduPointAI. All rights reserved.</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-        """
+        cluster_html = f'''
+        <tr>
+            <td align="center" style="padding-bottom: 30px;">
+                <h3 style="color: #7047EB; margin: 0 0 10px 0; font-size: 22px; font-weight: 700;">Your report is ready! 🎓</h3>
+                <p style="color: #26324D; margin: 0; font-size: 15px;">Your next academic chapter starts here.</p>
+                <p style="color: #26324D; margin: 10px 0 0 0; font-size: 15px;"><strong>Cluster Points:</strong> {cluster_points}</p>
+            </td>
+        </tr>
+        '''
+
+        html = _base_email_template(
+            pill_text="Payment Confirmation",
+            pill_bg="#0F9D91", # Green
+            title="Payment successful! <span style='color: #0F9D91; font-size: 28px;'>✓</span>",
+            subtitle="Thank you! Your payment has been confirmed.",
+            invoice_short=inv_short,
+            amount=amount,
+            button_text="VIEW MY REPORT",
+            button_link="https://edupointai-frontend.vercel.app/",
+            extra_html=cluster_html + '<tr><td align="center" style="padding-bottom: 20px;"><p style="color: #64748B; margin: 0; font-size: 13px;">Your official Results Report and Payment Receipt are attached to this email.</p></td></tr>'
+        )
 
         client.transactional_emails.send_transac_email(
             subject="Your EduPointAI Results & Receipt",
@@ -899,6 +808,16 @@ def pesapal_webhook():
 
         if new_status == "paid":
             _claim_and_process(row["transaction_id"])
+            
+        elif new_status in ("failed", "reversed"):
+            with connect() as conn:
+                u = conn.execute("SELECT * FROM users WHERE id = %s", (row["user_id"],)).fetchone()
+            if u:
+                threading.Thread(
+                    target=send_failed_invoice_email,
+                    args=(u["email"], u["name"], row),
+                    daemon=True
+                ).start()
 
         return jsonify(ok=True, status=new_status)
 
