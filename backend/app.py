@@ -821,6 +821,67 @@ def handle_exception(e):
     logger.error(f"Unhandled Exception: {traceback.format_exc()}")
     return jsonify(ok=False, error="An unexpected error occurred. Please contact support."), 500
 
+@app.get("/api/admin/dashboard-v2")
+@admin_required
+def admin_dashboard_v2():
+    try:
+        with connect() as conn:
+            # 1. Main Stats
+            total_students = conn.execute("SELECT COUNT(*) as c FROM users WHERE role='student'").fetchone()["c"]
+            total_revenue = conn.execute("SELECT COALESCE(SUM(amount),0) as s FROM payments WHERE status IN ('paid', 'completed')").fetchone()["s"]
+            pending_payments = conn.execute("SELECT COUNT(*) as c FROM payments WHERE status='pending'").fetchone()["c"]
+            successful_payments = conn.execute("SELECT COUNT(*) as c FROM payments WHERE status IN ('paid', 'completed')").fetchone()["c"]
+            
+            # 2. Recent Transactions (Last 5)
+            recent_tx = conn.execute("""
+                SELECT p.transaction_id, p.amount, p.status, p.created_at, u.name as student_name
+                FROM payments p JOIN users u ON u.id = p.user_id
+                ORDER BY p.created_at DESC LIMIT 5
+            """).fetchall()
+
+            # 3. Chart Data (Last 7 Days)
+            # We generate the last 7 days dynamically
+            from datetime import datetime, timedelta
+            labels = []
+            revenue_data = []
+            student_data = []
+            
+            for i in range(6, -1, -1):
+                day = datetime.now() - timedelta(days=i)
+                day_str = day.strftime("%d %b")
+                labels.append(day_str)
+                
+                # Revenue for this day
+                rev = conn.execute("""
+                    SELECT COALESCE(SUM(amount),0) as s FROM payments 
+                    WHERE status IN ('paid', 'completed') AND DATE(created_at) = DATE(%s)
+                """, (day,)).fetchone()["s"]
+                revenue_data.append(float(rev))
+                
+                # Students for this day
+                stu = conn.execute("""
+                    SELECT COUNT(*) as c FROM users 
+                    WHERE role='student' AND DATE(created_at) = DATE(%s)
+                """, (day,)).fetchone()["c"]
+                student_data.append(int(stu))
+
+        return jsonify(ok=True, data={
+            "stats": {
+                "students": total_students,
+                "revenue": float(total_revenue),
+                "pending": pending_payments,
+                "successful": successful_payments
+            },
+            "recent_transactions": [dict(r) for r in recent_tx],
+            "charts": {
+                "labels": labels,
+                "revenue": revenue_data,
+                "students": student_data
+            }
+        })
+    except Exception as e:
+        logger.error(f"Dashboard V2 error: {traceback.format_exc()}")
+        return jsonify(ok=False, error=str(e)), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
