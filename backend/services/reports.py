@@ -11,22 +11,36 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.colors import HexColor
+
 from brevo import Brevo
-from brevo.transactional_emails import SendTransacEmailRequestSender, SendTransacEmailRequestToItem
+from brevo.transactional_emails import (
+    SendTransacEmailRequestSender,
+    SendTransacEmailRequestToItem,
+    SendTransacEmailRequestAttachment,   # <-- REQUIRED
+)
 from db import connect
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Get Kenya Time
-nairobi_tz = pytz.timezone('Africa/Nairobi')
-now_nairobi = datetime.now(nairobi_tz)
-today_str = now_nairobi.strftime("%Y-%m-%d")
+# Keep the tz object at module level (safe), but DO NOT snapshot "now" here.
+NAIROBI_TZ = pytz.timezone("Africa/Nairobi")
+
+PAID_STATUSES = {"paid", "completed", "complete", "success", "successful"}
+
 
 def safe_local_time(dt):
+    if dt is None:
+        return ""
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        except ValueError:
+            return dt
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(nairobi_tz).strftime("%Y-%m-%d %H:%M")
+    return dt.astimezone(NAIROBI_TZ).strftime("%Y-%m-%d %H:%M")
+
 
 def create_excel(data, headers, title):
     wb = Workbook()
@@ -35,7 +49,7 @@ def create_excel(data, headers, title):
 
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
-    
+
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header)
         cell.font = header_font
@@ -53,107 +67,175 @@ def create_excel(data, headers, title):
             try:
                 if len(str(cell.value)) > max_length:
                     max_length = len(str(cell.value))
-            except:
+            except Exception:
                 pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
+        ws.column_dimensions[column].width = max_length + 2
 
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
     return buffer
 
-def create_pdf(title, headers, data, summary_text):
+
+def create_pdf(title, headers, data, summary_text, generated_at):
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=20 * mm, leftMargin=20 * mm,
+        topMargin=20 * mm, bottomMargin=20 * mm,
+    )
     story = []
-    
-    # FIX: Create local styles instead of adding to global stylesheet
-    title_style = ParagraphStyle(name="CustomTitle", fontName="Helvetica-Bold", fontSize=18, textColor=HexColor("#172554"), spaceAfter=15)
-    sub_style = ParagraphStyle(name="CustomSub", fontName="Helvetica", fontSize=10, textColor=HexColor("#64748B"), spaceAfter=20)
+
+    title_style = ParagraphStyle(
+        name="CustomTitle", fontName="Helvetica-Bold",
+        fontSize=18, textColor=HexColor("#172554"), spaceAfter=15,
+    )
+    sub_style = ParagraphStyle(
+        name="CustomSub", fontName="Helvetica",
+        fontSize=10, textColor=HexColor("#64748B"), spaceAfter=20,
+    )
     normal_style = getSampleStyleSheet()["Normal"]
-    
+
     story.append(Paragraph(title, title_style))
-    story.append(Paragraph(f"Generated on {now_nairobi.strftime('%d %b %Y at %H:%M')} (Nairobi Time)", sub_style))
-    story.append(Paragraph(summary_text, normal_style))
-    story.append(Spacer(1, 10*mm))
-    
+    story.append(Paragraph(
+        f"Generated on {generated_at.strftime('%d %b %Y at %H:%M')} (Nairobi Time)",
+        sub_style,
+    ))
+    # Escape any XML-unsafe chars in summary
+    safe_summary = (summary_text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    story.append(Paragraph(safe_summary, normal_style))
+    story.append(Spacer(1, 10 * mm))
+
     table_data = [headers] + data
     t = Table(table_data, repeatRows=1)
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), HexColor("#172554")),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 1), (-1, -1), HexColor("#F8FAFC")),
-        ('GRID', (0, 0), (-1, -1), 0.5, HexColor("#CBD5E1")),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ("BACKGROUND", (0, 0), (-1, 0), HexColor("#172554")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 9),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
+        ("BACKGROUND", (0, 1), (-1, -1), HexColor("#F8FAFC")),
+        ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#CBD5E1")),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE", (0, 1), (-1, -1), 8),
+        ("TOPPADDING", (0, 1), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 1), (-1, -1), 6),
     ]))
     story.append(t)
-    
     doc.build(story)
     buffer.seek(0)
     return buffer
 
+
 def generate_and_send_reports():
     try:
+        # --- Time is computed at call time (was previously at import) ---
+        now_nairobi = datetime.now(NAIROBI_TZ)
+        today_str = now_nairobi.strftime("%Y-%m-%d")
+
         with connect() as conn:
-            users = conn.execute("SELECT id, name, email, phone, credits, created_at FROM users WHERE role = 'student' ORDER BY id DESC LIMIT 100").fetchall()
-            payments = conn.execute("SELECT transaction_id, user_id, amount, plan, status, created_at FROM payments ORDER BY created_at DESC LIMIT 100").fetchall()
+            users = conn.execute(
+                "SELECT id, name, email, phone, credits, created_at FROM users "
+                "WHERE role = 'student' ORDER BY id DESC LIMIT 100"
+            ).fetchall()
+            payments = conn.execute(
+                "SELECT transaction_id, user_id, amount, plan, status, created_at "
+                "FROM payments ORDER BY created_at DESC LIMIT 100"
+            ).fetchall()
 
         enrollment_data = []
         for u in users:
             local_time = safe_local_time(u["created_at"])
-            status = "Active" if u["credits"] >= 0 else "Inactive"
-            enrollment_data.append([u["id"], u["name"], u["email"], u["phone"], u["credits"], local_time, status])
+            status = "Active" if (u["credits"] or 0) >= 0 else "Inactive"
+            enrollment_data.append([
+                u["id"], u["name"], u["email"], u["phone"],
+                u["credits"], local_time, status,
+            ])
 
         revenue_data = []
-        total_revenue = 0
+        total_revenue = 0.0
         successful_payments = 0
         for p in payments:
             local_time = safe_local_time(p["created_at"])
-            amount = float(p["amount"])
-            if p["status"] in ["paid", "completed"]:
+            amount = float(p["amount"] or 0)
+            raw_status = (p["status"] or "").lower()
+            if raw_status in PAID_STATUSES:
                 total_revenue += amount
                 successful_payments += 1
-            revenue_data.append([p["transaction_id"], p["user_id"], p["plan"], amount, "KES", "Pesapal", p["status"], local_time])
+            revenue_data.append([
+                p["transaction_id"], p["user_id"], p["plan"],
+                amount, "KES", "Pesapal", p["status"], local_time,
+            ])
 
         summary_data = [
             ["Report Date", today_str],
             ["Total Registered Students (Recent)", len(users)],
             ["Total Successful Payments (Recent)", successful_payments],
             ["Total Lifetime Revenue (Recent)", f"KES {total_revenue:,.2f}"],
-            ["Net Revenue", f"KES {total_revenue:,.2f}"]
+            ["Net Revenue", f"KES {total_revenue:,.2f}"],
         ]
 
-        ex1 = create_excel(enrollment_data, ["ID", "Name", "Email", "Phone", "Credits", "Enrollment Date", "Status"], "Enrollments")
-        ex2 = create_excel(revenue_data, ["TxID", "User ID", "Plan", "Amount", "Currency", "Method", "Status", "Date"], "Revenue")
+        ex1 = create_excel(
+            enrollment_data,
+            ["ID", "Name", "Email", "Phone", "Credits", "Enrollment Date", "Status"],
+            "Enrollments",
+        )
+        ex2 = create_excel(
+            revenue_data,
+            ["TxID", "User ID", "Plan", "Amount", "Currency", "Method", "Status", "Date"],
+            "Revenue",
+        )
         ex3 = create_excel(summary_data, ["Metric", "Value"], "Summary")
 
-        pdf1 = create_pdf("Student Enrollments Report", ["ID", "Name", "Email", "Enrolled On"], [r[:4] for r in enrollment_data[:50]], f"Recent Students: {len(users)}")
-        pdf2 = create_pdf("Revenue & Payments Report", ["TxID", "User", "Amount", "Status"], [r[:4] for r in revenue_data[:50]], f"Recent Revenue: KES {total_revenue:,.2f}")
+        pdf1 = create_pdf(
+            "Student Enrollments Report",
+            ["ID", "Name", "Email", "Enrolled On"],
+            [r[:4] for r in enrollment_data[:50]],
+            f"Recent Students: {len(users)}",
+            now_nairobi,
+        )
+        pdf2 = create_pdf(
+            "Revenue & Payments Report",
+            ["TxID", "User", "Amount", "Status"],
+            [r[:4] for r in revenue_data[:50]],
+            f"Recent Revenue: KES {total_revenue:,.2f}",
+            now_nairobi,
+        )
 
         api_key = os.getenv("BREVO_API_KEY")
         sender_email = os.getenv("SENDER_EMAIL")
         admin_email = os.getenv("ADMIN_EMAIL", "brayondueki815@gmail.com")
-        
+
         if not api_key or not sender_email:
-            logger.warning("Brevo credentials missing.")
+            logger.error("Brevo credentials missing: BREVO_API_KEY / SENDER_EMAIL")
             return False
 
-        def to_b64(buf): return base64.b64encode(buf.getvalue()).decode('utf-8')
+        def to_b64(buf):
+            return base64.b64encode(buf.getvalue()).decode("utf-8")
 
+        # --- Use typed attachment objects, not dicts ---
         attachments = [
-            {"content": to_b64(ex1), "name": f"01_Student_Enrollments_{today_str}.xlsx"},
-            {"content": to_b64(ex2), "name": f"02_Revenue_and_Payments_{today_str}.xlsx"},
-            {"content": to_b64(ex3), "name": f"03_Daily_Business_Summary_{today_str}.xlsx"},
-            {"content": to_b64(pdf1), "name": f"Enrollment_Report_{today_str}.pdf"},
-            {"content": to_b64(pdf2), "name": f"Revenue_Report_{today_str}.pdf"},
+            SendTransacEmailRequestAttachment(
+                content=to_b64(ex1),
+                name=f"01_Student_Enrollments_{today_str}.xlsx",
+            ),
+            SendTransacEmailRequestAttachment(
+                content=to_b64(ex2),
+                name=f"02_Revenue_and_Payments_{today_str}.xlsx",
+            ),
+            SendTransacEmailRequestAttachment(
+                content=to_b64(ex3),
+                name=f"03_Daily_Business_Summary_{today_str}.xlsx",
+            ),
+            SendTransacEmailRequestAttachment(
+                content=to_b64(pdf1),
+                name=f"Enrollment_Report_{today_str}.pdf",
+            ),
+            SendTransacEmailRequestAttachment(
+                content=to_b64(pdf2),
+                name=f"Revenue_Report_{today_str}.pdf",
+            ),
         ]
 
         html_content = f"""
@@ -171,14 +253,16 @@ def generate_and_send_reports():
         client.transactional_emails.send_transac_email(
             subject=f"EduPoint AI - Daily Business Report ({today_str})",
             html_content=html_content,
-            sender=SendTransacEmailRequestSender(email=sender_email, name="EduPoint AI Automated"),
+            sender=SendTransacEmailRequestSender(
+                email=sender_email, name="EduPoint AI Automated"
+            ),
             to=[SendTransacEmailRequestToItem(email=admin_email)],
-            attachment=attachments
+            attachment=attachments,
         )
         logger.info(f"Successfully sent automated reports to {admin_email}")
         return True
 
-    except Exception as e:
+    except Exception:
         import traceback
         logger.error(f"Failed to generate/send reports: {traceback.format_exc()}")
         return False
