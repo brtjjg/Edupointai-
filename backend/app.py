@@ -742,11 +742,29 @@ def admin_users():
 def admin_payments():
     with connect() as conn:
         rows = conn.execute("""
-            SELECT id, transaction_id, user_id, amount, status,
-                   invoice_sent_at, last_reminder_at, reminder_count
-            FROM payments ORDER BY id DESC LIMIT 100
+            SELECT
+                p.id,
+                p.transaction_id,
+                p.user_id,
+                p.amount,
+                p.status,
+                p.created_at,
+                p.invoice_sent_at,
+                p.last_reminder_at,
+                p.reminder_count,
+                u.name AS student_name,
+                u.email AS student_email
+            FROM payments p
+            JOIN users u ON u.id = p.user_id
+            ORDER BY p.created_at DESC
+            LIMIT 100
         """).fetchall()
-    return jsonify(ok=True, payments=[dict(r) for r in rows])
+
+    return jsonify(
+        ok=True,
+        payments=[dict(r) for r in rows]
+    )
+
 
 @app.post("/api/admin/access/<int:user_id>")
 @admin_required
@@ -757,32 +775,6 @@ def admin_access(user_id):
         with connect() as conn:
             conn.execute("UPDATE users SET credits = credits + %s WHERE id=%s", (credits_to_add, user_id))
     return jsonify(ok=True, added=credits_to_add)
-
-@app.get("/api/admin/dashboard")
-@admin_required
-def admin_dashboard():
-    with connect() as conn:
-        total_users = conn.execute("SELECT COUNT(*) as c FROM users WHERE role='student'").fetchone()["c"]
-        total_revenue = conn.execute("SELECT COALESCE(SUM(amount),0) as s FROM payments WHERE status IN ('paid', 'completed')").fetchone()["s"]
-        pending_payments = conn.execute("SELECT COUNT(*) as c FROM payments WHERE status='pending'").fetchone()["c"]
-        
-        users = conn.execute("SELECT id, name, email, role, credits, created_at FROM users ORDER BY created_at DESC LIMIT 50").fetchall()
-        
-        payments_list = conn.execute("""
-            SELECT p.transaction_id, p.amount, p.status, p.created_at, u.name as user_name, u.email 
-            FROM payments p JOIN users u ON u.id = p.user_id 
-            ORDER BY p.created_at DESC LIMIT 50
-        """).fetchall()
-
-    return jsonify(ok=True, data={
-        "stats": {
-            "total_students": total_users,
-            "total_revenue_kes": float(total_revenue),
-            "pending_payments": pending_payments
-        },
-        "recent_users": [dict(r) for r in users],
-        "recent_payments": [dict(r) for r in payments_list]
-    })
 
 @app.post("/api/admin/trigger-daily-report")
 @admin_required
@@ -821,7 +813,6 @@ def handle_exception(e):
     logger.error(f"Unhandled Exception: {traceback.format_exc()}")
     return jsonify(ok=False, error="An unexpected error occurred. Please contact support."), 500
 
-@app.get("/api/admin/dashboard-v2")
 @app.get("/api/admin/dashboard-v2")
 @admin_required
 def admin_dashboard_v2():
