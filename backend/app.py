@@ -737,35 +737,6 @@ def admin_users():
         rows = conn.execute("SELECT id,name,email,phone,role,active,credits FROM users ORDER BY id DESC").fetchall()
     return jsonify(ok=True, users=[dict(r) for r in rows])
 
-@app.get("/api/admin/payments")
-@admin_required
-def admin_payments():
-    with connect() as conn:
-        rows = conn.execute("""
-            SELECT
-                p.id,
-                p.transaction_id,
-                p.user_id,
-                p.amount,
-                p.status,
-                p.created_at,
-                p.invoice_sent_at,
-                p.last_reminder_at,
-                p.reminder_count,
-                u.name AS student_name,
-                u.email AS student_email
-            FROM payments p
-            JOIN users u ON u.id = p.user_id
-            ORDER BY p.created_at DESC
-            LIMIT 100
-        """).fetchall()
-
-    return jsonify(
-        ok=True,
-        payments=[dict(r) for r in rows]
-    )
-
-
 @app.post("/api/admin/access/<int:user_id>")
 @admin_required
 def admin_access(user_id):
@@ -883,17 +854,33 @@ def admin_students():
             FROM users WHERE role='student' ORDER BY created_at DESC
         """).fetchall()
     return jsonify(ok=True, students=[dict(r) for r in rows])
-
 @app.get("/api/admin/payments")
 @admin_required
 def admin_payments():
     with connect() as conn:
         rows = conn.execute("""
-            SELECT p.transaction_id, p.amount, p.status, p.created_at, u.name as student_name, u.email 
-            FROM payments p JOIN users u ON u.id = p.user_id 
-            ORDER BY p.created_at DESC LIMIT 100
+            SELECT
+                p.id,
+                p.transaction_id,
+                p.user_id,
+                p.amount,
+                p.status,
+                p.created_at,
+                p.invoice_sent_at,
+                p.last_reminder_at,
+                p.reminder_count,
+                u.name AS student_name,
+                u.email AS student_email
+            FROM payments p
+            JOIN users u ON u.id = p.user_id
+            ORDER BY p.created_at DESC
+            LIMIT 100
         """).fetchall()
-    return jsonify(ok=True, payments=[dict(r) for r in rows])
+
+    return jsonify(
+        ok=True,
+        payments=[dict(row) for row in rows]
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))
